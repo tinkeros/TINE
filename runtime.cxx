@@ -10,8 +10,6 @@
 #include "tos_aot.hxx"
 #include "vfs.hxx"
 
-#include "ext/linenoise/linenoise.h"
-
 #include <ios>
 #include <iostream>
 #include <string>
@@ -43,12 +41,15 @@ using std::thread;
 #include <shlwapi.h>
 // clang-format on
 #else
+#include <signal.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif
-// todo restore __GetUVLoopMode
+
+#include "ext/dyad.h"
+#include "ext/linenoise/linenoise.h"
 
 void HolyFree(void* ptr) {
   static void* fptr = nullptr;
@@ -77,138 +78,6 @@ char* HolyStrDup(char const* str) {
 static FILE* VFsFOpen(char const* path, char const* m) {
   std::string p = VFsFileNameAbs(path);
   return fopen(p.c_str(), m);
-}
-
-#include "ext/dyad.h"
-#include <uv.h>
-
-/*
- * uv_udp_t
- * uv_udp_send_t
- * uv_udp_flags { UV_UDP_IPV6ONLY, UV_UDP_PARTIAL, UV_UDP_REUSEADDR,
- * UV_UDP_MMSG_CHUNK, UV_UDP_MMSG_FREE, UV_UDP_LINUX_RECVERR, UV_UDP_RECVMSG }
- * void (*)uv_udp_send_cb(uv_udp_send_t *req, int status)
- * void (*)uv_udp_recv_cb(uv_udp_t *handle, ssize_t nread, uv_buf_t const *buf,
- *                        struct sockaddr const *addr, unsigned flags)
- *       -> nread 0 ~
- *       -> uv_buf_t -> len  size_t
- *                   -> base char*
- * uv_interface_address_t
- *       -> name char*
- *       -> phys_addr char[6]
- *       -> is_internal bool
- *       -> address sockaddr_in{,6} union
- *       -> netmask ditto ^
- *
- * uv_random(uv_loop_t *loop, uv_random_t *req, void *buf,
- *           size_t buflen, unsigned int flags, uv_random_cb cb)
- *       -> void (*)uv_random_cb(uv_random_t *req, int status,
- *                               void *buf, size_t buflen)
- *
- * req->data <- &TOSFunc;
- *
- * */
-
-#if 0
-static void UVUDPSendCB(uv_udp_t* h, ssize_t nread, uv_buf_t const* buf,
-                        struct sockaddr const* addr, unsigned flags) {
-  (void)h;
-  (void)nread;
-  (void)buf;
-  (void)addr;
-  (void)flags;
-}
-
-static int64_t STK_UVIP4Addr(int64_t* stk) {
-  return uv_ip4_addr((char const*)stk[0], (int)stk[1],
-                     (struct sockaddr_in*)stk[2]);
-}
-
-static int64_t STK_UVIP6Addr(int64_t* stk) {
-  return uv_ip6_addr((char const*)stk[0], (int)stk[1],
-                     (struct sockaddr_in6*)stk[2]);
-}
-
-static int64_t STK_UVIP4Name(int64_t* stk) {
-  return uv_ip4_name((struct sockaddr_in const*)stk[0], (char*)stk[1],
-                     (size_t)stk[2]);
-}
-
-static int64_t STK_UVIP6Name(int64_t* stk) {
-  return uv_ip6_name((struct sockaddr_in6 const*)stk[0], (char*)stk[1],
-                     (size_t)stk[2]);
-}
-
-static int64_t STK_UVIPName(int64_t* stk) {
-  return uv_ip_name((struct sockaddr const*)stk[0], (char*)stk[1],
-                    (size_t)stk[2]);
-}
-
-static void* STK_UVUDPNew(int64_t* stk) {
-  auto ret = new(std::nothrow) uv_udp_t;
-  if (uv_udp_init((uv_loop_t*)stk[0], ret))
-    return nullptr;
-  return ret;
-}
-// 0suc
-static void STK_UVUDPRecvStop(int64_t* stk) {
-  uv_udp_recv_stop((uv_udp_t*)stk[0]);
-}
-
-static void STK_UVUDPDel(int64_t* stk) {
-  delete (uv_udp_t*)stk[0];
-}
-
-static int64_t STK_UVUDPBind(int64_t* stk) {
-  return (uintptr_t)uv_udp_bind(
-      (uv_udp_t*)stk[0], (struct sockaddr const*)stk[1], (unsigned)stk[2]);
-}
-
-static int64_t STK_UVUDPConnect(int64_t* stk) {
-  return (uintptr_t)uv_udp_connect((uv_udp_t*)stk[0],
-                                   (struct sockaddr const*)stk[1]);
-}
-#endif
-
-static void UVRandomCB(uv_random_t* req, int status, void* buf, size_t buflen) {
-  FFI_CALL_TOS_4(req->data, (uintptr_t)req, status, (uintptr_t)buf, buflen);
-}
-
-static int64_t STK_UVRandom(uintptr_t* stk) {
-  ((uv_random_t*)stk[1])->data = (void*)stk[5];
-  return uv_random((uv_loop_t*)stk[0], (uv_random_t*)stk[1], (void*)stk[2],
-                   stk[3], stk[4], &UVRandomCB);
-}
-static void* STK_UVRandomNew() {
-  return new (std::nothrow) uv_random_t;
-}
-
-static void STK_UVRandomDel(int64_t* stk) {
-  delete (uv_random_t*)stk[0];
-}
-
-static int64_t STK_UVBufLen(int64_t* stk) {
-  return ((uv_buf_t*)stk[0])->len;
-}
-
-static int64_t STK_UVBufBase(int64_t* stk) {
-  return (uintptr_t)((uv_buf_t*)stk[0])->base;
-}
-static void* STK_UVLoopNew() {
-  auto ret = new (std::nothrow) uv_loop_t;
-  if (uv_loop_init(ret) != 0)
-    return nullptr;
-  return ret;
-}
-
-static void STK_UVLoopDel(uintptr_t* stk) {
-  auto l = (uv_loop_t*)stk[0];
-  uv_stop(l);
-  delete l;
-}
-
-static int64_t STK_UVRun(uintptr_t* stk) {
-  return uv_run((uv_loop_t*)stk[0], (uv_run_mode)stk[1]);
 }
 
 static void STK_DyadInit() {
@@ -791,7 +660,6 @@ void RegisterFuncPtrs() {
   R_("__CoreNum", CoreNum, 0);
   R_("GetFs", GetFs, 0);
   R_("GetGs", GetGs, 0);
-  R_("DrawWindowNew", NewDrawWindow, 0);
   S_(__IsValidPtr, 1);
   S_(__SpawnCore, 0);
   S_(UnixNow, 0);
@@ -865,14 +733,6 @@ void RegisterFuncPtrs() {
   S_(SetVolume, 1);
   S_(__GetTicksHP, 0);
   S_(_GrPaletteColorSet, 2);
-  S_(UVBufBase, 1);
-  S_(UVBufLen, 1);
-  S_(UVRandomNew, 0);
-  S_(UVRandomDel, 1);
-  S_(UVLoopNew, 0);
-  S_(UVLoopDel, 1);
-  S_(UVRun, 2);
-  S_(UVRandom, 0);
   auto blob = VirtAlloc<char>(ffi_blob.size());
   std::copy(ffi_blob.begin(), ffi_blob.end(), blob);
   for (auto& m : TOSLoader) {

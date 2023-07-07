@@ -45,11 +45,6 @@ if (NOT ARCH MATCHES "x86_64")
   message(FATAL_ERROR "CAN ONLY BUILD ON x86_64 ARCHITECTURE")
 endif ()
 
-if (WIN32)
-  set(CMAKE_THREAD_PREFER_PTHREAD OFF)
-  set(THREADS_PREFER_PTHREAD_FLAG OFF)
-endif ()
-
 set(CPP_EXECUTABLE_SOURCE_FILES
   main.cxx
   dbg.cxx
@@ -142,21 +137,16 @@ endif ()
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
 
-# libuv dep
-include (Findlibuv)
-if (NOT LIBUV_FOUND)
-  message(FATAL_ERROR "INSTALL LIBUV")
-endif ()
-target_include_directories(${PROJECT_NAME} PRIVATE ${LIBUV_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBUV_LIBRARIES})
-
 if (WIN32)
   # I literally gave up trying to build this shit statically
   # so bundle your own dlls when you want to package it
   target_link_libraries(${PROJECT_NAME} PRIVATE
-    ssp synchronization shlwapi shcore dbghelp winmm -static)
+    psapi iphlpapi userenv ws2_32
+    synchronization shlwapi shcore dbghelp winmm -static)
   set(C_ABI_NAME "WIN64")
   set(BIN_FORMAT "win64")
+  unset(CMAKE_THREAD_PREFER_PTHREAD)
+  unset(THREADS_PREFER_PTHREAD_FLAG)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR
         CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
   # ffi
@@ -188,7 +178,7 @@ add_custom_command(OUTPUT "${FFI_NAME}.obj"
     ARGS -f ${BIN_FORMAT} -o "${CMAKE_CURRENT_BINARY_DIR}/${FFI_NAME}.obj" "${CMAKE_CURRENT_SOURCE_DIR}/${FFI_NAME}.yasm"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FFI_NAME}.yasm"
 )
-add_library(FFI "${FFI_NAME}.obj")
+add_library(FFI STATIC "${FFI_NAME}.obj")
 set_target_properties(FFI
   PROPERTIES
     LINKER_LANGUAGE C

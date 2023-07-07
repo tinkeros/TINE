@@ -156,9 +156,11 @@ void LaunchCore0(ThreadCallback* fp) {
   cores.resize(mp_cnt(nullptr));
   cores[0].fp = nullptr;
 #ifdef _WIN32
-  auto fp_win = (void*)fp; // silence compiler warnings
+  // sorry for this piece of utter garbage code, I wanted it to compile
+  // without warnings
+#define CAST(x) (WinCB)(void*)x
   cores[0].thread =
-      CreateThread(nullptr, 0, (WinCB)fp_win, nullptr, 0, nullptr);
+      CreateThread(nullptr, 0, CAST(fp), nullptr, 0, nullptr);
   cores[0].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[0].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[0].thread, THREAD_PRIORITY_HIGHEST);
@@ -175,9 +177,8 @@ void CreateCore(size_t core, void* fp) {
   // CoreAPSethTask(...) passed from SpawnCore
   cores[core].fp = fp;
 #ifdef _WIN32
-  auto lc_win = (void*)LaunchCore; // silence compiler warnings
   cores[core].thread =
-      CreateThread(nullptr, 0, (WinCB)lc_win, (void*)core, 0, nullptr);
+      CreateThread(nullptr, 0, CAST(LaunchCore), (void*)core, 0, nullptr);
   cores[core].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[core].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[core].thread, THREAD_PRIORITY_HIGHEST);

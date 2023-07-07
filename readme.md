@@ -12,11 +12,11 @@ it's hard to describe what this exactly is because it doesn't "emulate" anything
 ### only supports >=Win10(complain to msys2 devs not me), msvc unsupported
 install msys2, launch the "MSYS2 MINGW64 Shell", and run the following
 ```
-pacman -Syu yasm make mingw-w64-x86_64-{cmake,gcc,SDL2,libuv}
+pacman -Syu yasm make mingw-w64-x86_64-{cmake,gcc,SDL2}
 ```
 if pacman tells you to restart the terminal then do it and run the cmd again(rtfm)
 ## unix-like system users
-install SDL2, cmake, make, yasm, gcc/clang and libuv
+install SDL2, cmake, make, yasm and gcc/clang
 ## building the loader
 ```
 mkdir build;

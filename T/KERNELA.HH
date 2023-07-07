@@ -242,11 +242,6 @@ public class CD3 //Three dimensional F64 pt
 
 extern class CCPU;
 extern class CDyadStream;
-/*extern class CUVUDP;
-extern class CUVBuf;
-extern class CUVInterfaceAddr;*/
-extern class CUVRandom;
-extern class CUVLoop;
 #ifdef IMPORT_BUILTINS
 import U0 _GrPaletteColorSet(I64i,I64i);
 import U0 __SleepHP(I64i);
@@ -288,12 +283,6 @@ import U8i *DyadGetAddress(CDyadStream *);
 import U0i DyadSetReadCallback(CDyadStream *,U0i(*fptr)(CDyadStream *,U8i *,I64i,U8i *),U8i *);
 import U0i DyadSetOnConnectCallback(CDyadStream *,U0i(*fptr)(CDyadStream *,U8i *),U8i *);
 import U0i DyadSetOnCloseCallback(CDyadStream *,U0i(*fptr)(CDyadStream *,U8i *),U8i *);
-import CUVLoop *UVLoopNew();
-import U0i UVLoopDel(CUVLoop *);
-import I64i UVRandom(CUVLoop *,CUVRandom*,U8i *,U64i,U64i flags=0,U0i (*cb)(CUVRandom *,I64i,U8i *,U64i));
-import CUVRandom *UVRandomNew();
-import U0i UVRandomDel(CUVRandom *);
-import I64i UVRun(CUVLoop *,U64i);
 import I64i mp_cnt();
 import U0i SetFs(CTask*);
 import CTask* GetFs();
@@ -372,12 +361,6 @@ extern U0i DyadClose(CDyadStream *);
 extern U8i *DyadGetAddress(CDyadStream *);
 extern U0i DyadSetReadCallback(CDyadStream *,U0i(*fptr)(CDyadStream *,U8i *,I64i,U8i *),U8i *);
 extern U0i DyadSetOnListenCallback(CDyadStream *,U0i(*fptr)(CDyadStream *,U8i *,I64i,U8i *),U8i *);
-extern CUVRandom *UVRandomNew();
-extern U0i UVRandomDel(CUVRandom *);
-extern CUVLoop *UVLoopNew();
-extern U0i UVLoopDel(CUVLoop *);
-extern I64i UVRun(CUVLoop *,U64i);
-extern I64i UVRandom(CUVLoop *,CUVRandom*,U8i *,U64i,U64i flags=0,U0i (*cb)(CUVRandom *,I64i,U8i *,U64i));
 extern I64i mp_cnt();
 extern U0i SetFs(CTask*);
 extern CTask* GetFs();
