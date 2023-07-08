@@ -78,7 +78,8 @@ U0 FaultCB(U8 **rbp,U8 *fptr) {
         TOSPrint("[%d] %s\n",0,ln);
     Free(ln);
     
-    for (bt=0;bt<=5;bt++) {
+    //__CallerBP will return NULL if we cant go up the stack more
+    for (bt=0;__CallerBP(rbp,bt);bt++) {
         ln=SrcEdLink(__CallerBP(rbp,bt));
         if (!ln) ln=StrNew("???");
         f=FunSegFind(__CallerBP(rbp,bt),NULL);
