@@ -93,28 +93,27 @@ int main(int argc, char** argv) {
       sixty_fps = arg_lit0("6", "60fps", "Run in 60 fps mode."),
       commandLineArg = arg_lit0("c", "com",
                                 "Start in command line "
-                                "mode,mount drive '/' at /."),
+                                "mode, mount cwd at Z:/"),
       HCRTArg = arg_file0("f", "file", nullptr,
-                          "Specifies where your HolyC runtime is"),
-      TDriveArg = arg_file0("t", nullptr, "T(boot) Drive",
-                            "This tells TINE where to "
-                            "use(or create) the boot "
-                            "drive folder."),
-      cmdLineFiles = arg_filen(nullptr, nullptr, "<files>", 0, 100,
-                               "Files for use with command "
-                               "line mode."),
+                          "Specify where your HolyC runtime is"),
+      TDriveArg = arg_file0("t", "root", nullptr,
+                            "This tells TINE where the boot folder is"),
       cb_sanitize = arg_lit0("s", "sanitize-cb",
                              "Remove characters in clipboard that may collide "
-                             "with DolDoc control chars)"),
+                             "with DolDoc control chars"),
       ndebug = arg_lit0("n", "ndebug", "Silence compiler output"),
       noans = arg_lit0("a", "noans", "Do not print expression results"),
+      cmdLineFiles = arg_filen(nullptr, nullptr, "<files>", 0, 100,
+                               "Files for use with command "
+                               "line mode"),
+
       arg_end_(1),
   };
   int errs = arg_parse(argc, argv, argtable);
   if (helpArg->count > 0 || errs != 0 || TDriveArg->count == 0) {
     std::cerr << "Usage is: " << argv[0];
     arg_print_syntaxv(stderr, argtable, "\n");
-    arg_print_glossary(stderr, argtable, "  %-25s %s\n");
+    arg_print_glossary_gnu(stderr, argtable);
     return 1;
   }
   if (fs::exists(TDriveArg->filename[0])) {
