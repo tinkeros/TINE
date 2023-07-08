@@ -78,14 +78,14 @@ CDrawWindow* NewDrawWindow() {
       SDL_CreateWindow("TINE Is Not an Emulator", SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_RESIZABLE);
   SDL_Surface* icon = SDL_CreateRGBSurfaceWithFormat(
-      0, TOSLogo.width, TOSLogo.height,
-      8 /*bits in a byte*/ * TOSLogo.bytes_per_pixel, SDL_PIXELFORMAT_BGR888);
+      0, TINELogo.width, TINELogo.height,
+      8 /*bits in a byte*/ * TINELogo.bytes_per_pixel, SDL_PIXELFORMAT_RGBA32);
   SDL_LockSurface(icon);
-  // icon->pixels = const_cast<void*>((void const*)TOSLogo.pixel_data);
+  // icon->pixels = const_cast<void*>((void const*)TINELogo.pixel_data);
   // whatever, just copy it over lmao
   auto constexpr bytes =
-      TOSLogo.width * TOSLogo.height * TOSLogo.bytes_per_pixel;
-  std::copy(TOSLogo.pixel_data, TOSLogo.pixel_data + bytes,
+      TINELogo.width * TINELogo.height * TINELogo.bytes_per_pixel;
+  std::copy(TINELogo.pixel_data, TINELogo.pixel_data + bytes,
             static_cast<uint8_t*>(icon->pixels));
   SDL_UnlockSurface(icon);
   SDL_SetWindowIcon(win.window, icon);
