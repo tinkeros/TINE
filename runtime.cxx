@@ -532,6 +532,8 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
 #ifdef _WIN32
   // https://defuse.ca/online-x86-assembler.htm
   // https://archive.md/4HDA0#selection-2085.880-2085.1196
+  // last 4 register pushes are for register "home"s
+  // that microsoft wants me to provide
   char const* atxt = "\x55\x48\x89\xE5"
                      "\x48\x83\xE4\xF0"
                      "\x56\x57\x41\x52"
@@ -563,6 +565,8 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   // CALL RAX
   blob.append("\xFF\xD0", 2);
 #ifdef _WIN32
+  // pops stack. boring stuff
+  // can just add to rsp since those 4 are volatile
   atxt = "\x48\x83\xC4\x20"
          "\x41\x5F\x41\x5E"
          "\x41\x5D\x41\x5C"
