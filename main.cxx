@@ -81,7 +81,6 @@ static void* __stdcall Core0(void*) {
   SetupDebugger();
 #ifndef _WIN32
   signal(SIGUSR1, [](int) {
-    FFI_CALL_TOS_0(TOSLoader["__FreeCPUs"][0].val);
     pthread_exit(nullptr);
   });
 #endif
@@ -173,7 +172,6 @@ int main(int argc, char** argv) {
     InputLoop(&prog_exit);
   } else {
     WaitForCore0();
-    FFI_CALL_TOS_0(TOSLoader["__FreeCPUs"][0].val);
   }
   return 0;
 }

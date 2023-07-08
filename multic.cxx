@@ -211,7 +211,6 @@ void ShutdownCores(int ec) {
   for (size_t c = 0; c < mp_cnt(nullptr); ++c)
     if (c != core_num)
       ShutdownCore(c);
-  FFI_CALL_TOS_0(TOSLoader["__FreeCPUs"][0].val);
   // This is the same as calling Core0Exit
   // with the difference of being able to exit
   // with a specific exit code

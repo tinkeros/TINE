@@ -72,11 +72,6 @@ U0 StartUpTasks()
   ACInit("KERNEL*.HH*");
   AutoComplete(ON);
 }
-U0 __FreeCPUs() {
-  Free(cpu_structs),
-  Free(mp_cores);
-  Free(_boot_gs);
-}
 
 cpu_structs[Gs->num=__CoreNum]=Gs;//It should be 0
 SetFs(adam_task);
