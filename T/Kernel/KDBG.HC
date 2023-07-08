@@ -78,14 +78,15 @@ U0 FaultCB(U8 **rbp,U8 *fptr) {
         TOSPrint("[%d] %s\n",0,ln);
     Free(ln);
     
-    for (bt=0;bt<=5;bt++) {
+    for (bt=0;bt<=5;bt++) {
         ln=SrcEdLink(__CallerBP(rbp,bt));
         if (!ln) ln=StrNew("???");
         f=FunSegFind(__CallerBP(rbp,bt),NULL);
+//Add 1,(+0 is RIP)
         if (f)
-            TOSPrint("[%d] %s,%s\n",bt,f->str,ln);
+            TOSPrint("[%d] %s,%s\n",bt+1,f->str,ln);
         else
-            TOSPrint("[%d] %s\n",bt,ln);
+            TOSPrint("[%d] %s\n",bt+1,ln);
         Free(ln);
     }
     //Exit;
