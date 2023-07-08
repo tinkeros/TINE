@@ -7,7 +7,7 @@
 inline constexpr struct {
   uint32_t width, height, bytes_per_pixel;
   uint8_t pixel_data[30 * 30 * 4 + 1];
-} tos_logo {
+} TOSLogo {
   30, 30, 4,
   "U\377\377\377U\377\377\377U\377\377\377U\377\377\377U\377\377\377U\377\377"
   "\377U\377\377\377U\377\377\377U\377\377\377U\377\377\377U\377\377\377U\377"

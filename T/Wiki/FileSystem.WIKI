@@ -6,7 +6,7 @@ In TempleOS each,*CTask* has it's current folder(aka directory) stored in *->cur
 
 [DirCur.png]
 
-+In TempleOS all files paths are relative to the current folder you are in+(unless your filename starts with '!/'). For example,in tos The file *GrScrn.HC* is located in /T:!/GR!/GrScrn.HC/. So if you want to edit /GrScrn.HC/,you must first goto the /T:!/GR/ folder.
++In TempleOS all files paths are relative to the current folder you are in+(unless your filename starts with '!/'). For example,in TINE The file *GrScrn.HC* is located in /T:!/GR!/GrScrn.HC/. So if you want to edit /GrScrn.HC/,you must first goto the /T:!/GR/ folder.
 
 To change our task's current folder,use *Cd*(Change Directories).  In our below example,I we *Cd* itno the absolute absolute path /"T:!/GR"/,Then we can edit /"T:!/GR!/GrScrn.HC"/ using *Ed*.
 

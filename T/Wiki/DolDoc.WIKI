@@ -205,7 +205,7 @@ We are also given other epic functions so we don't have to re!-invent the wheel,
 |PopUpGetI64(msg,dft,lo,hi)|Gets an I64
 |PopUpGetF64(msg,dft,lo,hi)|Gets an F64 
 == Registry
-In tos there is a file called /T:!/Registry.HC.Z/. It is used by the apps for storing data such as highscores and user information for the server. TempleOS gives us functions for editing the registry. So let's get started.
+In TINE there is a file called /T:!/Registry.HC.Z/. It is used by the apps for storing data such as highscores and user information for the server. TempleOS gives us functions for editing the registry. So let's get started.
 === Registry(1) System Registery
 The first thing you will want to do is assume a initial value for your apps registry,we can do this via *RegDft*. This will allow us to store HolyC code snippet for our app to run.
  RegDft("/Game/HighScore","F64 high_score=0;");

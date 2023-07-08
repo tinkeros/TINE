@@ -29,7 +29,7 @@ T/FULL\_PACKAGE.HC
 ```C
 #define GEN_HEADERS 1
 ```
-make -> run tos -> T/unfound.DD
+make -> run tine -> T/unfound.DD
 ```
 <functions>
 ```

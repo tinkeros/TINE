@@ -67,7 +67,7 @@ char const* CmdLineBootText() {
 }
 
 static bool prog_exit = false;
-void ShutdownTOS(int32_t ec) {
+void ShutdownTINE(int32_t ec) {
   prog_exit = true;
   ShutdownCores(ec);
 }
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
       HCRTArg = arg_file0("f", "file", nullptr,
                           "Specifies where your HolyC runtime is"),
       TDriveArg = arg_file0("t", nullptr, "T(boot) Drive",
-                            "This tells tos where to "
+                            "This tells TINE where to "
                             "use(or create) the boot "
                             "drive folder."),
       cmdLineFiles = arg_filen(nullptr, nullptr, "<files>", 0, 100,

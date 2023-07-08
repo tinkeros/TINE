@@ -470,7 +470,7 @@ U0 EdCodeTools2(CDoc *doc,I64 tool_action,Bool beep=TRUE)
 	  st=DirFile(doc->filename.name,"Load","HC.Z");
 	  prj_file=FileNameAbs(st);
 	  Free(st);
-	  //Changed for tos.DirFile used to strip filename from file(but might be re-introduced so
+	  //Changed for TINE.DirFile used to strip filename from file(but might be re-introduced so
           // leaving this here),so if we are in the root direction,we will return root
 	  //
 	  // Here is an example:
@@ -478,7 +478,7 @@ U0 EdCodeTools2(CDoc *doc,I64 tool_action,Bool beep=TRUE)
 	  //
 	  if(IsDir(prj_file))
 	    st=MStrPrint("\"\dWW,1\d\";ExeFile(\"%s\",CCF_JUST_LOAD);",doc->filename.name);
-	  else if (FileFind(prj_file)) //FileFind whines about invalid filenames(T:/ is invalid) 
+	  else if (FileFind(prj_file))
 	    st=MStrPrint("\"\dWW,1\d\";ExeFile(\"%s\",CCF_JUST_LOAD);",prj_file);
 	  else
 	    st=MStrPrint("\"\dWW,1\d\";ExeFile(\"%s\",CCF_JUST_LOAD);",

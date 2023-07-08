@@ -46,7 +46,7 @@ U0 RedSeaISO9660Stage1(U8 drv,CBlkDev *bd,U8 *stage2_filename)
   Free(stage1_buf),Free(path);
 }
 
-//Changed for tos,now uses what was iso_filename  as CFile
+//Changed for TINE,now uses what was iso_filename  as CFile
 U0 RedSeaISO9660(U8 *to_file,U8 drv_let)
 {
   CDrv	*dv=Let2Drv(drv_let);

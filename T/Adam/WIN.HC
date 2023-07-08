@@ -313,8 +313,6 @@ public I64 WinToTop(CTask *task=NULL,Bool update_z_buf=TRUE)
   if (!Bt(&task->win_inhibit,WIf_SELF_FOCUS))
     sys_focus_task=task;
   if (res && !Bt(&task->display_flags,DISPLAYf_CHILDREN_NOT_ON_TOP)) {
-  //I reworked this,I made last_child_task NULL if there are no children,
-  //I cant decipher TOS's method of child tasks.
     if(task1=task->last_child_task) {
         do {
           if (!TaskValidate(task1))

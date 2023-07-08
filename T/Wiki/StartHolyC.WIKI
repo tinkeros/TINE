@@ -17,13 +17,13 @@ For Linux QEMU is highly recommended.
                     -smp $(nproc) \
                     -rtc base=localtime
 For Windows, !VMWare Workstation is highly recommended. Keep in mind you /must/ disable anything Hyper-V related(Virtual machine platform, Hyper-V, Windows Subsystem for Linux) or else !VMWare Workstation will perform very poorly because it becomes a Hyper-V wrapper instead of using its own hypervisor. !VMWare Workstation 16.0.0 supports !PCSpeaker emulation. 16.2.3 has a hypervisor bug. Make sure you choose 'Compatible with Workstation 8.x' in the custom configuration menu.
-===tos(the thing that this server it running on)
-tos is a loader that runs the orthodox HolyC compiler for Linux, FreeBSD and Windows to run a full-blown TempleOS environment in userspace without virtualization. It is currently only available for !AMD64 FreeBSD/Linux/Windows
+===TINE(the thing that this server it running on)
+TINE is a loader that runs the orthodox HolyC compiler for Linux, FreeBSD and Windows to run a full-blown TempleOS environment in userspace without virtualization. It is currently only available for !AMD64 FreeBSD/Linux/Windows
 
-Development is still in progress, but it will (hopefully) be able to execute all source code in this Wiki without problems. Please contact the owner if it fails to run.
+Development is still in progress, but it will (hopefully) be able to execute all source code in this Wiki without problems. Please contact the owner if it fails to run as intended.
 
 ===aiwnios(an experimental compiler that supports SSE floats)
-[https://github.com/nrootconauto/Aiwnios Aiwnios] is an experimental HolyC compiler that supports ARM, and SSE for floating-point calculation.
+[https://github.com/nrootconauto/Aiwnios Aiwnios] is an experimental HolyC compiler that supports ARM, and SSE for floating-point calculation on x86_64.
 
 ===Bare metal
 While TempleOS can be booted on any generic PC with BIOS boot, an !AMD64 CPU, an IDE CDROM, and an IDE hard drive, and a 640x480 4:3 display, it is not easy to find a machine that fits all these requirements. The closest machine to this is the !ThinkPad T60 with a 4:3 screen.

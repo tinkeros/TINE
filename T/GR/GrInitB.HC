@@ -177,7 +177,7 @@ U0 GrInit2()
   if(gr.dc1) DCDel(gr.dc1);
   if(gr.zoomed_dc) DCDel(gr.zoomed_dc);
   if(gr.scrn_image) DCDel(gr.scrn_image);
-  //Changed for tos,we call GrInit2 from SetResolution,so we want to keep our good values like gr.fp_final_scrn_update
+  //Changed for TINE,we call GrInit2 from SetResolution,so we want to keep our good values like gr.fp_final_scrn_update
   //MemSet(&gr,0,sizeof(CGrGlbls));
   if(old_h)
     gr.sprite_hash=old_h;

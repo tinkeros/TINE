@@ -48,7 +48,7 @@ CHashClass *PrsClass(CCmpCtrl *cc,I64 keyword,I64 fsp_flags,Bool is_extern)
       else
         HashSrcFileSet(cc,tmpc,0);
     } else if(!tmpc->idx) {
-//In tos,Help index info is put in PUBLIC.HC so we should update it
+//In TINE,Help index info is put in PUBLIC.HC so we should update it
       if (cc->cur_help_idx && *cc->cur_help_idx)
         tmpc->idx=StrNew(cc->cur_help_idx);
     }
@@ -129,7 +129,7 @@ CHashFun *PrsFunJoin(CCmpCtrl *cc,CHashClass *tmp_return,
   if(!tmpf->src_link) {
     HashSrcFileSet(cc,tmpf);
   } else if(!tmpf->idx) {
-//In tos,Help index info is put in PUBLIC.HC so we should update it
+//In TINE,Help index info is put in PUBLIC.HC so we should update it
     if (cc->cur_help_idx && *cc->cur_help_idx)
       tmpf->idx=StrNew(cc->cur_help_idx);
   }

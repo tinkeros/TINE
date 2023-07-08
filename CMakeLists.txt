@@ -12,9 +12,9 @@ set(PROJECT_MINOR_VERSION 2)
 set(PROJECT_PATCH_LEVEL   0)
 set(VERSION_SIMPLE "${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_PATCH_LEVEL}")
 
-project(tos
+project(tine
   VERSION ${VERSION_SIMPLE}
-  DESCRIPTION "TempleOS emulator"
+  DESCRIPTION "TINE Is Not an Emulator"
   LANGUAGES C CXX
 )
 
@@ -141,8 +141,7 @@ if (WIN32)
   # I literally gave up trying to build this shit statically
   # so bundle your own dlls when you want to package it
   target_link_libraries(${PROJECT_NAME} PRIVATE
-    psapi iphlpapi userenv ws2_32
-    synchronization shlwapi shcore dbghelp winmm -static)
+    ws2_32 synchronization shlwapi shcore dbghelp winmm -static)
   set(C_ABI_NAME "WIN64")
   set(BIN_FORMAT "win64")
   unset(CMAKE_THREAD_PREFER_PTHREAD)

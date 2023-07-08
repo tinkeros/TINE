@@ -144,7 +144,7 @@ U0 DebuggerLandWin(I64 sig,I64 *gps) {
   if(Fs==sys_winmgr_task) {
     //Oh no,you crashed the window manager
     TOSPrint("You crashed the window manager,aborting\n");
-    ExitTOS;
+    ExitTINE;
   }
   Bool b=FALSE;
 //General purpose registers are in this order,16 is RIP
@@ -212,7 +212,7 @@ U0 DebuggerLand(I64 sig,I64 *gps) {
   if(Fs==sys_winmgr_task) {
     //Oh no,you crashed the window manager
     TOSPrint("You crashed the window manager,aborting\n");
-    ExitTOS;
+    ExitTINE;
   }
 //General purpose registers are in this order,16 is RIP
   //https://archive.md/kdCG4

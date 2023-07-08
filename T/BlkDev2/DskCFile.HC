@@ -36,7 +36,7 @@ CFile *FOpen(U8 *filename,U8 *flags,I64 cnt=0,CTask *mem_task=NULL)
     f->flags=f->flags|FF_WRITE|FF_NEEDS_WRITE;
     if (StrOcc(flags,'+')) {
       if (FileFind(full_name,&f->de,FUF_JUST_FILES)) {
-//Modified for tos
+//Modified for TINE
         if(Let2BlkDevType(*full_name)==BDT_VIRT) {
 	  dirc=DirContextNew(full_name);
 	  VFsSetDrv(Fs->cur_dv->drv_let);
@@ -57,7 +57,7 @@ CFile *FOpen(U8 *filename,U8 *flags,I64 cnt=0,CTask *mem_task=NULL)
     if (dirc=DirContextNew(full_name)) {
       StrCpy(f->de.name,dirc->mask);
       if (cnt>0) {//We pre-alloc the whole thing.
-//Modified for tos
+//Modified for TINE
         if(Let2BlkDevType(*full_name)!=BDT_VIRT) {
 	  f->de.clus=ClusAlloc(f->dv,0,
 	        (cnt+f->dv->spc-1)/f->dv->spc,contiguous);
@@ -67,7 +67,7 @@ CFile *FOpen(U8 *filename,U8 *flags,I64 cnt=0,CTask *mem_task=NULL)
         f->flags&=~FF_NEW_FILE;
 
       }
-//Modified for tos
+//Modified for TINE
       if(Let2BlkDevType(*full_name)==BDT_VIRT) {
         VFsSetPwd(Fs->cur_dir);
         f->_file_virt=VFsFOpenW(&f->de.name);
@@ -78,7 +78,7 @@ CFile *FOpen(U8 *filename,U8 *flags,I64 cnt=0,CTask *mem_task=NULL)
     }
   } else {
     if (FileFind(full_name,&f->de,FUF_JUST_FILES)) {
-//Modified for tos
+//Modified for TINE
       if(Let2BlkDevType(*full_name)==BDT_VIRT) {
         dirc=DirContextNew(full_name);
         VFsSetPwd(Fs->cur_dir);

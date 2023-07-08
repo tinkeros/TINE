@@ -520,103 +520,69 @@ static uint64_t STK_GetVolume(void*) {
   return un.i;
 }
 
-static void STK_ExitTOS(int64_t* stk) {
-  ShutdownTOS(stk[0]);
+static void STK_ExitTINE(int64_t* stk) {
+  ShutdownTINE(stk[0]);
 }
 
 // arity must be <= 0xffFF/sizeof U64
-static void RegisterFunctionPtr(std::string& blob, char const* name, void* fp,
-                                uint16_t arity) {
+static void RegisterFunctionPtr(std::string& blob, char const* name,
+                                uintptr_t fp, uint16_t arity) {
   // Function entry point offset from the code blob
   uintptr_t off = blob.size();
 #ifdef _WIN32
-  // clang-format off
   // https://defuse.ca/online-x86-assembler.htm
-  /*
-  PUSH RBP
-  MOV RBP,RSP
-  AND RSP,-0x10
-  PUSH R10
-  PUSH R11
-  SUB RSP,0x20 //Mandatory 4 stack arguments must be "pushed"
-  LEA RCX,[RBP+8+8]
-  PUSH R9
-  PUSH R8
-  PUSH RDX
-  PUSH RCX
-   */
-  // clang-format on
-  char const* atxt = "\x55\x48\x89\xE5"
-                     "\x48\x83\xE4\xF0"
-                     "\x41\x52\x41\x53"
-                     "\x48\x83\xEC\x20"
-                     "\x48\x8D\x4D\x10"
-                     "\x41\x51\x41\x50"
-                     "\x52\x51";
-  blob.append(atxt, 26);
-#else
-  // clang-format off
-  /*
-  PUSH RBP
-  MOV RBP,RSP //RBP will have point to the old RBP,as we just PUSHed it(We moved the pointer to the old RBP to the current RBP)
-              //-0x10 =0xffffffffff0,16 is 0b1111 and AND ing will move the stack
-              //down to an alignment of 16(it chops off the bits)
-  AND RSP,-0x10 //This will align the stack to 16
-                //SysV OS will save R12-15 which are needed,but TempleOS needs to save
-                //RSI,RDI,R10-15
-  PUSH RSI
-  PUSH RDI
-  PUSH R10
-  PUSH R11
-//Load Effective Address
-// RBP+16 This is where TempleOS puts the argument
-// RBP+8 the return address(When you CALL a function,it pushes the return address(RIP) to the stack)
-// RBP+0 The old RBP
-  LEA RDI,[RBP+8+8] //RDI=&RBP+8+8 Because at RBP+16 we have the first stack argument
- */
-  // clang-format on
+  // https://archive.md/4HDA0#selection-2085.880-2085.1196
+  // pushing r9, r8, rdx, and rcx
+  // is for register "home"s and mandatory
+  // stack argument reservation
+  char const* atxt = "\x48\x89\xE5\x48"
+                     "\x83\xE4\xF0\x56"
+                     "\x57\x41\x52\x41"
+                     "\x53\x41\x54\x41"
+                     "\x55\x41\x56\x41"
+                     "\x57\x48\x83\xEC"
+                     "\x20\x48\x8D\x4D"
+                     "\x10\x41\x51\x41"
+                     "\x50\x52\x51";
+  blob.append(atxt, 35);
+#else // sysv
+  // boring register pushing and stack aligning garbage, disassemble it and
+  // read the SysV ABI and Doc/GuideLines.DD if you're interested
   char const* atxt = "\x55\x48\x89\xE5"
                      "\x48\x83\xE4\xF0"
                      "\x56\x57\x41\x52"
-                     "\x41\x53\x48\x8D"
+                     "\x41\x53\x41\x54"
+                     "\x41\x55\x41\x56"
+                     "\x41\x57\x48\x8D"
                      "\x7D\x10";
-  blob.append(atxt, 18);
+  blob.append(atxt, 26);
 #endif
-  // MOV RAX,fptr
-  atxt = "\x48\xb8";
-  blob.append(atxt, 2);
-  // clang-format off
-  for (uint8_t i = 0; i < 8; ++i)
-    blob.push_back(0xff & (reinterpret_cast<uintptr_t>(fp) >> i*8));
+  // MOVABS RAX, fp
+  blob.append("\x48\xb8", 2);
+  union {
+    uintptr_t p;
+    char data[sizeof(uint64_t)];
+  } fu = {fp};
+  blob.append(fu.data, sizeof(uint64_t));
+  // CALL RAX
+  blob.append("\xFF\xD0", 2);
 #ifdef _WIN32
-  /*
-  CALL RAX
-  ADD RSP,0x40
-  POP R11
-  POP R10
-  LEAVE
-  */
-  atxt = "\xFF\xD0\x48\x83"
-	 "\xC4\x40\x41\x5B"
-	 "\x41\x5A\xC9";
-  blob.append(atxt, 11);	
+  atxt = "\x48\x83\xC4\x40"
+         "\x41\x5F\x41\x5E"
+         "\x41\x5D\x41\x5C"
+         "\x41\x5B\x41\x5A"
+         "\x5F\x5E";
+  blob.append(atxt, 18);
 #else
-  /*
-  CALL RAX
-  POP R11
-  POP R10
-  POP RDI
-  POP RSI
-  LEAVE //This instruction will move RSP to the old base ptr and POP RBP
-        //It is the same as this
-        //   MOV RSP,RBP //Our old RBP address on the stack
-        //   POP RBP
-  */
-  atxt = "\xFF\xD0\x41\x5B"
-	 "\x41\x5A\x5F\x5E"
-	 "\xC9";
-  blob.append(atxt, 9);
+  atxt = "\x41\x5F\x41\x5E"
+         "\x41\x5D\x41\x5C"
+         "\x41\x5B\x41\x5A"
+         "\x5F\x5E";
+  blob.append(atxt, 14);
 #endif
+  // LEAVE
+  blob.push_back('\xC9');
+  // clang-format off
   // RET1 will pop the old return address from the stack,AND it will remove the
   // arguments' off the stack
   // RET1 is like this
@@ -636,11 +602,15 @@ static void RegisterFunctionPtr(std::string& blob, char const* name, void* fp,
   //   argc 3(num of varargs) // RBP + 24 <-value- argc(internal var in function)
   //   i  2    // RBP + 16(this is where the stack starts)
   // clang-format on
+  // RET
   blob.push_back('\xc2');
   arity *= 8;
-  // Arity is 16bits in the instrction(64 kilobytes of arguments and below ONLY)
-  blob.push_back(arity & 0xFF);
-  blob.push_back((arity >> 8) & 0xFF);
+  // ret imm16
+  union {
+    uint16_t ar;
+    char data[2];
+  } au = {arity};
+  blob.append(au.data, 2);
   CHash sym;
   sym.type = HTT_FUN;
   sym.val = reinterpret_cast<void*>(off);
@@ -649,11 +619,12 @@ static void RegisterFunctionPtr(std::string& blob, char const* name, void* fp,
 
 void RegisterFuncPtrs() {
   std::string ffi_blob;
-#define R_(holy, secular, arity) \
-  RegisterFunctionPtr(ffi_blob, holy, reinterpret_cast<void*>(secular), arity)
-#define S_(name, arity)                                                     \
-  RegisterFunctionPtr(ffi_blob, #name, reinterpret_cast<void*>(STK_##name), \
+#define R_(holy, secular, arity)                                            \
+  RegisterFunctionPtr(ffi_blob, holy, reinterpret_cast<uintptr_t>(secular), \
                       arity)
+#define S_(name, arity)                \
+  RegisterFunctionPtr(ffi_blob, #name, \
+                      reinterpret_cast<uintptr_t>(STK_##name), arity)
   R_("__CmdLineBootText", CmdLineBootText, 0);
   R_("__IsCmdLine", IsCmdLine, 0);
   R_("mp_cnt", mp_cnt, 0);
@@ -666,7 +637,7 @@ void RegisterFuncPtrs() {
   S_(InterruptCore, 1);
   S_(NewVirtualChunk, 2);
   S_(FreeVirtualChunk, 2);
-  S_(ExitTOS, 1);
+  S_(ExitTINE, 1);
   S_(__GetStr, 1);
   S_(__FExists, 1);
   S_(FUnixTime, 1);

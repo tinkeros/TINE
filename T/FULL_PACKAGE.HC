@@ -103,7 +103,7 @@ try {
 if (__IsCmdLine) {
   CTask *u=User;
   DeathWait(&u);
-  ExitTOS;
+  ExitTINE;
 } else {
   sys_winmgr_task=Spawn(&WinMgrTask);
   Refresh; //Wait for window manager.

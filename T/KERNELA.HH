@@ -1,11 +1,8 @@
 // Main TempleOS header
 //
-// These are modified for tos; they dont take CTask * as an argument
+// These are modified for TINE; they dont take CTask * as an argument
 //
-#define __tos__ TRUE
-    // "tos"(lowercase)
-    // does not refer to TempleOS(TOS), it's the name
-    // of this emulator/runtime/loader/whatever
+#define __TINE__ TRUE
 extern class CDrawWin;
 extern class CTask;
 extern class CFile;
@@ -288,7 +285,7 @@ import U0i SetFs(CTask*);
 import CTask* GetFs();
 import CCPU *GetGs();
 import U0 SetGs(CCPU *);
-import U0i ExitTOS(I32i ec=0);
+import U0i ExitTINE(I32i ec=0);
 import I64i __IsCmdLine();
 import U8i __FExists(U8i *);
 import CCPU *Gs();
@@ -366,7 +363,7 @@ extern U0i SetFs(CTask*);
 extern CTask* GetFs();
 extern CCPU *GetGs();
 extern U8i *__CmdLineBootText();
-extern U0i ExitTOS(I32i ec=0);
+extern U0i ExitTINE(I32i ec=0);
 extern I64i __IsCmdLine();
 extern U8i __FExists(U8i *);
 extern CCPU *Gs();
@@ -3033,7 +3030,7 @@ public class CFile //See \dLK,"::/Demo/Dsk/DataBase.HC"\d.
   CDrv	*dv;
   I64	fblk_num,clus,file_clus_num,max_blk;
   U8	*clus_buf;
-  U8	*_file_virt; //points to FILE * from C
+  U8	*_file_virt; //points to FILE * from C, changed for TINE
 };
 
 #define _CFG_HEAP_DBG FALSE
@@ -3354,7 +3351,7 @@ class CBpt
   CBpt	*next;
   U8	*addr,
 	val,
-	is_tmp, //Changed in tos
+	is_tmp, //Changed in TINE
 	pad[6];
 };
 
@@ -3482,7 +3479,7 @@ public class CTaskSettings
 #define TASKf_KILL_AFTER_DBG	13
 
 #define TASKf_NONTIMER_RAND	14
-//Added in tos 
+//Added in TINE 
 #define TASKf_JUST_STEPPED 15
 
 //CTask.display_flags

@@ -75,17 +75,17 @@ CDrawWindow* NewDrawWindow() {
   win.screen_mutex = SDL_CreateMutex();
   win.screen_done_cond = SDL_CreateCond();
   win.window =
-      SDL_CreateWindow("TempleOS", SDL_WINDOWPOS_CENTERED,
+      SDL_CreateWindow("TINE Is Not an Emulator", SDL_WINDOWPOS_CENTERED,
                        SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_RESIZABLE);
   SDL_Surface* icon = SDL_CreateRGBSurfaceWithFormat(
-      0, tos_logo.width, tos_logo.height,
-      8 /*bits in a byte*/ * tos_logo.bytes_per_pixel, SDL_PIXELFORMAT_BGR888);
+      0, TOSLogo.width, TOSLogo.height,
+      8 /*bits in a byte*/ * TOSLogo.bytes_per_pixel, SDL_PIXELFORMAT_BGR888);
   SDL_LockSurface(icon);
-  // icon->pixels = const_cast<void*>((void const*)tos_logo.pixel_data);
+  // icon->pixels = const_cast<void*>((void const*)TOSLogo.pixel_data);
   // whatever, just copy it over lmao
   auto constexpr bytes =
-      tos_logo.width * tos_logo.height * tos_logo.bytes_per_pixel;
-  std::copy(tos_logo.pixel_data, tos_logo.pixel_data + bytes,
+      TOSLogo.width * TOSLogo.height * TOSLogo.bytes_per_pixel;
+  std::copy(TOSLogo.pixel_data, TOSLogo.pixel_data + bytes,
             static_cast<uint8_t*>(icon->pixels));
   SDL_UnlockSurface(icon);
   SDL_SetWindowIcon(win.window, icon);
@@ -311,7 +311,7 @@ static char constexpr keys[] = {
     '+', 0,      0,    0,   0,    0,   0,   0,   0,   0,   0,   0};
 
 static inline constexpr uint64_t K2SC(char ch) {
-  for (size_t i = 0; i != sizeof(keys) / sizeof(*keys); i++) {
+  for (size_t i = 0; i < sizeof(keys) / sizeof(*keys); ++i) {
     if (keys[i] == ch)
       return i;
   }
@@ -622,23 +622,22 @@ void InputLoop(bool* off) {
 // please policeman am i under arrest? read me my rights please!
 // I WANT MY PHONE CALL!!!
 extern "C" union bgr_48 {
+  uint64_t i;
   struct __attribute__((packed)) {
     uint16_t b, g, r, pad;
-  } c;
-  uint64_t i;
+  };
 };
 
 void GrPaletteColorSet(uint64_t i, uint64_t bgr48) {
   if (!win_init)
     return;
-  bgr_48 u;
-  u.i = bgr48;
+  bgr_48 u = {bgr48};
   // clang-format off
   // 0xffff is 100% so 0x7fff/0xffff would be about .50
   // this gets multiplied by 0xff to get 0x7f
-  Uint8 b = u.c.b / (double)0xffff * 0xff,
-        g = u.c.g / (double)0xffff * 0xff,
-        r = u.c.r / (double)0xffff * 0xff;
+  Uint8 b = u.b / (double)0xffff * 0xff,
+        g = u.g / (double)0xffff * 0xff,
+        r = u.r / (double)0xffff * 0xff;
   // clang-format on
   // i seriously need designated inits in c++
   SDL_Color sdl_c;

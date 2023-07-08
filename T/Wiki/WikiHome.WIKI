@@ -1,6 +1,6 @@
 {no-toc}
-==Welcome to documentation for tos, a TempleOS emulator
-This website is about "tos"(tos refers to this emulator, not an abbreviation of TempleOS), which this wiki server is running on and is an implementation of a TempleOS runtime under Linux,Windows and FreeBSD. Code here should work also under TempleOS. Here are some links to get started,but this website is still under construction. If you want to Contibute,you'll have to ask *enzymical@duck.com* as this server is under development. 
+==Welcome to documentation for TINE
+This website is about TINE(Is Not an Emulator), which this wiki server is running on and is an implementation of a TempleOS kernel loader that works on Linux,Windows and FreeBSD. Code here should work also under TempleOS. Here are some links to get started,but this website is still under construction. If you want to Contibute,you'll have to ask *enzymical@duck.com* as this server is under development. 
 
 * [WikiHome Home]
 * Topics
