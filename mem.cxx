@@ -22,11 +22,15 @@ using std::ios;
 #include <sys/mman.h>
 #include <unistd.h>
 #else
+// clang-format off
+#include <windows.h>
+#include <winnt.h>
 #include <memoryapi.h>
 #include <sysinfoapi.h>
-#include <winnt.h>
+// clang-format on
 #endif
 
+#ifdef __linux__
 static inline uint64_t Hex2U64(char const* ptr, char const** res) {
   uint64_t ret = 0;
   char c;
@@ -38,6 +42,7 @@ static inline uint64_t Hex2U64(char const* ptr, char const** res) {
   *res = ptr;
   return ret;
 }
+#endif
 
 void* NewVirtualChunk(size_t sz, bool low32) {
 #ifndef _WIN32
