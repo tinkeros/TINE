@@ -533,18 +533,16 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   // https://defuse.ca/online-x86-assembler.htm
   // https://archive.md/4HDA0#selection-2085.880-2085.1196
   // pushing r9, r8, rdx, and rcx
-  // is for register "home"s and mandatory
-  // stack argument reservation
-  char const* atxt = "\x48\x89\xE5\x48"
-                     "\x83\xE4\xF0\x56"
-                     "\x57\x41\x52\x41"
-                     "\x53\x41\x54\x41"
-                     "\x55\x41\x56\x41"
-                     "\x57\x48\x83\xEC"
-                     "\x20\x48\x8D\x4D"
-                     "\x10\x41\x51\x41"
-                     "\x50\x52\x51";
-  blob.append(atxt, 35);
+  // is for register "home"s
+  char const* atxt = "\x55\x48\x89\xE5"
+                     "\x48\x83\xE4\xF0"
+                     "\x56\x57\x41\x52"
+                     "\x41\x53\x41\x54"
+                     "\x41\x55\x41\x56"
+                     "\x41\x57\x48\x8D"
+                     "\x4D\x10\x41\x51"
+                     "\x41\x50\x52\x51";
+  blob.append(atxt, 36);
 #else // sysv
   // boring register pushing and stack aligning garbage, disassemble it and
   // read the SysV ABI and Doc/GuideLines.DD if you're interested
@@ -567,7 +565,7 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   // CALL RAX
   blob.append("\xFF\xD0", 2);
 #ifdef _WIN32
-  atxt = "\x48\x83\xC4\x40"
+  atxt = "\x48\x83\xC4\x20"
          "\x41\x5F\x41\x5E"
          "\x41\x5D\x41\x5C"
          "\x41\x5B\x41\x5A"
