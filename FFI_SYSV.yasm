@@ -35,8 +35,8 @@ PUSH RDI
 PUSH RSI
 PUSH R10
 PUSH R11
-PUSH R12 ; i save everything just
-PUSH R13 ; to be safe
+PUSH R12
+PUSH R13
 PUSH R14
 PUSH R15
 PUSH RSI;2nd arg
@@ -90,8 +90,8 @@ PUSH RDI
 PUSH RSI
 PUSH R10
 PUSH R11
-PUSH R12 ; i save everything just
-PUSH R13 ; to be safe
+PUSH R12
+PUSH R13
 PUSH R14
 PUSH R15
 PUSH RCX
@@ -119,8 +119,8 @@ PUSH RDI
 PUSH RSI
 PUSH R10
 PUSH R11
-PUSH R12 ; i save everything just
-PUSH R13 ; to be safe
+PUSH R12
+PUSH R13
 PUSH R14
 PUSH R15
 PUSH R8
@@ -149,8 +149,8 @@ PUSH RDI
 PUSH RSI
 PUSH R10
 PUSH R11
-PUSH R12 ; i save everything just
-PUSH R13 ; to be safe
+PUSH R12
+PUSH R13
 PUSH R14
 PUSH R15
 PUSH R9
@@ -180,8 +180,8 @@ PUSH RDI
 PUSH RSI
 PUSH R10
 PUSH R11
-PUSH R12 ; i save everything just
-PUSH R13 ; to be safe
+PUSH R12
+PUSH R13
 PUSH R14
 PUSH R15
 PUSH QWORD [RBP + 16]
@@ -212,8 +212,8 @@ PUSH RDI
 PUSH RSI
 PUSH R10
 PUSH R11
-PUSH R12 ; i save everything just
-PUSH R13 ; to be safe
+PUSH R12
+PUSH R13
 PUSH R14
 PUSH R15
 PUSH QWORD [RBP + 0x18]
@@ -245,8 +245,8 @@ PUSH RDI
 PUSH RSI
 PUSH R10
 PUSH R11
-PUSH R12 ; i save everything just
-PUSH R13 ; to be safe
+PUSH R12
+PUSH R13
 PUSH R14
 PUSH R15
 PUSH QWORD [RBP + 0x20]
@@ -278,8 +278,8 @@ PUSH RDI
 PUSH RSI
 PUSH R10
 PUSH R11
-PUSH R12 ; i save everything just
-PUSH R13 ; to be safe
+PUSH R12
+PUSH R13
 PUSH R14
 PUSH R15
 PUSH 0 ;fake return address so the stack trace deliberately ends here(doesn't matter since it'll be reset to normal after the function returns and rbp is popped)
