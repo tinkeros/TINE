@@ -1,4 +1,4 @@
-# ![](./logo.png) TINE Is Not an Emulator(of TempleOS)
+# ![](./logo.png) TINE Is Not a (TempleOS) Emulator
  \* *logo courtesy of CrunkLord420.*
 ## skills required to use this
  - knowledge of TempleOS
