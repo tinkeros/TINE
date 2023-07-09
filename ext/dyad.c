@@ -13,11 +13,25 @@
   #include <winsock2.h>
   #include <ws2tcpip.h>
   #include <windows.h>
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <stdarg.h>
+  #include <signal.h>
+  #include <errno.h>
+  #include <limits.h>
 #else
   #define _POSIX_C_SOURCE 200809L
   #ifdef __APPLE__
     #define _DARWIN_UNLIMITED_SELECT
   #endif
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <stdarg.h>
+  #include <signal.h>
+  #include <errno.h>
+  #include <limits.h>
   #include <time.h>
   #include <unistd.h>
   #include <netdb.h>
@@ -29,15 +43,6 @@
   #include <netinet/tcp.h>
   #include <arpa/inet.h>
 #endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <signal.h>
-#include <errno.h>
-#include <limits.h>
-
 #include "dyad.h"
 
 #define DYAD_VERSION "0.2.1"
