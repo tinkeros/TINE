@@ -5,6 +5,8 @@ class CUniqueToken {
   CConnection *con;
 };
 class CConnection {
+	U8 *buffer;
+	I64 buffer_len;
 	//These occupy .u8[0]
 	#define CON_S_METHOD 1
 	#define CON_S_FIELDS 2
@@ -370,17 +372,28 @@ U0 ParseRequest(CConnection *con) {
 		break;
 	}
 }
-U0 SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
-  static I64 spawn_at=0;
-  CConnection *first,*con,*con2;
-  CHashGeneric *hash;
-  U8 *buf,*buf2;
-  U8 *fb,*http2,*t1,*t2,*odata;
+
+extern Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut);
+U0 LookForLine(U8 *ptr,I64 len) {
+  I64 t=0;
+  for(t=0;t<=len-2;t++,ptr++) {
+    if(ptr[0]=='\r'&&ptr[1]=='\n')
+      return ptr;
+  }
+  return NULL;
+}
+U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
+  CConnection *con;
+  U8 *tmp, *ptr;
+  I64 len2;
+  Bool en=FALSE;
   if(ut->con) {
     con=ut->con;
     goto found;
   }
   con=CAlloc(sizeof(CConnection));
+  con->buffer=MAlloc(0x1000);
+  con->buffer_len=0;
   con->unique_token=ut;
   con->server=ut->srv;
   con->stream=s;
@@ -390,9 +403,45 @@ U0 SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   con->post_data=HashTableNew(0x10,con->hc);
   ut->con=con;
 found:
+  if(MSize(con->buffer)<=1+con->buffer_len+len) {
+    tmp=MAlloc(1+2*con->buffer_len+len);
+    MemCpy(tmp,con->buffer,MSize(con->buffer));
+    Free(con->buffer);
+    con->buffer=tmp;
+  }
+  MemCpy(con->buffer+con->buffer_len,data,len);
+  con->buffer_len+=len;
+  con->buffer[con->buffer_len]=0;
+loop:
+  if(ptr=LookForLine(con->buffer,con->buffer_len)) {
+     len2=ptr-con->buffer+2;
+     tmp=MAlloc(len2+1);
+     MemCpy(tmp,con->buffer,len2);
+     tmp[len2]=0;
+     en=SReadLine(s,tmp,len2,ut);
+     Free(tmp);
+     MemCpy(con->buffer,ptr+2,con->buffer_len-len2);
+     con->buffer_len-=len2;
+     con->buffer[con->buffer_len]=0;
+     if(!en)
+       goto loop;
+  }
+//Just flush rest of data
+  if(con->buffer_len&&!en) {
+    en=SReadLine(s,con->buffer,con->buffer_len,ut);
+    con->buffer[con->buffer_len]=0;
+    con->buffer_len=0;
+  }
+}
+Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
+  static I64 spawn_at=0;
+  CConnection *first,*con,*con2;
+  CHashGeneric *hash;
+  U8 *buf,*buf2;
+  U8 *fb,*http2,*t1,*t2,*odata;
+  con=ut->con;
   buf=MAlloc(len+1,con->hc),buf2=MAlloc(len+1,con->hc);
   if(len==2) con->state.u8[0]=CON_S_BLANK_LINE;
-//Pray that header is smaller than 128kb.
   if(con->state.u8[0]==CON_S_METHOD&&!StrNICmp(data,"GET",3)) {
     con->method.u8[0]=HTTP_GET;
     t1=MStrPrint("http://potato.com/%s",Trim(SkipWhitespace(data+3)));
@@ -546,14 +595,14 @@ loop:
 	  if(!StrNICmp(data,"name",StrLen("name"))) {
 	    t2=con->field;
 	    if(!StrFirstOcc(data,"\"")) goto malformed;
-	    if(StrOcc(data,'\"')!=2) goto malformed;
+	    if(StrOcc(data,'\"')<2) goto malformed;
 	    data=StrScan(StrFirstOcc(data,"\""),"\"%s\"",&t2);
 	  } else if(!StrNICmp(data,"filename",StrLen("filename"))) {
 	    if(con->name) Free(con->name);
 	    con->name=MAlloc(len+1,con->hc);
 	    t2=con->name;
 	    if(!StrFirstOcc(data,"\"")) goto malformed;
-	    if(StrOcc(data,'\"')!=2) goto malformed;
+	    if(StrOcc(data,'\"')<2) goto malformed;
 	    data=StrScan(StrFirstOcc(data,"\""),"\"%s\"",&t2);
 	  }
 	  if(data) data=StrFirstOcc(data,";");
@@ -562,7 +611,7 @@ loop:
 	    goto loop;
 	  }
 	  Free(buf),Free(buf2);
-	  return;
+	  return FALSE;
         }
       } 
     } else if(!Bt(&con->state,CONf_DATA)&&len==2) { //+2 for \x0d\n
@@ -586,17 +635,18 @@ en:
   if(len==2&&!Bt(&con->state,CONf_AWAIT_BOUNDARY)&&!(Bt(&con->state,CONf_URL_ENCODED)&&con->content_len))
     goto process;
   Free(buf),Free(buf2);
-  return;
+  return FALSE;
 malformed:
   Free(buf),Free(buf2);
   DyadEnd(s);
-  return;
+  returnTRUE;
 process:
   Free(buf),Free(buf2);
 //If we have content,make sure we recieved all the data
   if((con->content_len&&con->content_len==con->field_ptr)||!con->content_len){
     Spawn(&ParseRequest,con,"Request");
   }
+  return FALSE;
 }
 U0 CloseCallback(CDyadStream *s,CUniqueToken *ut) {
 //Killing the thread will fre the connection too
@@ -625,7 +675,7 @@ U0 ListenCallback(CDyadStream *s,CServer *srv) {
 	CUniqueToken *ut=CAlloc(sizeof(CUniqueToken));
 	ut->srv=srv;
 	DyadSetTimeout(s,5);
-	DyadSetReadCallback(s,&SReadLine,ut);
+	DyadSetDataCallback(s,&SReadData,ut);
 	DyadSetOnCloseCallback(s,&CloseCallback,ut);
 	DyadSetOnTimeoutCallback(s,&CloseCallback,ut);
 }
