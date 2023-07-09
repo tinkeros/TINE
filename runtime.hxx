@@ -8,4 +8,4 @@ void* HolyCAlloc(size_t sz);
 void HolyFree(void* p);
 char* HolyStrDup(char const* s);
 void RegisterFuncPtrs();
-uint64_t mp_cnt(int64_t*);
+uint64_t mp_cnt(void*);

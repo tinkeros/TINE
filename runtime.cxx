@@ -143,6 +143,7 @@ static void DyadListenCB(dyad_Event* e) {
 static void DyadCloseCB(dyad_Event* e) {
   FFI_CALL_TOS_2(e->udata, (uintptr_t)e->stream, (uintptr_t)e->udata2);
 }
+
 static void STK_DyadSetOnCloseCallback(int64_t* stk) {
   dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_CLOSE, &DyadCloseCB,
                    (void*)stk[1], (void*)stk[2]);
@@ -215,7 +216,7 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
                    : (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY);
     return !!(mbi.Protect & mask);
   }
-  return 0;
+  return false;
   /*#else
     return !IsBadReadPtr((void*)stk[0], 8);
   #endif*/
@@ -250,9 +251,9 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
       ++ptr; // skip '-'
       uintptr_t upper = Hex2U64(ptr, &ptr);
       if (lower <= stk[0] && stk[0] <= upper)
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
   #endif*/
 
 #endif
@@ -278,22 +279,21 @@ static void STK_TOSPrint(uint64_t* stk) {
   TOSPrint((char const*)stk[0], stk[1], (int64_t*)stk + 2);
 }
 
-static int64_t STK_DrawWindowUpdate(uintptr_t* stk) {
+static void STK_DrawWindowUpdate(uintptr_t* stk) {
   DrawWindowUpdate((uint8_t*)stk[0], stk[1]);
-  return 0;
 }
 
-static int64_t STK___GetTicksHP() {
+static uint64_t STK___GetTicksHP(void*) {
 #ifndef _WIN32
   struct timespec ts;
-  int64_t theTick = 0U;
+  uint64_t theTick = 0U;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   theTick = ts.tv_nsec / 1000;
   theTick += ts.tv_sec * 1000000U;
   return theTick;
 #else
-  static int64_t freq = 0;
-  int64_t cur;
+  static uint64_t freq = 0;
+  uint64_t cur;
   if (!freq) {
     QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
     freq /= 1000000U;
@@ -303,54 +303,44 @@ static int64_t STK___GetTicksHP() {
 #endif
 }
 
-static uint64_t STK___GetTicks() {
+static uint64_t STK___GetTicks(void*) {
   return GetTicks();
 }
 
-static int64_t STK_SetKBCallback(int64_t* stk) {
+static void STK_SetKBCallback(uintptr_t* stk) {
   SetKBCallback((void*)stk[0], (void*)stk[1]);
-  return 0;
 }
 
-static int64_t STK_SetMSCallback(int64_t* stk) {
+static void STK_SetMSCallback(uintptr_t* stk) {
   SetMSCallback((void*)stk[0]);
-  return 0;
 }
 
-static int64_t STK___AwakeCore(int64_t* stk) {
+static void STK___AwakeCore(size_t* stk) {
   AwakeFromSleeping(stk[0]);
-  return 0;
 }
 
-static int64_t STK___SleepHP(int64_t* stk) {
+static void STK___SleepHP(uint64_t* stk) {
   SleepHP(stk[0]);
-  return 0;
 }
 
-static int64_t STK___Sleep(uint64_t* stk) {
+static void STK___Sleep(uint64_t* stk) {
   SleepHP(stk[0] * 1000);
-  return 0;
 }
 
-static int64_t STK_SetFs(int64_t* stk) {
+static void STK_SetFs(uintptr_t* stk) {
   SetFs((void*)stk[0]);
-  return 0;
 }
 
-static int64_t STK_SetGs(int64_t* stk) {
+static void STK_SetGs(uintptr_t* stk) {
   SetGs((void*)stk[0]);
-  return 0;
 }
 
-static int64_t STK_SndFreq(uint64_t* stk) {
+static void STK_SndFreq(uint64_t* stk) {
   SndFreq(stk[0]);
-  return 0;
 }
 
-static int64_t STK_SetClipboardText(int64_t* stk) {
-  // SDL_SetClipboardText(stk[0]);
+static void STK_SetClipboardText(int64_t* stk) {
   SetClipboard((char*)stk[0]);
-  return 0;
 }
 
 static char* STK___GetStr(uintptr_t* stk) {
@@ -372,12 +362,11 @@ static int64_t STK_FUnixTime(uintptr_t* stk) {
   return VFsUnixTime((char*)stk[0]);
 }
 
-static uint64_t STK_VFsFTrunc(uintptr_t* stk) {
+static void STK_VFsFTrunc(uintptr_t* stk) {
   fs::resize_file(VFsFileNameAbs((char*)stk[0]), stk[1]);
-  return 0;
 }
 
-static int64_t STK___FExists(uintptr_t* stk) {
+static uint64_t STK___FExists(uintptr_t* stk) {
   return VFsFileExists((char*)stk[0]);
 }
 
@@ -403,11 +392,11 @@ static uint64_t STK_UnixNow(void*) {
 
 #endif
 
-uint64_t mp_cnt(int64_t*) {
+size_t mp_cnt(void*) {
   return thread::hardware_concurrency();
 }
 
-static void STK___SpawnCore(uint64_t* stk) {
+static void STK___SpawnCore(uintptr_t* stk) {
   CreateCore(stk[0], (void*)stk[1]);
 }
 
@@ -415,29 +404,27 @@ static void* STK_NewVirtualChunk(size_t* stk) {
   return NewVirtualChunk(stk[0], stk[1]);
 }
 
-static uint64_t STK_FreeVirtualChunk(int64_t* stk) {
+static void STK_FreeVirtualChunk(uintptr_t* stk) {
   FreeVirtualChunk((void*)stk[0], stk[1]);
-  return 0;
 }
 
-static uint64_t STK_VFsSetPwd(int64_t* stk) {
+static void STK_VFsSetPwd(uintptr_t* stk) {
   VFsSetPwd((char*)stk[0]);
-  return 1;
 }
 
 static char* STK__BootDrv(void*) {
   return BootDrv();
 }
 
-static uint64_t STK_VFsExists(int64_t* stk) {
+static uint64_t STK_VFsExists(uintptr_t* stk) {
   return VFsFileExists((char*)stk[0]);
 }
 
-static uint64_t STK_VFsIsDir(int64_t* stk) {
+static uint64_t STK_VFsIsDir(uintptr_t* stk) {
   return VFsIsDir((char*)stk[0]);
 }
 
-static int64_t STK_VFsFSize(int64_t* stk) {
+static int64_t STK_VFsFSize(uintptr_t* stk) {
   return VFsFSize((char*)stk[0]);
 }
 
@@ -453,7 +440,7 @@ static uint64_t STK_VFsDirMk(uintptr_t* stk) {
   return VFsDirMk((char*)stk[0], VFS_CDF_MAKE);
 }
 
-static uintptr_t STK_VFsDir(void*) {
+static uint64_t STK_VFsDir(void*) {
   return (uintptr_t)VFsDir();
 }
 
@@ -469,40 +456,36 @@ static uint64_t STK_VFsFOpenR(uintptr_t* stk) {
   return (uintptr_t)VFsFOpen((char*)stk[0], "rb");
 }
 
-static uint64_t STK_VFsFClose(uintptr_t* stk) {
+static void STK_VFsFClose(uintptr_t* stk) {
   fclose((FILE*)stk[0]);
-  return 0;
 }
 
-static int64_t STK_VFsFBlkRead(uintptr_t* stk) {
+static uint64_t STK_VFsFBlkRead(uintptr_t* stk) {
   fflush((FILE*)stk[3]);
   return stk[2] == fread((void*)stk[0], stk[1], stk[2], (FILE*)stk[3]);
 }
 
-static int64_t STK_VFsFBlkWrite(uintptr_t* stk) {
+static uint64_t STK_VFsFBlkWrite(uintptr_t* stk) {
   bool r = stk[2] == fwrite((void*)stk[0], stk[1], stk[2], (FILE*)stk[3]);
   fflush((FILE*)stk[3]);
   return r;
 }
 
-static int64_t STK_VFsFSeek(int64_t* stk) {
+static void STK_VFsFSeek(uintptr_t* stk) {
   fseek((FILE*)stk[1], stk[0], SEEK_SET);
-  return 0;
 }
 
-static int64_t STK_VFsSetDrv(int64_t* stk) {
+static void STK_VFsSetDrv(char* stk) {
   VFsSetDrv(stk[0]);
-  return 0;
 }
 
-static int64_t STK_SetVolume(uint64_t* stk) {
+static void STK_SetVolume(uint64_t* stk) {
   static_assert(sizeof(double) == sizeof(uint64_t));
   union {
     uint64_t i;
     double flt;
   } un = {stk[0]};
   SetVolume(un.flt);
-  return 0;
 }
 
 static uint64_t STK_GetVolume(void*) {

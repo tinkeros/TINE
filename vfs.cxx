@@ -67,15 +67,15 @@ static int FIsDir(std::string const& path) {
   return fs::is_directory(path);
 }
 
-uint64_t VFsDirMk(char const* to, int const flags) {
+bool VFsDirMk(char const* to, int const flags) {
   std::string p = VFsFileNameAbs(to);
   if (FExists(p) && FIsDir(p)) {
-    return 1;
+    return true;
   } else if (flags & VFS_CDF_MAKE) {
     fs::create_directory(p);
-    return 1;
+    return true;
   }
-  return 0;
+  return false;
 }
 
 uint64_t VFsDel(char const* p) {
@@ -204,11 +204,11 @@ char** VFsDir() {
   return ret;
 }
 
-uint64_t VFsIsDir(char const* path) {
+bool VFsIsDir(char const* path) {
   return FIsDir(VFsFileNameAbs(path));
 }
 
-uint64_t VFsFileExists(char const* path) {
+bool VFsFileExists(char const* path) {
   return FExists(VFsFileNameAbs(path));
 }
 

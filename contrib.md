@@ -6,6 +6,8 @@ uint64_t STK_FunctionName(uint64_t* stk) {
 }
 S_(FunctionName, function arg cnt);
 ```
+`STK_FunctionName` ***MUST*** return void OR a value that is 8 bytes big
+
 T/KERNELA.HH
 ```C
 ...after #ifdef IMPORT_BUILTINS
