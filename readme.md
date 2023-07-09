@@ -1,9 +1,13 @@
 # ![](./logo.png) TINE Is Not a (TempleOS) Emulator
  \* *logo courtesy of CrunkLord420.*
-## skills required to use this
+## required skills
  - knowledge of TempleOS
  - knowledge of C
  - (optional but recommended)knowledge of GDB/LLDB(for debugging the loader)
+
+## system requirements
+ - AMD64 architecture
+ - Operating System: Linux, FreeBSD or Windows
 
 # building
 ## windows users
