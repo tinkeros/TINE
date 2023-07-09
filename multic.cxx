@@ -239,7 +239,7 @@ void AwakeFromSleeping(size_t core) {
 #ifdef _WIN32
 
 static UINT tick_inc;
-static std::atomic<uint64_t> ticks = 0;
+static uint64_t ticks = 0;
 
 // To just get ticks we can use QueryPerformanceFrequency
 // and QueryPerformanceCounter but we want to set an winmm
@@ -255,19 +255,19 @@ static uint64_t GetTicksHP() {
     tick_inc = tc.wPeriodMin;
     timeSetEvent(
         tick_inc, tick_inc,
-        [](UINT, UINT, DWORD_PTR, DWORD_PTR, DWORD_PTR) {
+        [](auto, auto, auto, auto, auto) {
           ticks += tick_inc;
-          for (uint64_t idx = 0; idx < mp_cnt(nullptr); ++idx) {
-            if (!cores[idx].is_alive)
+          for (size_t idx = 0; idx < mp_cnt(nullptr); ++idx) {
+            auto& c = cores[idx];
+            if (!c.is_alive)
               continue;
-            WaitForSingleObject(cores[idx].mtx, INFINITE);
-            if (ticks >=
-                    cores[idx].awake_at /* check if ticks reached awake_at */
-                && cores[idx].awake_at > 0) {
-              SetEvent(cores[idx].event);
-              cores[idx].awake_at = 0;
+            WaitForSingleObject(c.mtx, INFINITE);
+            // check if ticks reached awake_at
+            if (ticks >= c.awake_at && c.awake_at > 0) {
+              SetEvent(c.event);
+              c.awake_at = 0;
             }
-            ReleaseMutex(cores[idx].mtx);
+            ReleaseMutex(c.mtx);
           }
         },
         0, TIME_PERIODIC);

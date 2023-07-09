@@ -132,17 +132,16 @@ static void DyadReadCB(dyad_Event* e) {
 }
 
 static void STK_DyadSetReadCallback(int64_t* stk) {
-  //This is for a line of text 
+  // This is for a line of text
   dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_LINE, DyadReadCB,
                    (void*)stk[1], (void*)stk[2]);
 }
 
 static void STK_DyadSetDataCallback(int64_t* stk) {
-  //This is for binary data
+  // This is for binary data
   dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_DATA, DyadReadCB,
                    (void*)stk[1], (void*)stk[2]);
 }
-
 
 static void DyadListenCB(dyad_Event* e) {
   FFI_CALL_TOS_2(e->udata, (uintptr_t)e->remote, (uintptr_t)e->udata2);

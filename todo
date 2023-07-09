@@ -1,0 +1,3 @@
+OpenBSD support
+  pledge("stdio rpath wpath cpath inet dns prot_exec audio video", nullptr);
+  MAP_32BIT support? How? Maybe by hinting?
