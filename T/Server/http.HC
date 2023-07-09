@@ -6,6 +6,7 @@ class CUniqueToken {
 };
 class CConnection {
 	U8 *buffer;
+	U8 *buffer_ptr;
 	I64 buffer_len;
 	//These occupy .u8[0]
 	#define CON_S_METHOD 1
@@ -374,12 +375,16 @@ U0 ParseRequest(CConnection *con) {
 }
 
 extern Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut);
-U0 LookForLine(U8 *ptr,I64 len) {
-  I64 t=0;
-  for(t=0;t<=len-2;t++,ptr++) {
-    if(ptr[0]=='\r'&&ptr[1]=='\n')
-      return ptr;
-  }
+U8 *LookForLine(U8 *ptr,I64 len) {
+  I64 reg RDI cap=ptr;
+  I64 reg R15 l=len;
+  if(!l) return NULL;
+  MOV AL,'\n'
+  MOV RCX,R15
+  REPNE_SCASB
+  JNZ fail
+  return cap;
+  fail:
   return NULL;
 }
 U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
@@ -393,6 +398,7 @@ U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   }
   con=CAlloc(sizeof(CConnection));
   con->buffer=MAlloc(0x1000);
+  con->buffer_ptr=con->buffer;
   con->buffer_len=0;
   con->unique_token=ut;
   con->server=ut->srv;
@@ -403,34 +409,33 @@ U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   con->post_data=HashTableNew(0x10,con->hc);
   ut->con=con;
 found:
-  if(MSize(con->buffer)<=1+con->buffer_len+len) {
-    tmp=MAlloc(1+2*con->buffer_len+len);
+  if(MSize(con->buffer)<=1+(con->buffer_ptr-con->buffer)+len+con->buffer_len) {
+    tmp=MAlloc((con->buffer_ptr-con->buffer)+1+2*MSize(con->buffer)+len);
     MemCpy(tmp,con->buffer,MSize(con->buffer));
     Free(con->buffer);
+    con->buffer_ptr=tmp+(con->buffer_ptr-con->buffer);
     con->buffer=tmp;
   }
-  MemCpy(con->buffer+con->buffer_len,data,len);
+  MemCpy(con->buffer_ptr,data,len);
   con->buffer_len+=len;
-  con->buffer[con->buffer_len]=0;
+  con->buffer_ptr[con->buffer_len]=0;
 loop:
-  if(ptr=LookForLine(con->buffer,con->buffer_len)) {
-     len2=ptr-con->buffer+2;
+  if(ptr=LookForLine(con->buffer_ptr,con->buffer_len)) {
+     len2=ptr-con->buffer_ptr;
      tmp=MAlloc(len2+1);
-     MemCpy(tmp,con->buffer,len2);
+     MemCpy(tmp,con->buffer_ptr,len2);
      tmp[len2]=0;
      en=SReadLine(s,tmp,len2,ut);
      Free(tmp);
-     MemCpy(con->buffer,ptr+2,con->buffer_len-len2);
      con->buffer_len-=len2;
-     con->buffer[con->buffer_len]=0;
+     con->buffer_ptr+=len2;
      if(!en)
        goto loop;
-  }
-//Just flush rest of data
-  if(con->buffer_len&&!en) {
-    en=SReadLine(s,con->buffer,con->buffer_len,ut);
-    con->buffer[con->buffer_len]=0;
-    con->buffer_len=0;
+  } else {
+    len=con->buffer_len;
+    en=SReadLine(s,con->buffer_ptr,len,ut);
+	con->buffer_len-=len;
+    con->buffer_ptr+=len;
   }
 }
 Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
@@ -506,7 +511,7 @@ etag_loop:
     t1=buf;
     if(StrOcc(data,'\"')!=2) goto malformed;
     data=StrScan(data,"\"%s\"",&t1);
-    if(ETagChanged(con->server,buf)){
+    if(ETagChanged(con->server,buf)) {
       con->etag_changed=1;
     }
     if(*data==',') {
@@ -619,8 +624,8 @@ loop:
     } else if(Bt(&con->state,CONf_DATA)) {
       if(!con->fbuffer) {
 	con->fbuffer=MAlloc(len+1,con->hc);
-      } else {
-        t1=MAlloc(con->field_ptr+len+1,con->hc);
+      } else if(MSize(con->fbuffer)<=1+len+con->field_ptr) {
+        t1=MAlloc(2*con->field_ptr+len+1,con->hc);
 	MemCpy(t1,con->fbuffer,con->field_ptr);
 	Free(con->fbuffer);
 	con->fbuffer=t1;
@@ -690,3 +695,4 @@ U0 Serve(CServer *srv) {
 	}
 	DyadShutdown;
 }
+
