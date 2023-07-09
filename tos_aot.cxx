@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <new>
 #include <string_view>
 namespace fs = std::filesystem;
 #include <ios>
@@ -259,7 +260,7 @@ void BackTrace() {
 // the entire debug session not to mention
 // this function wont even be called in normal
 // circumstances
-#define str_dup(s) (strcpy(new char[strlen(s) + 1], s))
+#define str_dup(s) (strcpy(new (std::nothrow) char[strlen(s) + 1], s))
 
 // great when you use lldb and get a fault
 // (lldb) p (char*)WhichFun($pc)
