@@ -1,4 +1,5 @@
-# TempleOS in ring 3(basically)
+# ![](./logo.png) TINE Is Not an Emulator(of TempleOS)
+ \* *logo courtesy of CrunkLord420.*
 ## skills required to use this
  - knowledge of TempleOS
  - knowledge of C
