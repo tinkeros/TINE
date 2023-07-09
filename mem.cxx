@@ -63,7 +63,7 @@ void* NewVirtualChunk(size_t sz, bool low32) {
 #ifdef __linux__
     // I hear that linux doesn't like addresses within the first 16bits
     if (ret == MAP_FAILED) {
-      uintptr_t down = 0x1000;
+      uintptr_t down = 0xffff;
       std::ifstream map{"/proc/self/maps", ios::binary | ios::in};
       std::string buffer;
       // just fs::file_size() wont work lmao
