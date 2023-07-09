@@ -49,7 +49,10 @@ static LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
   uint64_t sig = (c == EXCEPTION_BREAKPOINT || c == STATUS_SINGLE_STEP)
                    ? 5 /* SIGTRAP */
                    : 0;
-  FFI_CALL_TOS_2(TOSLoader["DebuggerLandWin"][0].val, sig, (uintptr_t)regs);
+  static void* fp = nullptr;
+  if (fp == nullptr)
+    fp = TOSLoader["DebuggerLandWin"][0].val;
+  FFI_CALL_TOS_2(fp, sig, (uintptr_t)regs);
   return EXCEPTION_CONTINUE_EXECUTION;
 }
 
@@ -62,40 +65,13 @@ void SetupDebugger() {
 #include <signal.h>
 #include <ucontext.h>
 
-// apparently mcontext is implementation defined idk
-// if your on musl or something fix this yourself and send me a patch
-/*enum {
-  REG_R8 = 0,
-  REG_R9,
-  REG_R10,
-  REG_R11,
-  REG_R12,
-  REG_R13,
-  REG_R14,
-  REG_R15,
-  REG_RDI,
-  REG_RSI,
-  REG_RBP,
-  REG_RBX,
-  REG_RDX,
-  REG_RAX,
-  REG_RCX,
-  REG_RSP,
-  REG_RIP,
-  REG_EFL,
-  REG_CSGSFS, // segment regs CS, GS, FS
-              // (each 16bit, padding at the end)
-  REG_ERR,
-  REG_TRAPNO,
-  REG_OLDMASK,
-  REG_CR2,
-};*/
-
 static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
   BackTrace();
   uint64_t sig_i64 = sig;
 #ifdef __linux__
 #define REG(x) static_cast<uint64_t>(ctx->uc_mcontext.gregs[REG_##x])
+  // apparently ucontext is implementation defined idk
+  // if your on musl or something fix this yourself and send me a patch
   // probably only works on glibc lmao
   // clang-format off
   // heres why i dont take the address of fpregs on linux
@@ -124,7 +100,10 @@ static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
       REG(rflags),
   };
 #endif
-  FFI_CALL_TOS_2(TOSLoader["DebuggerLand"][0].val, sig_i64, (uintptr_t)regs);
+  static void* fp = nullptr;
+  if (fp == nullptr)
+    fp = TOSLoader["DebuggerLand"][0].val;
+  FFI_CALL_TOS_2(fp, sig_i64, (uintptr_t)regs);
 }
 
 void SetupDebugger() {

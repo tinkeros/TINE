@@ -143,8 +143,12 @@ void InterruptCore(size_t core) {
   // PUSH RIP
   ctx.Rsp -= 8;
   ((DWORD64*)ctx.Rsp)[0] = ctx.Rip;
-  ctx.Rip =
-      (uintptr_t)TOSLoader["__InterruptCoreRoutine"][0].val; // MOV RIP, fptr
+  //
+  static void* fp = nullptr;
+  if (fp == nullptr)
+    fp = TOSLoader["__InterruptCoreRoutine"][0].val;
+  // MOV RIP, fp
+  ctx.Rip = reinterpret_cast<uintptr_t>(fp);
   SetThreadContext(cores[core].thread, &ctx);
   ResumeThread(cores[core].thread);
 #else

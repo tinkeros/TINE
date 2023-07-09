@@ -208,14 +208,17 @@ void LoadHCRT(std::string const& name) {
   }
   LoadPass1(bfh_addr + bfh->patch_table_offset, bfh->data);
 #ifndef _WIN32
-  signal(SIGUSR2, (void (*)(int))TOSLoader["__InterruptCoreRoutine"][0].val);
+  static void* fp = nullptr;
+  if (fp == nullptr)
+    fp = TOSLoader["__InterruptCoreRoutine"][0].val;
+  signal(SIGUSR2, (void (*)(int))fp);
 #endif
   LoadPass2(bfh_addr + bfh->patch_table_offset, bfh->data);
 }
 
 void BackTrace() {
-  static size_t sz = 0;
   std::string last;
+  static size_t sz = 0;
   static std::vector<std::string> sorted;
   static bool init = false;
   if (!init) {
@@ -265,8 +268,8 @@ void BackTrace() {
 // great when you use lldb and get a fault
 // (lldb) p (char*)WhichFun($pc)
 __attribute__((used)) char* WhichFun(void* ptr) {
-  size_t sz = TOSLoader.size();
   std::string last;
+  static size_t sz = 0;
   static std::vector<std::string> sorted;
   static bool init = false;
   if (!init) {
@@ -274,6 +277,7 @@ __attribute__((used)) char* WhichFun(void* ptr) {
       auto const& [name, v] = e;
       sorted.emplace_back(name);
     }
+    sz = sorted.size();
     std::sort(sorted.begin(), sorted.end(), [](auto const& a, auto const& b) {
       return TOSLoader[a][0].val < TOSLoader[b][0].val;
     });
