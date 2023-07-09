@@ -140,9 +140,9 @@ void InterruptCore(size_t core) {
   ctx.ContextFlags = CONTEXT_FULL;
   SuspendThread(cores[core].thread);
   GetThreadContext(cores[core].thread, &ctx);
-  ctx.Rsp -= 8; // SUB RSP, 8; actually acts like PUSH <empty>
-  ((DWORD64*)ctx.Rsp)[0] =
-      ctx.Rip; // MOV QWORD PTR[RSP], RIP; we store RIP in the new stack space
+  // PUSH RIP
+  ctx.Rsp -= 8;
+  ((DWORD64*)ctx.Rsp)[0] = ctx.Rip;
   ctx.Rip =
       (uintptr_t)TOSLoader["__InterruptCoreRoutine"][0].val; // MOV RIP, fptr
   SetThreadContext(cores[core].thread, &ctx);

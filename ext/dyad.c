@@ -21,9 +21,11 @@
   #include <errno.h>
   #include <limits.h>
 #else
-  #define _POSIX_C_SOURCE 200809L
-  #ifdef __APPLE__
-    #define _DARWIN_UNLIMITED_SELECT
+  #ifndef _GNU_SOURCE
+    #define _GNU_SOURCE
+  #endif
+  #ifdef __FreeBSD__
+    #define _BSD_SOURCE
   #endif
   #include <stdio.h>
   #include <stdlib.h>
