@@ -40,7 +40,7 @@ static void LoadOneImport(char** src_, char* mod_base) {
     // "repeat this until another name is found"
     if (*st_ptr) {
       if (!first) {
-        *src_ = st_ptr - 5;
+        *src_ = st_ptr - sizeof(uint32_t) - 1;
         return;
       } else {
         first = false;
