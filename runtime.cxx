@@ -495,13 +495,12 @@ static int64_t STK_VFsSetDrv(int64_t* stk) {
   return 0;
 }
 
-static int64_t STK_SetVolume(int64_t* stk) {
+static int64_t STK_SetVolume(uint64_t* stk) {
   static_assert(sizeof(double) == sizeof(uint64_t));
   union {
+    uint64_t i;
     double flt;
-    int64_t i;
-  } un;
-  un.i = stk[0];
+  } un = {stk[0]};
   SetVolume(un.flt);
   return 0;
 }
@@ -509,9 +508,8 @@ static int64_t STK_SetVolume(int64_t* stk) {
 static uint64_t STK_GetVolume(void*) {
   union {
     double flt;
-    int64_t i;
-  } un;
-  un.flt = GetVolume();
+    uint64_t i;
+  } un = {GetVolume()};
   return un.i;
 }
 
