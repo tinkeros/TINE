@@ -29,7 +29,7 @@ static void LoadOneImport(char** src_, char* mod_base) {
   char *src = *src_, *st_ptr, *ptr = nullptr;
   uintptr_t i = 0;
   uint8_t etype;
-  char first = 1;
+  bool first = true;
   while ((etype = *src++)) {
     ptr = mod_base + *(uint32_t*)src;
     src += 4;
@@ -42,7 +42,7 @@ static void LoadOneImport(char** src_, char* mod_base) {
         *src_ = st_ptr - 5;
         return;
       } else {
-        first = 0;
+        first = false;
         if (TOSLoader.find(st_ptr) == TOSLoader.end()) {
           std::cerr << "Unresolved reference " << st_ptr << std::endl;
           CHash tmpiss;
@@ -220,8 +220,7 @@ void BackTrace() {
   if (!init) {
     for (auto const& e : TOSLoader) {
       auto const& [name, v] = e;
-      if (v.size() > 0)
-        sorted.emplace_back(name);
+      sorted.emplace_back(name);
     }
     sz = sorted.size();
     std::sort(sorted.begin(), sorted.end(), [](auto const& a, auto const& b) {
@@ -255,9 +254,16 @@ void BackTrace() {
   std::cerr << std::endl;
 }
 
-// great when you use gdb and get a fault
-// > p WhichFun($pc)
-__attribute__((used)) std::string WhichFun(void* ptr) {
+// who the fuck cares about memory leaks
+// its gonna be executed once or twice in
+// the entire debug session not to mention
+// this function wont even be called in normal
+// circumstances
+#define str_dup(s) (strcpy(new char[strlen(s) + 1], s))
+
+// great when you use lldb and get a fault
+// (lldb) p (char*)WhichFun($pc)
+__attribute__((used)) char* WhichFun(void* ptr) {
   size_t sz = TOSLoader.size();
   std::string last;
   static std::vector<std::string> sorted;
@@ -265,8 +271,7 @@ __attribute__((used)) std::string WhichFun(void* ptr) {
   if (!init) {
     for (auto const& e : TOSLoader) {
       auto const& [name, v] = e;
-      if (v.size() > 0)
-        sorted.emplace_back(name);
+      sorted.emplace_back(name);
     }
     std::sort(sorted.begin(), sorted.end(), [](auto const& a, auto const& b) {
       return TOSLoader[a][0].val < TOSLoader[b][0].val;
@@ -278,10 +283,9 @@ __attribute__((used)) std::string WhichFun(void* ptr) {
     if (curp == ptr) {
       std::cerr << sorted[idx] << std::endl;
     } else if (curp > ptr) {
-      return last;
+      return str_dup(last.c_str());
     }
     last = sorted[idx];
   }
-  std::cout << last << std::endl;
-  return last;
+  return str_dup(last.c_str());
 }

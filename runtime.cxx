@@ -266,8 +266,6 @@ static void STK_InterruptCore(int64_t* stk) {
 static void STK___BootstrapForeachSymbol(uintptr_t* stk) {
   for (auto& m : TOSLoader) {
     auto& [symname, vec] = m;
-    if (vec.size() == 0)
-      continue;
     auto& sym = vec[0];
     FFI_CALL_TOS_3((void*)stk[0], (uintptr_t)symname.c_str(),
                    (uintptr_t)sym.val,
@@ -668,8 +666,6 @@ void RegisterFuncPtrs() {
   std::copy(ffi_blob.begin(), ffi_blob.end(), blob);
   for (auto& m : TOSLoader) {
     auto& [symname, vec] = m;
-    if (vec.size() == 0)
-      continue;
     auto& sym = vec[0];
     sym.val = blob + (uintptr_t)sym.val;
   }
