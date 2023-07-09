@@ -5,14 +5,6 @@
  * under the terms of the MIT license. See LICENSE for details.
  */
 
-#include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
-#include <signal.h>
-#include <errno.h>
-#include <limits.h>
 #ifdef _WIN32
   #define _WIN32_WINNT 0x501
   #ifndef _CRT_SECURE_NO_WARNINGS
@@ -31,11 +23,20 @@
   #include <fcntl.h>
   #include <sys/types.h>
   #include <sys/socket.h>
+  #include <time.h>
   #include <sys/time.h>
   #include <netinet/in.h>
   #include <netinet/tcp.h>
   #include <arpa/inet.h>
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
+#include <signal.h>
+#include <errno.h>
+#include <limits.h>
 
 #include "dyad.h"
 
