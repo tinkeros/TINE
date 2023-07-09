@@ -18,5 +18,3 @@ This website is about TINE(Is Not an Emulator), which this wiki server is runnin
 *** [Strings]
 **** [Print Displaying Strings]
 *** [FileSystem Files and FileSystem stuff]
-** TempleOS
-*** [TempleKernel TempleOS internals - Kernel]
