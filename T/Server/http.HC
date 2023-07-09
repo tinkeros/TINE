@@ -639,7 +639,7 @@ en:
 malformed:
   Free(buf),Free(buf2);
   DyadEnd(s);
-  returnTRUE;
+  return TRUE;
 process:
   Free(buf),Free(buf2);
 //If we have content,make sure we recieved all the data
