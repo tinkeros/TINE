@@ -353,8 +353,7 @@ static int64_t STK_SetClipboardText(int64_t* stk) {
   return 0;
 }
 
-static char* STK___GetStr([[maybe_unused]] uintptr_t* stk) {
-#ifndef TOS_STATIC_BUILD
+static char* STK___GetStr(uintptr_t* stk) {
   char *s = linenoise(reinterpret_cast<char const*>(stk[0])), *r;
   if (s == nullptr)
     return nullptr;
@@ -362,10 +361,6 @@ static char* STK___GetStr([[maybe_unused]] uintptr_t* stk) {
   r = HolyStrDup(s);
   free(s);
   return r;
-#else
-  std::cerr << "STATIC WINDOWS BUILDS DO NOT WORK WITH COMMAND LINE MODE\n";
-  std::terminate();
-#endif
 }
 
 static char* STK_GetClipboardText(int64_t*) {
@@ -529,66 +524,50 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
                                 uintptr_t fp, uint16_t arity) {
   // Function entry point offset from the code blob
   uintptr_t off = blob.size();
-#ifdef _WIN32
   // https://defuse.ca/online-x86-assembler.htm
+  // boring register pushing and stack alignment bullshit
+  // disas then read the ABIs and Doc/GuideLines.DD if interested
+  char const* inst = "\x55\x48\x89\xE5\x48"
+                     "\x83\xE4\xF0\x56\x57"
+                     "\x41\x52\x41\x53\x41"
+                     "\x54\x41\x55\x41\x56"
+                     "\x41\x57";
+  blob.append(inst, 22);
+#ifdef _WIN32
   // https://archive.md/4HDA0#selection-2085.880-2085.1196
+  // rcx is the first arg i have to provide in win64 abi
   // last 4 register pushes are for register "home"s
-  // that microsoft wants me to provide
-  char const* atxt = "\x55\x48\x89\xE5"
-                     "\x48\x83\xE4\xF0"
-                     "\x56\x57\x41\x52"
-                     "\x41\x53\x41\x54"
-                     "\x41\x55\x41\x56"
-                     "\x41\x57\x48\x8D"
-                     "\x4D\x10\x41\x51"
-                     "\x41\x50\x52\x51";
-  blob.append(atxt, 32);
+  // that windows wants me to provide
+  inst = "\x48\x8D\x4D\x10\x41"
+         "\x51\x41\x50\x52\x51";
+  blob.append(inst, 10);
 #else // sysv
-  // boring register pushing and stack aligning garbage, disassemble it and
-  // read the SysV ABI and Doc/GuideLines.DD if you're interested
-  char const* atxt = "\x55\x48\x89\xE5"
-                     "\x48\x83\xE4\xF0"
-                     "\x56\x57\x41\x52"
-                     "\x41\x53\x41\x54"
-                     "\x41\x55\x41\x56"
-                     "\x41\x57\x48\x8D"
-                     "\x7D\x10";
-  blob.append(atxt, 26);
+  // rdi is the first arg
+  // i have to provide in sysv
+  blob.append("\x48\x8D\x7D\x10", 4);
 #endif
   // MOVABS RAX, fp
   blob.append("\x48\xb8", 2);
   union {
     uintptr_t p;
-    char data[sizeof(uint64_t)];
+    char data[8];
   } fu = {fp};
-  blob.append(fu.data, sizeof(uint64_t));
+  blob.append(fu.data, 8);
   // CALL RAX
   blob.append("\xFF\xD0", 2);
 #ifdef _WIN32
-  // pops stack. boring stuff
-  // can just add to rsp since those 4 are volatile
-  atxt = "\x48\x83\xC4\x20"
-         "\x41\x5F\x41\x5E"
-         "\x41\x5D\x41\x5C"
-         "\x41\x5B\x41\x5A"
-         "\x5F\x5E";
-  blob.append(atxt, 18);
-#else
-  atxt = "\x41\x5F\x41\x5E"
-         "\x41\x5D\x41\x5C"
-         "\x41\x5B\x41\x5A"
-         "\x5F\x5E";
-  blob.append(atxt, 14);
+  // can just add to rsp since
+  // those 4 registers are volatile
+  blob.append("\x48\x83\xC4\x20", 4);
 #endif
+  // pops stack. boring stuff
+  inst = "\x41\x5F\x41\x5E\x41"
+         "\x5D\x41\x5C\x41\x5B"
+         "\x41\x5A\x5F\x5E";
+  blob.append(inst, 14);
   // LEAVE
   blob.push_back('\xC9');
   // clang-format off
-  // RET1 will pop the old return address from the stack,AND it will remove the
-  // arguments' off the stack
-  // RET1 is like this
-  // POP RIP
-  // ADD RSP,cnt //Remove cnt bytes from the stack
-  //
   // RET1 ARITY*8 (8 == sizeof(uint64_t))
   // HolyC ABI is __stdcall, the callee cleans up its own stack
   // unless its variadic
@@ -602,10 +581,10 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   //   argc 3(num of varargs) // RBP + 24 <-value- argc(internal var in function)
   //   i  2    // RBP + 16(this is where the stack starts)
   // clang-format on
-  // RET
+  // RET1
   blob.push_back('\xc2');
   arity *= 8;
-  // ret imm16
+  // imm16
   union {
     uint16_t ar;
     char data[2];
