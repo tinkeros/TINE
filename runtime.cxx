@@ -23,13 +23,9 @@ namespace fs = std::filesystem;
 #include <thread>
 using std::thread;
 
-#include <ctype.h>
-#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #ifdef _WIN32
 // clang-format off
@@ -532,14 +528,14 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   // i have to provide in sysv
   blob.append("\x48\x8D\x7D\x10", 4);
 #endif
-  // MOV RAX, fp
+  // movabs rax, <fp>
   blob.append("\x48\xb8", 2);
   union {
     uintptr_t p;
     char data[8];
   } fu = {fp};
   blob.append(fu.data, 8);
-  // CALL RAX
+  // call rax
   blob.append("\xFF\xD0", 2);
 #ifdef _WIN32
   // can just add to rsp since
@@ -551,12 +547,12 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
          "\x5D\x41\x5C\x41\x5B"
          "\x41\x5A\x5F\x5E";
   blob.append(inst, 14);
-  // LEAVE
+  // leave
   blob.push_back('\xC9');
   // clang-format off
-  // RET1 ARITY*8 (8 == sizeof(uint64_t))
+  // ret <arity*8>; (8 == sizeof(uint64_t))
   // HolyC ABI is __stdcall, the callee cleans up its own stack
-  // unless its variadic
+  // unless its variadic so we pop the stack with ret
   //
   // A bit about HolyC ABI: all args are 8 bytes(64 bits)
   // let there be function Foo(I64 i, ...);
@@ -567,9 +563,9 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   //   argc 3(num of varargs) // RBP + 24 <-value- argc(internal var in function)
   //   i  2    // RBP + 16(this is where the stack starts)
   // clang-format on
-  // RET1
+  // ret
   blob.push_back('\xc2');
-  arity *= 8;
+  arity *= 8; // sizeof(uint64_t)
   // imm16
   union {
     uint16_t ar;

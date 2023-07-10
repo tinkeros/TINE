@@ -27,7 +27,7 @@ static std::string MStrPrint(char const* fmt, uint64_t, int64_t* argv) {
   int64_t arg = -1;
   char const *start = fmt, *end;
 loop:;
-  arg++;
+  ++arg;
   end = strchr(start, '%');
   if (end == nullptr)
     end = start + strlen(start);
@@ -36,9 +36,9 @@ loop:;
     return ret;
   start = end + 1;
   if (*start == '-')
-    start++;
+    ++start;
   if (*start == '0')
-    start++;
+    ++start;
   /* this skips output format specifiers
    * because i dont think a debug printer
    * needs such a thing */
@@ -46,10 +46,10 @@ loop:;
   while (isdigit(*start)) {
     // width *= 10;
     // width += *start - '0';
-    start++;
+    ++start;
   }
   if (*start == '.')
-    start++;
+    ++start;
   while (isdigit(*start)) {
     // decimals *= 10;
     // decimals += *start - '0';
@@ -59,13 +59,14 @@ loop:;
     ++start;
   int64_t aux = 1;
   if (*start == '*') {
-    aux = argv[arg++];
-    start++;
+    aux = argv[arg];
+    ++arg;
+    ++start;
   } else if (*start == 'h') {
     while (isdigit(*start)) {
       aux *= 10;
       aux += *start - '0';
-      start++;
+      ++start;
     }
   }
 #define FMT_CH(x, T, ...)                                                \
@@ -124,7 +125,7 @@ loop:;
     break;
   default:;
   }
-  start++;
+  ++start;
   goto loop;
 }
 
@@ -161,7 +162,7 @@ static char* UnescapeString(char* str, char* where) {
       // printing a 8 bit wide octal value to get the correct digits
       // probably it's typical GNU bullshittery or there's something
       // deep inside the Standard that I'm missing, either way, this works
-      char buf[5]{};
+      char buf[5];
       snprintf(buf, sizeof buf, "\\%" PRIo8, (uint8_t)*str);
       std::copy(buf, buf + 4, where);
       where += 4;
@@ -169,8 +170,8 @@ static char* UnescapeString(char* str, char* where) {
       continue;
     }
     *where = *str;
-    str++;
-    where++;
+    ++str;
+    ++where;
   }
   *where = '\0';
   return where;

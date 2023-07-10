@@ -6,10 +6,10 @@
 #include "vfs.hxx"
 
 #include <atomic>
-#include <iostream>
 #include <vector>
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -140,14 +140,14 @@ void InterruptCore(size_t core) {
   ctx.ContextFlags = CONTEXT_FULL;
   SuspendThread(cores[core].thread);
   GetThreadContext(cores[core].thread, &ctx);
-  // PUSH RIP
+  // push rip
   ctx.Rsp -= 8;
   ((DWORD64*)ctx.Rsp)[0] = ctx.Rip;
   //
   static void* fp = nullptr;
   if (fp == nullptr)
     fp = TOSLoader["__InterruptCoreRoutine"][0].val;
-  // MOV RIP, fp
+  // movabs rip, <fp>
   ctx.Rip = reinterpret_cast<uintptr_t>(fp);
   SetThreadContext(cores[core].thread, &ctx);
   ResumeThread(cores[core].thread);

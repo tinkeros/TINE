@@ -66,9 +66,11 @@ char const* CmdLineBootText() {
   return boot_str.c_str();
 }
 
+static int exit_code = 0;
 static bool prog_exit = false;
-void ShutdownTINE(int32_t ec) {
+void ShutdownTINE(int ec) {
   prog_exit = true;
+  exit_code = ec;
   ShutdownCores(ec);
 }
 
@@ -169,5 +171,5 @@ int main(int argc, char** argv) {
   } else {
     WaitForCore0();
   }
-  return 0;
+  return exit_code;
 }
