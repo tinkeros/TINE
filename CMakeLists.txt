@@ -45,7 +45,7 @@ if (NOT ARCH MATCHES "x86_64")
   message(FATAL_ERROR "CAN ONLY BUILD ON x86_64 ARCHITECTURE")
 endif ()
 
-set(CPP_EXECUTABLE_SOURCE_FILES
+set(CXX_EXECUTABLE_SOURCE_FILES
   main.cxx
   dbg.cxx
   sdl_window.cxx
@@ -66,7 +66,7 @@ set(C_EXECUTABLE_SOURCE_FILES
   ext/argtable3.c
 )
 
-set_source_files_properties(CPP_EXECUTABLE_SOURCE_FILES
+set_source_files_properties(CXX_EXECUTABLE_SOURCE_FILES
   PROPERTIES
     LANGUAGE CXX
     COMPILE_FLAGS -fno-rtti
@@ -80,7 +80,7 @@ set_source_files_properties(C_EXECUTABLE_SOURCE_FILES}
 
 add_executable(${PROJECT_NAME}
   ${C_EXECUTABLE_SOURCE_FILES}
-  ${CPP_EXECUTABLE_SOURCE_FILES}
+  ${CXX_EXECUTABLE_SOURCE_FILES}
 )
 
 # outputs bin to src tree dir
@@ -94,6 +94,7 @@ set_target_properties(${PROJECT_NAME}
     CXX_EXTENSIONS YES
     C_EXTENSIONS YES
     LINKER_LANGUAGE CXX
+    INTERPROCEDURAL_OPTIMIZATION ON
 )
 
 target_compile_features(${PROJECT_NAME}
@@ -125,6 +126,7 @@ target_compile_options(${PROJECT_NAME}
     -Wall
     -Wextra
     -Wno-frame-address
+    -fvisibility=hidden
 )
 
 # libm

@@ -532,7 +532,7 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   // i have to provide in sysv
   blob.append("\x48\x8D\x7D\x10", 4);
 #endif
-  // MOVABS RAX, fp
+  // MOV RAX, fp
   blob.append("\x48\xb8", 2);
   union {
     uintptr_t p;

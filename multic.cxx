@@ -162,8 +162,8 @@ void LaunchCore0(ThreadCallback* fp) {
 #ifdef _WIN32
   // sorry for this piece of utter garbage code, I wanted it to compile
   // without warnings
-#define CAST(x) (WinCB)(void*) x
-  cores[0].thread = CreateThread(nullptr, 0, CAST(fp), nullptr, 0, nullptr);
+#define CAST_(x) reinterpret_cast<WinCB>((void*)x)
+  cores[0].thread = CreateThread(nullptr, 0, CAST_(fp), nullptr, 0, nullptr);
   cores[0].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[0].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[0].thread, THREAD_PRIORITY_HIGHEST);
@@ -181,7 +181,7 @@ void CreateCore(size_t core, void* fp) {
   cores[core].fp = fp;
 #ifdef _WIN32
   cores[core].thread =
-      CreateThread(nullptr, 0, CAST(LaunchCore), (void*)core, 0, nullptr);
+      CreateThread(nullptr, 0, CAST_(LaunchCore), (void*)core, 0, nullptr);
   cores[core].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[core].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[core].thread, THREAD_PRIORITY_HIGHEST);
@@ -282,7 +282,7 @@ static uint64_t GetTicksHP() {
 
 void SleepHP(uint64_t us) {
 #ifdef _WIN32
-  auto s = GetTicksHP();
+  auto const s = GetTicksHP();
   WaitForSingleObject(cores[core_num].mtx, INFINITE);
   cores[core_num].awake_at = s + us / 1000;
   ReleaseMutex(cores[core_num].mtx);

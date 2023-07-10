@@ -1,3 +1,6 @@
+#include "TOSPrint.hxx"
+
+#include <algorithm>
 #include <iostream>
 #include <string>
 
@@ -6,8 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "TOSPrint.hxx"
 
 static char* UnescapeString(char* str, char* where);
 static std::string MStrPrint(char const* fmt, uint64_t /* argc*/,
@@ -147,7 +148,7 @@ static char* UnescapeString(char* str, char* where) {
     default:
       goto check_us_key;
     }
-    memcpy(where, to, 2);
+    std::copy(to, to + 2, where);
     where += 2;
     ++str;
     continue;
@@ -161,8 +162,8 @@ static char* UnescapeString(char* str, char* where) {
       // probably it's typical GNU bullshittery or there's something
       // deep inside the Standard that I'm missing, either way, this works
       char buf[5]{};
-      snprintf(where, sizeof buf, "\\%" PRIo8, (uint8_t)*str);
-      memcpy(where, buf, 4);
+      snprintf(buf, sizeof buf, "\\%" PRIo8, (uint8_t)*str);
+      std::copy(buf, buf + 4, where);
       where += 4;
       ++str;
       continue;

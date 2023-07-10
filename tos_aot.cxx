@@ -234,6 +234,8 @@ void BackTrace() {
   }
   auto rbp = (void**)__builtin_frame_address(0);
   void* oldp;
+  // its 1 because we want to know the return
+  // addr of BackTrace()'s caller
   void* ptr = __builtin_return_address(1);
   while (rbp) {
     oldp = nullptr;
@@ -261,13 +263,13 @@ void BackTrace() {
 // who the fuck cares about memory leaks
 // its gonna be executed once or twice in
 // the entire debug session not to mention
-// this function wont even be called in normal
+// WhichFun() wont even be called in normal
 // circumstances
 #define str_dup(s) (strcpy(new (std::nothrow) char[strlen(s) + 1], s))
 
 // great when you use lldb and get a fault
 // (lldb) p (char*)WhichFun($pc)
-__attribute__((used)) char* WhichFun(void* ptr) {
+__attribute__((used, visibility("default"))) char* WhichFun(void* ptr) {
   std::string last;
   static size_t sz = 0;
   static std::vector<std::string> sorted;
