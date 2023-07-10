@@ -162,8 +162,8 @@ void LaunchCore0(ThreadCallback* fp) {
 #ifdef _WIN32
   // sorry for this piece of utter garbage code, I wanted it to compile
   // without warnings
-#define CAST_(x) reinterpret_cast<WinCB>((void*)x)
-  cores[0].thread = CreateThread(nullptr, 0, CAST_(fp), nullptr, 0, nullptr);
+#define C_(x) reinterpret_cast<WinCB>((void*)x)
+  cores[0].thread = CreateThread(nullptr, 0, C_(fp), nullptr, 0, nullptr);
   cores[0].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[0].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[0].thread, THREAD_PRIORITY_HIGHEST);
@@ -181,7 +181,7 @@ void CreateCore(size_t core, void* fp) {
   cores[core].fp = fp;
 #ifdef _WIN32
   cores[core].thread =
-      CreateThread(nullptr, 0, CAST_(LaunchCore), (void*)core, 0, nullptr);
+      CreateThread(nullptr, 0, C_(LaunchCore), (void*)core, 0, nullptr);
   cores[core].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[core].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[core].thread, THREAD_PRIORITY_HIGHEST);
