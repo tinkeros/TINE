@@ -28,7 +28,7 @@ public U0 CPURep(Bool full=FALSE) {
   CCPURep cr;
 
   if (!full)
-    "%d Cores\n",mp_cnt;
+    "%d Cores\n",mp_cnt;
   else {
     cr.swaps=CAlloc(sizeof(I64)*mp_cnt);
     cr.cycles=CAlloc(sizeof(I64)*mp_cnt);
@@ -44,8 +44,9 @@ public U0 CPURep(Bool full=FALSE) {
     while (cr.mp_not_done_flags)
       Yield;
     tf=tS;
-
-    "\%d Cores\n",mp_cnt;
+    U64 c=GetTSC;Sleep(10);c=GetTSC-c;
+    F64 ghz=c*100;
+    "%d Cores %6h9nHz\n",mp_cnt,ghz;
     "\n         Context\n"
 	  "CPU     Swaps/s         Cycles\n"
 	  "--- ------------- -----------------\n";
