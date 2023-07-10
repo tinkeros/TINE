@@ -375,6 +375,7 @@ U0 ParseRequest(CConnection *con) {
 	con->post_data=HashTableNew(0x10,con->hc);
 	con->state=CON_S_METHOD;
 	LBtr(&con->lock,CON_LOCKf_PROCESS);
+        DyadEnd(stream);
 	Exit;
 }
 
@@ -715,7 +716,7 @@ U0 CloseCallback(CDyadStream *s,CUniqueToken *ut) {
 U0 ListenCallback(CDyadStream *s,CServer *srv) {
 	CUniqueToken *ut=CAlloc(sizeof(CUniqueToken));
 	ut->srv=srv;
-	DyadSetTimeout(s,500);
+	DyadSetTimeout(s,5);
 	DyadSetDataCallback(s,&SReadData,ut);
 	DyadSetOnCloseCallback(s,&CloseCallback,ut);
 	DyadSetOnTimeoutCallback(s,&CloseCallback,ut);
