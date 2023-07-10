@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-void ShutdownTINE(int32_t);
+void ShutdownTINE(int);
 bool IsCmdLine();
 char const* CmdLineBootText();
 

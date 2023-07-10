@@ -66,9 +66,11 @@ char const* CmdLineBootText() {
   return boot_str.c_str();
 }
 
+static int exit_code = 0;
 static bool prog_exit = false;
-void ShutdownTINE(int32_t ec) {
+void ShutdownTINE(int ec) {
   prog_exit = true;
+  exit_code = ec;
   ShutdownCores(ec);
 }
 
@@ -106,11 +108,10 @@ int main(int argc, char** argv) {
       cmdLineFiles = arg_filen(nullptr, nullptr, "<files>", 0, 100,
                                "Files for use with command "
                                "line mode"),
-
       arg_end_(1),
   };
   int errs = arg_parse(argc, argv, argtable);
-  if (helpArg->count > 0 || errs != 0 || TDriveArg->count == 0) {
+  if (helpArg->count > 0 || errs > 0 || TDriveArg->count == 0) {
     std::cerr << "Usage is: " << argv[0];
     arg_print_syntaxv(stderr, argtable, "\n");
     arg_print_glossary_gnu(stderr, argtable);
@@ -126,7 +127,6 @@ int main(int argc, char** argv) {
     VFsMountDrive('Z', ".");
     is_cmd_line = true;
   }
-  VFsThrdInit();
   // This is called before LoadHCRT so TOSLoader will not be
   // all fucked up, fyi
   RegisterFuncPtrs();
@@ -135,7 +135,6 @@ int main(int argc, char** argv) {
   if (noans->count == 0)
     boot_str += "__EnableAns;\n";
   if (is_cmd_line) {
-    VFsSetDrv('Z');
     boot_str += "#exe {Drv('Z');};\n";
     for (int i = 0; i < cmdLineFiles->count; ++i) {
       boot_str += "#include \"";
@@ -172,5 +171,5 @@ int main(int argc, char** argv) {
   } else {
     WaitForCore0();
   }
-  return 0;
+  return exit_code;
 }

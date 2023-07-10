@@ -6,10 +6,10 @@
 #include "vfs.hxx"
 
 #include <atomic>
-#include <iostream>
 #include <vector>
 
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -140,14 +140,14 @@ void InterruptCore(size_t core) {
   ctx.ContextFlags = CONTEXT_FULL;
   SuspendThread(cores[core].thread);
   GetThreadContext(cores[core].thread, &ctx);
-  // PUSH RIP
+  // push rip
   ctx.Rsp -= 8;
   ((DWORD64*)ctx.Rsp)[0] = ctx.Rip;
   //
   static void* fp = nullptr;
   if (fp == nullptr)
     fp = TOSLoader["__InterruptCoreRoutine"][0].val;
-  // MOV RIP, fp
+  // movabs rip, <fp>
   ctx.Rip = reinterpret_cast<uintptr_t>(fp);
   SetThreadContext(cores[core].thread, &ctx);
   ResumeThread(cores[core].thread);
@@ -162,8 +162,8 @@ void LaunchCore0(ThreadCallback* fp) {
 #ifdef _WIN32
   // sorry for this piece of utter garbage code, I wanted it to compile
   // without warnings
-#define CAST(x) (WinCB)(void*) x
-  cores[0].thread = CreateThread(nullptr, 0, CAST(fp), nullptr, 0, nullptr);
+#define C_(x) reinterpret_cast<WinCB>((void*)x)
+  cores[0].thread = CreateThread(nullptr, 0, C_(fp), nullptr, 0, nullptr);
   cores[0].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[0].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[0].thread, THREAD_PRIORITY_HIGHEST);
@@ -181,7 +181,7 @@ void CreateCore(size_t core, void* fp) {
   cores[core].fp = fp;
 #ifdef _WIN32
   cores[core].thread =
-      CreateThread(nullptr, 0, CAST(LaunchCore), (void*)core, 0, nullptr);
+      CreateThread(nullptr, 0, C_(LaunchCore), (void*)core, 0, nullptr);
   cores[core].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[core].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[core].thread, THREAD_PRIORITY_HIGHEST);
@@ -282,7 +282,7 @@ static uint64_t GetTicksHP() {
 
 void SleepHP(uint64_t us) {
 #ifdef _WIN32
-  auto s = GetTicksHP();
+  auto const s = GetTicksHP();
   WaitForSingleObject(cores[core_num].mtx, INFINITE);
   cores[core_num].awake_at = s + us / 1000;
   ReleaseMutex(cores[core_num].mtx);
