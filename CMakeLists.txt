@@ -99,22 +99,25 @@ set_target_properties(${PROJECT_NAME}
 
 target_compile_features(${PROJECT_NAME}
   PRIVATE
+    cxx_attributes
+    cxx_alignas
     cxx_thread_local
     cxx_right_angle_brackets
     cxx_range_for
     cxx_auto_type
     cxx_nullptr
-    cxx_alignas
     cxx_constexpr
+    cxx_relaxed_constexpr
     cxx_variadic_macros
     cxx_uniform_initialization
+    cxx_generalized_initializers
     cxx_strong_enums
     cxx_static_assert
     cxx_lambdas
     cxx_generic_lambdas
-    cxx_generalized_initializers
-    cxx_attributes
     cxx_aggregate_default_initializers
+    cxx_default_function_template_args
+    c_function_prototypes
 )
 
 target_compile_options(${PROJECT_NAME}

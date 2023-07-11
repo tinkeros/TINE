@@ -106,7 +106,6 @@ struct CCore {
   // static_assert(std::is_layout_compatible_v<std::atomic<uint32_t>, uint32_t>)
   // failed on my machine
 #endif
-  bool is_alive;
   void* fp;
 };
 
@@ -167,7 +166,6 @@ void LaunchCore0(ThreadCallback* fp) {
   cores[0].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[0].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[0].thread, THREAD_PRIORITY_HIGHEST);
-  cores[0].is_alive = true;
   // im not going to use SEH or some crazy bulllshit to set the
   // thread name on windows(https://archive.md/9jiD5)
 #else
@@ -185,7 +183,6 @@ void CreateCore(size_t core, void* fp) {
   cores[core].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[core].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[core].thread, THREAD_PRIORITY_HIGHEST);
-  cores[core].is_alive = true;
 #else
   pthread_create(&cores[core].thread, nullptr, LaunchCore, (void*)core);
   pthread_setname_np(cores[core].thread, "Seth");
@@ -263,8 +260,6 @@ static uint64_t GetTicksHP() {
           ticks += tick_inc;
           for (size_t idx = 0; idx < mp_cnt(nullptr); ++idx) {
             auto& c = cores[idx];
-            if (!c.is_alive)
-              continue;
             WaitForSingleObject(c.mtx, INFINITE);
             // check if ticks reached awake_at
             if (ticks >= c.awake_at && c.awake_at > 0) {
