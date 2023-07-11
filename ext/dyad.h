@@ -100,6 +100,8 @@ int  dyad_getBytesSent(dyad_Stream *stream);
 int  dyad_getBytesReceived(dyad_Stream *stream);
 dyad_Socket dyad_getSocket(dyad_Stream *stream);
 
+void dyad_setMaxConnections(int);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

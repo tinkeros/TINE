@@ -189,6 +189,10 @@ static void STK_DyadSetNoDelay(int64_t* stk) {
   dyad_setNoDelay((dyad_Stream*)stk[0], stk[1]);
 }
 
+static void STK_DyadSetMaxConnections(int64_t *stk) {
+	dyad_setMaxConnections(stk[0]);
+}
+
 static void STK_UnblockSignals() {
 #ifndef _WIN32
   sigset_t all;
@@ -642,6 +646,7 @@ void RegisterFuncPtrs() {
   S_(DyadSetOnTickCallback, 3);
   S_(DyadSetOnErrorCallback, 3);
   S_(DyadSetOnDestroyCallback, 3);
+  S_(DyadSetMaxConnections,1);
   S_(DyadSetTimeout, 2);
   S_(DyadSetNoDelay, 2);
   S_(_BootDrv, 0);

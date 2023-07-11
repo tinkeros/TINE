@@ -311,6 +311,7 @@ static SelectSet dyad_selectSet;
 static double dyad_updateTimeout = 1;
 static double dyad_tickInterval = 1;
 static double dyad_lastTick = 0;
+static int dyad_maxConnects = 25;
 
 
 static void panic(const char *fmt, ...) {
@@ -606,6 +607,8 @@ static void stream_acceptPendingConnections(dyad_Stream *stream) {
     dyad_Stream *remote;
     dyad_Event e;
     int err = 0;
+    if(dyad_streamCount >= dyad_maxConnects)
+      return;
     dyad_Socket sockfd = accept(stream->sockfd, NULL, NULL);
     if (sockfd == INVALID_SOCKET) {
       err = errno;
@@ -1168,4 +1171,8 @@ int dyad_getBytesReceived(dyad_Stream *stream) {
 
 dyad_Socket dyad_getSocket(dyad_Stream *stream) {
   return stream->sockfd;
+}
+
+void dyad_setMaxConnections(int m) {
+	dyad_maxConnects=m;
 }
