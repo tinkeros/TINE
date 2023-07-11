@@ -1,5 +1,4 @@
 DyadInit;
-DyadSetMaxConnections(mp_cnt*2);
 extern class CConnection;
 class CUniqueToken {
   CServer *srv;

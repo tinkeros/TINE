@@ -268,7 +268,6 @@ import U0i InterruptCore(I64i);
 import U8i *NewVirtualChunk(I64i,I64i low32);
 import U0 FreeVirtualChunk(U8 *,U64);
 import U0i DyadInit();
-import U0i DyadSetMaxConnections(I64i);
 import U0i DyadUpdate();
 import U0i DyadShutdown();
 import CDyadStream *DyadNewStream();
@@ -354,7 +353,6 @@ extern U0 DyadSetOnDestroyCallback(CDyadStream *,U8i(*)(CDyadStream*,U8i*),U8i*)
 extern U0 DyadSetTimeout(CDyadStream *,F64);
 extern U0 DyadSetNoDelay(CDyadStream *,I64i);
 extern CDyadStream *DyadNewStream();
-extern U0i DyadSetMaxConnections(I64i);
 extern I64i DyadListen(CDyadStream *,I64i port);
 extern I64i DyadConnect(CDyadStream *,U8i*,I64i port);
 extern U0i DyadWrite(CDyadStream *,U8i*,I64i);
