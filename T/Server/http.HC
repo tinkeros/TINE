@@ -315,27 +315,9 @@ U0 EndHttpRequest(CDyadStream *s) {
   CConnection *con=Fs->user_data,old;
   if(Bt(&con->is_dead,0)) {
     return;
-  }
+  }
 //SendRequest may set the session cookie,we we do this after we send the request
   SendRequest(s);
-//SEE ABOVE NOTE
-  MemCpy(&old,con,sizeof(CConnection));
-  Free(con->url->query);
-  Free(con->url->abs_path);
-  Free(con->url->hostname);
-  Free(con->url);
-  Free(con->fbuffer);
-  Free(con->name);
-  HashTableDel(con->post_data);
-
-  MemSet(con,0,sizeof(CConnection));
-  con->unique_token=old.unique_token;
-  con->server=old.server;
-  con->stream=old.stream;
-  con->state.u8[0]=CON_S_METHOD;
-  con->hc=old.hc;
-  con->name=StrNew("",old.hc);
-  con->post_data=HashTableNew(0x10,con->hc);
   DyadEnd(s);
 }
 
@@ -388,7 +370,7 @@ U8 *LookForLine(U8 *ptr,I64 len) {
   fail:
   return NULL;
 }
-extern Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut);
+extern Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut);
 U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   CConnection *con;
   U8 *tmp, *ptr;
@@ -399,20 +381,20 @@ U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
     goto found;
   }
   con=CAlloc(sizeof(CConnection));
-  con->buffer=MAlloc(0x1000);
+  con->hc=HeapCtrlInit(,Fs,1);
+  con->buffer=MAlloc(0x1000,con->hc);
   con->buffer_ptr=con->buffer;
   con->buffer_len=0;
   con->unique_token=ut;
   con->server=ut->srv;
   con->stream=s;
   con->state.u8[0]=CON_S_METHOD;
-  con->hc=HeapCtrlInit(,Fs,1);
   con->name=StrNew("",con->hc);
   con->post_data=HashTableNew(0x10,con->hc);
   ut->con=con;
 found:
   if(MSize(con->buffer)<=1+(con->buffer_ptr-con->buffer)+len+con->buffer_len) {
-    tmp=MAlloc((con->buffer_ptr-con->buffer)+1+2*MSize(con->buffer)+len);
+    tmp=MAlloc((con->buffer_ptr-con->buffer)+1+2*MSize(con->buffer)+len,con->hc);
     MemCpy(tmp,con->buffer,MSize(con->buffer));
     Free(con->buffer);
     con->buffer_ptr=tmp+(con->buffer_ptr-con->buffer);
@@ -424,7 +406,7 @@ found:
 loop:
   if(ptr=LookForLine(con->buffer_ptr,con->buffer_len)) {
      len2=ptr-con->buffer_ptr;
-     tmp=MAlloc(len2+1);
+     tmp=MAlloc(len2+1,con->hc);
      MemCpy(tmp,con->buffer_ptr,len2);
      tmp[len2]=0;
      en=SReadLine(s,tmp,len2,ut);
