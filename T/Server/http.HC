@@ -8,11 +8,6 @@ class CConnection {
 	U8 *buffer;
 	U8 *buffer_ptr;
 	I64 buffer_len;
-//Each bit in lock has a purpose
-#define CON_LOCKf_DATA 0
-#define CON_LOCKf_PROCESS 1
-#define CON_LOCKf_BIRTH 2
-        I64 lock;
 	//These occupy .u8[0]
 	#define CON_S_METHOD 1
 	#define CON_S_FIELDS 2
@@ -34,7 +29,7 @@ class CConnection {
 	CURL *url;
 	U8 *name;
 	CHeapCtrl *hc;
-	CTask *data_task,*process_task;
+	CTask *task;
 	CUniqueToken *unique_token;
 	I64 is_dead,response_length;
 	U8 *session_cookie,*response_text;
@@ -324,35 +319,42 @@ U0 EndHttpRequest(CDyadStream *s) {
 //SendRequest may set the session cookie,we we do this after we send the request
   SendRequest(s);
 //SEE ABOVE NOTE
+  MemCpy(&old,con,sizeof(CConnection));
+  Free(con->url->query);
+  Free(con->url->abs_path);
+  Free(con->url->hostname);
+  Free(con->url);
+  Free(con->fbuffer);
+  Free(con->name);
+  HashTableDel(con->post_data);
+
+  MemSet(con,0,sizeof(CConnection));
+  con->unique_token=old.unique_token;
+  con->server=old.server;
+  con->stream=old.stream;
+  con->state.u8[0]=CON_S_METHOD;
+  con->hc=old.hc;
+  con->name=StrNew("",old.hc);
+  con->post_data=HashTableNew(0x10,con->hc);
   DyadEnd(s);
 }
 
-U0 ReleaseLocks() {
-//Called by ParseRequest
+U0 CloseConnectionCB() {
   ReleaseUsers;
   ReleaseCache;
-  Exit;
-}
-
-U0 CloseConnectionCB() {
   CConnection *con=Fs->user_data;
+  con->task=NULL;
   LBts(&con->is_dead,0);
-  Free(con);
-  Fs->user_data=NULL;
-  Exit;
 }
 U0 ParseRequest(CConnection *con) {
-    Fs->task_end_cb=&ReleaseLocks;
 	FramePtrAdd("CACHE_BLOB",NULL);
 	FramePtrAdd("CONNECTION",con);
     FramePtrAdd("TIMEOUT",(tS+5)(I64));
 	FramePtrAdd(WIKI_SESSION_COOKIE,con->session_cookie);
 	Fs->put_doc=Fs->parent_task->put_doc;
     Fs->user_data=con;
-    //DO NOT USE THIS(We are called with CON_LOCKf_PROCESS enabled)
-    //while(LBts(&con->lock,CON_LOCKf_PROCESS))
-    //  Yield;
-	con->process_task=Fs;
+    Fs->task_end_cb=&CloseConnectionCB;
+    con->task=Fs;
     CDyadStream *stream=con->stream;
 	U8 *http2,*t1,buf[STR_LEN],buf2[STR_LEN],*t2,*ptr,*optr;
 	CHashGeneric *hash;
@@ -370,16 +372,10 @@ U0 ParseRequest(CConnection *con) {
 		DyadWrite(stream,"\x0d\n",2);
 		break;
 	}
-	con->process_task=NULL;
-	HashTableDel(con->post_data);
-	con->post_data=HashTableNew(0x10,con->hc);
-	con->state=CON_S_METHOD;
-	LBtr(&con->lock,CON_LOCKf_PROCESS);
-        DyadEnd(stream);
+        DyadEnd(stream);
 	Exit;
 }
 
-extern Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut,Bool flush=FALSE);
 U8 *LookForLine(U8 *ptr,I64 len) {
   I64 reg RDI cap=ptr;
   I64 reg R15 l=len;
@@ -392,57 +388,7 @@ U8 *LookForLine(U8 *ptr,I64 len) {
   fail:
   return NULL;
 }
-U0 DataTask(CUniqueToken *ut) {
-  U8 *ptr2,*ptr;
-  U8 *tmp;
-  I64 len,len2;
-  Bool en;
-  CConnection *con=ut->con;
-  while(LBts(&con->lock,CON_LOCKf_BIRTH))
-   Yield;
-  CDyadStream *s=con->stream;
-  Fs->task_end_cb=&CloseConnectionCB;
-  Fs->user_data=con;
-  while(TRUE) {
-loop:
-    while(LBts(&con->lock,CON_LOCKf_DATA))
-      Sleep(1);
-    while(Bt(&con->lock,CON_LOCKf_PROCESS))
-      Sleep(1);
-    if(con->buffer_len)
-    if(ptr=LookForLine(con->buffer_ptr,con->buffer_len)) {
-      len2=ptr-con->buffer_ptr;
-      tmp=MAlloc(len2+1,con->hc);
-      MemCpy(tmp,con->buffer_ptr,len2);
-      tmp[len2]=0;
-      con->buffer_len-=len2;
-      con->buffer_ptr+=len2;
-      LBtr(&con->lock,CON_LOCKf_DATA);
-      en=SReadLine(s,tmp,len2,ut);
-      Free(tmp);
-      if(en) break;
-      goto loop;
-    } else {
-      len=con->buffer_len;
-      if(len)
-        en=SReadLine(s,con->buffer_ptr,len,ut,TRUE);
-      con->buffer_len-=len;
-      con->buffer_ptr+=len;
-      LBtr(&con->lock,CON_LOCKf_DATA);
-      if(en) break;
-    }
-    Sleep(10);
-  }
-  //Idle forever until kill
-  DyadEnd(s);
-  while(TRUE)
-    Sleep(1000);
-}
-
-I64 ChooseCore() {
-  return RandU16%mp_cnt;
-}
-
+extern Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut);
 U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   CConnection *con;
   U8 *tmp, *ptr;
@@ -453,38 +399,48 @@ U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
     goto found;
   }
   con=CAlloc(sizeof(CConnection));
+  con->buffer=MAlloc(0x1000);
+  con->buffer_ptr=con->buffer;
   con->buffer_len=0;
   con->unique_token=ut;
   con->server=ut->srv;
   con->stream=s;
   con->state.u8[0]=CON_S_METHOD;
-  ut->con=con;
-  LBts(&con->lock,CON_LOCKf_BIRTH);
-  con->data_task=Spawn(&DataTask,ut,"DATA",ChooseCore,Fs);
-  con->hc=HeapCtrlInit(,con->data_task,1);
-  con->post_data=HashTableNew(0x10,con->hc);
-  con->buffer=MAlloc(0x1000,con->hc);
+  con->hc=HeapCtrlInit(,Fs,1);
   con->name=StrNew("",con->hc);
-  con->buffer_ptr=con->buffer;
-  LBtr(&con->lock,CON_LOCKf_BIRTH);
+  con->post_data=HashTableNew(0x10,con->hc);
+  ut->con=con;
 found:
-  while(LBts(&con->lock,CON_LOCKf_DATA))
-    Yield;
   if(MSize(con->buffer)<=1+(con->buffer_ptr-con->buffer)+len+con->buffer_len) {
-    tmp=MAlloc((con->buffer_ptr-con->buffer)+1+2*MSize(con->buffer)+len,con->hc);
+    tmp=MAlloc((con->buffer_ptr-con->buffer)+1+2*MSize(con->buffer)+len);
     MemCpy(tmp,con->buffer,MSize(con->buffer));
     Free(con->buffer);
     con->buffer_ptr=tmp+(con->buffer_ptr-con->buffer);
     con->buffer=tmp;
   }
-  MemCpy(con->buffer_ptr+con->buffer_len,data,len);
+  MemCpy(con->buffer_ptr,data,len);
   con->buffer_len+=len;
   con->buffer_ptr[con->buffer_len]=0;
-  if(TaskValidate(con->data_task))
-    con->data_task->wake_jiffy=0;
-  LBtr(&con->lock,CON_LOCKf_DATA);
+loop:
+  if(ptr=LookForLine(con->buffer_ptr,con->buffer_len)) {
+     len2=ptr-con->buffer_ptr;
+     tmp=MAlloc(len2+1);
+     MemCpy(tmp,con->buffer_ptr,len2);
+     tmp[len2]=0;
+     en=SReadLine(s,tmp,len2,ut);
+     Free(tmp);
+     con->buffer_len-=len2;
+     con->buffer_ptr+=len2;
+     if(!en)
+       goto loop;
+  } else {
+    len=con->buffer_len;
+    en=SReadLine(s,con->buffer_ptr,len,ut);
+	con->buffer_len-=len;
+    con->buffer_ptr+=len;
+  }
 }
-Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut,Bool flush=FALSE) {
+Bool SReadLine(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   static I64 spawn_at=0;
   CConnection *first,*con,*con2;
   CHashGeneric *hash;
@@ -683,7 +639,6 @@ loop:
   }
 en:
 //2 is \x0d\n
-  if(flush) goto process;
   if(len==2&&!Bt(&con->state,CONf_AWAIT_BOUNDARY)&&!(Bt(&con->state,CONf_URL_ENCODED)&&con->content_len))
     goto process;
   Free(buf),Free(buf2);
@@ -696,9 +651,7 @@ process:
   Free(buf),Free(buf2);
 //If we have content,make sure we recieved all the data
   if((con->content_len&&con->content_len==con->field_ptr)||!con->content_len){
-    while(LBts(&con->lock,CON_LOCKf_PROCESS))
-      Yield;
-    con->process_task=Spawn(&ParseRequest,con,"Request",ChooseCore,Fs);
+    Spawn(&ParseRequest,con,"Request");
   }
   return FALSE;
 }
@@ -706,17 +659,29 @@ U0 CloseCallback(CDyadStream *s,CUniqueToken *ut) {
 //Killing the thread will fre the connection too
   CConnection *con=ut->con;
   if(!con) return;
+  if(con->task)
+    Kill(con->task,TRUE); //Wait for kill
+  con->task=NULL;
+  Free(con->session_cookie);
+  if(con->url) {
+    Free(con->url->query);
+    Free(con->url->abs_path);
+    Free(con->url->hostname);
+    Free(con->url);
+    Free(con->fbuffer);
+    Free(con->unique_token);
+  }
+  if(con->post_data)
+    HashTableDel(con->post_data);
+  HeapCtrlDel(con->hc);
+  Free(ut->con);
   ut->con=NULL;
-  if(con->process_task)
-    Kill(con->process_task,FALSE);   
-  if(con->data_task)
-    Kill(con->data_task,FALSE);  
   return;
 }
 U0 ListenCallback(CDyadStream *s,CServer *srv) {
 	CUniqueToken *ut=CAlloc(sizeof(CUniqueToken));
 	ut->srv=srv;
-	DyadSetTimeout(s,5);
+	DyadSetTimeout(s,60);
 	DyadSetDataCallback(s,&SReadData,ut);
 	DyadSetOnCloseCallback(s,&CloseCallback,ut);
 	DyadSetOnTimeoutCallback(s,&CloseCallback,ut);
@@ -727,7 +692,7 @@ U0 Serve(CServer *srv) {
 	DyadSetOnListenCallback(srv->s_sock,&ListenCallback,srv);
 	"Press a button to quit serving\n";
 	while(!ScanKey) {
-		Sleep(10);
+		Sleep(1);
 		DyadUpdate;
 	}
 	DyadShutdown;

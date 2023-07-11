@@ -271,6 +271,7 @@ import U0i DyadInit();
 import U0i DyadUpdate();
 import U0i DyadShutdown();
 import CDyadStream *DyadNewStream();
+import U0 DyadSetMaxConn(U64);
 import I64i DyadListen(CDyadStream *,I64i port);
 import I64i DyadConnect(CDyadStream *,U8i*,I64i port);
 import U0i DyadWrite(CDyadStream *,U8i*,I64i);
@@ -353,6 +354,7 @@ extern U0 DyadSetOnDestroyCallback(CDyadStream *,U8i(*)(CDyadStream*,U8i*),U8i*)
 extern U0 DyadSetTimeout(CDyadStream *,F64);
 extern U0 DyadSetNoDelay(CDyadStream *,I64i);
 extern CDyadStream *DyadNewStream();
+extern U0 DyadSetMaxConn(U64);
 extern I64i DyadListen(CDyadStream *,I64i port);
 extern I64i DyadConnect(CDyadStream *,U8i*,I64i port);
 extern U0i DyadWrite(CDyadStream *,U8i*,I64i);

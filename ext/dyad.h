@@ -9,6 +9,7 @@
 #define DYAD_H
 
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifdef _WIN32
   #include <windows.h> /* For SOCKET */

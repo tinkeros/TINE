@@ -208,8 +208,8 @@ PUSH R12
 PUSH R13
 PUSH R14
 PUSH R15
-PUSH 0 ;fake return address so the stack trace deliberately ends here(doesn't matter since it'll be reset to normal after the function returns and rbp is popped)
-PUSH 0 ;make it look like it was called from null
+PUSH 0 ;fake return address
+PUSH 0 ;make it look like it was called from null(fake RBP)
 MOV RBP,RSP 
 CALL RDI
 ADD RSP,0x10

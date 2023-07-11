@@ -15,6 +15,7 @@
   #include <windows.h>
   #include <stdio.h>
   #include <stdlib.h>
+  #include <stdint.h>
   #include <string.h>
   #include <stdarg.h>
   #include <signal.h>
@@ -24,12 +25,13 @@
   #ifndef _GNU_SOURCE
     #define _GNU_SOURCE
   #endif
-  #ifdef __FreeBSD__
+  #if defined(__FreeBSD__) && !defined(_BSD_SOURCE)
     #define _BSD_SOURCE
   #endif
   #include <stdio.h>
   #include <stdlib.h>
   #include <string.h>
+  #include <stdint.h>
   #include <stdarg.h>
   #include <signal.h>
   #include <errno.h>
@@ -304,7 +306,7 @@ struct dyad_Stream {
 
 
 static dyad_Stream *dyad_streams;
-static int dyad_streamCount;
+static int64_t dyad_streamCount = 0;
 static char dyad_panicMsgBuffer[128];
 static dyad_PanicCallback panicCallback;
 static SelectSet dyad_selectSet;

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 # thank you justin
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
-  message(FATAL_ERROR "You cannot use CMake to build from the root of it's source tree! Remove the CMakeCache.txt file and CMakeFiles directory from this directory, then create a separate directory (either below this directory or elsewhere), and then re-run CMake from there.")
+  message(FATAL_ERROR "You cannot use CMake to build from the root of its source tree! Remove the CMakeCache.txt file and CMakeFiles directory from this directory, then create a separate directory (either below this directory or elsewhere), and then re-run CMake from there.")
 endif ()
 
 # lmao lol
@@ -170,15 +170,15 @@ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR
     message(FATAL_ERROR "No builtin atomics, wtf are you using as your compiler?")
   endif ()
 else ()
-    message(FATAL_ERROR "Unsupported system")
+  message(FATAL_ERROR "Unsupported system")
 endif ()
 
 # ffi
 set(FFI_NAME "FFI_${C_ABI_NAME}")
 add_custom_command(OUTPUT "${FFI_NAME}.obj"
-    COMMAND yasm
-    ARGS -f ${BIN_FORMAT} -o "${CMAKE_CURRENT_BINARY_DIR}/${FFI_NAME}.obj" "${CMAKE_CURRENT_SOURCE_DIR}/${FFI_NAME}.yasm"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FFI_NAME}.yasm"
+  COMMAND yasm
+  ARGS -f ${BIN_FORMAT} -o "${CMAKE_CURRENT_BINARY_DIR}/${FFI_NAME}.obj" "${CMAKE_CURRENT_SOURCE_DIR}/${FFI_NAME}.yasm"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${FFI_NAME}.yasm"
 )
 add_library(FFI STATIC "${FFI_NAME}.obj")
 set_target_properties(FFI

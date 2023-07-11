@@ -50,6 +50,7 @@ static BOOL WINAPI CtrlCHandlerRoutine(DWORD) {
 
 #else
 #include <signal.h>
+#include <sys/resource.h>
 #endif
 
 static struct arg_lit *helpArg, *sixty_fps, *commandLineArg, *cb_sanitize,
@@ -90,6 +91,15 @@ static void* __stdcall Core0(void*) {
 }
 
 int main(int argc, char** argv) {
+#ifndef _WIN32
+  // https://archive.md/5cufN#selection-2369.223-2369.272
+  // Hilarious how Linux manpages won't teach me anything
+  // about why I got an EPERM when I raised rl.rlim_max
+  struct rlimit rl;
+  getrlimit(RLIMIT_NOFILE, &rl);
+  rl.rlim_cur = rl.rlim_max;
+  setrlimit(RLIMIT_NOFILE, &rl);
+#endif
   void* argtable[] = {
       helpArg = arg_lit0("h", "help", "Display this help message."),
       sixty_fps = arg_lit0("6", "60fps", "Run in 60 fps mode."),
