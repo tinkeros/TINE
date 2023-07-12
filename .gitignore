@@ -63,3 +63,5 @@ T/Headers.HH
 T/unfound.DD
 build
 tine
+T/Distro/**
+T/MyDistro.ISO.C

@@ -52,18 +52,18 @@ Cd("T:/Server");
 ```
 contributions to wiki appreciated
 
-# building TempleOS from TINE
+<!-- # building TempleOS from TINE
 because this runtime uses the orthodox version of the HolyC compiler,building a TempleOS distro is possible(why) <br>
 ISO must end in `ISO.C`
 
-```
+```C
 //Download an orthodox ISO into your T drive from TempleOS.org
 Move("TempleOSLite.ISO","TempleOSLite.ISO.C"); //Move it to end in ISO.C
 #include "Boot/DoDistro.HC";
 MakeMyISO("/TempleOSLite.ISO.C","/MyDistro.ISO.C");
 //ExitTINE; optionally exit idk
 //Run the ISO using qemu -m 512M -cdrom T/MyDistro.ISO.C
-```
+``` -->
 # ref
 ```C
 DirMk("folder");
