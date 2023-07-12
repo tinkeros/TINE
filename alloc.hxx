@@ -30,3 +30,5 @@ template <class T = void, bool exec = true>
 __attribute__((always_inline)) inline T* VirtAlloc(size_t sz) {
   return static_cast<T*>(NewVirtualChunk(detail::size_of<T>::sz * sz, exec));
 }
+
+// vim: set expandtab ts=2 sw=2 :

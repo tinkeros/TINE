@@ -258,8 +258,7 @@ static uint64_t GetTicksHP() {
         tick_inc, tick_inc,
         [](auto, auto, auto, auto, auto) {
           ticks += tick_inc;
-          for (size_t idx = 0; idx < mp_cnt(nullptr); ++idx) {
-            auto& c = cores[idx];
+          for (auto& c : cores) {
             WaitForSingleObject(c.mtx, INFINITE);
             // check if ticks reached awake_at
             if (ticks >= c.awake_at && c.awake_at > 0) {
@@ -295,3 +294,5 @@ void SleepHP(uint64_t us) {
 #endif
 #endif
 }
+
+// vim: set expandtab ts=2 sw=2 :

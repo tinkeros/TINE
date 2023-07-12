@@ -296,3 +296,5 @@ __attribute__((used, visibility("default"))) char* WhichFun(void* ptr) {
   }
   return str_dup(last.c_str());
 }
+
+// vim: set expandtab ts=2 sw=2 :

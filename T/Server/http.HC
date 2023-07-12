@@ -315,7 +315,7 @@ U0 EndHttpRequest(CDyadStream *s) {
   CConnection *con=Fs->user_data,old;
   if(Bt(&con->is_dead,0)) {
     return;
-  }
+  }
 //SendRequest may set the session cookie,we we do this after we send the request
   SendRequest(s);
   DyadEnd(s);
@@ -382,7 +382,7 @@ U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   }
   con=CAlloc(sizeof(CConnection));
   con->hc=HeapCtrlInit(,Fs,1);
-  con->buffer=MAlloc(0x1000,con->hc);
+  con->buffer=MAlloc(0xB00,con->hc);
   con->buffer_ptr=con->buffer;
   con->buffer_len=0;
   con->unique_token=ut;
@@ -390,7 +390,7 @@ U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   con->stream=s;
   con->state.u8[0]=CON_S_METHOD;
   con->name=StrNew("",con->hc);
-  con->post_data=HashTableNew(0x10,con->hc);
+  con->post_data=HashTableNew(0x50,con->hc);
   ut->con=con;
 found:
   if(MSize(con->buffer)<=1+(con->buffer_ptr-con->buffer)+len+con->buffer_len) {

@@ -24,10 +24,6 @@ static void AudioCB(void* userdata, Uint8* out, int len) {
   }
 }
 
-void SndFreq(uint64_t f) {
-  freq = f;
-}
-
 void InitSound(void) {
   SDL_AudioSpec want = {
       .freq = 24000,
@@ -44,6 +40,10 @@ void InitSound(void) {
   SDL_PauseAudioDevice(output, 0);
 }
 
+void SndFreq(uint64_t f) {
+  freq = f;
+}
+
 void SetVolume(double v) {
   vol = v;
 }
@@ -51,3 +51,5 @@ void SetVolume(double v) {
 double GetVolume(void) {
   return vol;
 }
+
+// vim: set expandtab ts=2 sw=2 :

@@ -24,3 +24,5 @@ char** VFsDir();
 bool VFsIsDir(char const* path);
 bool VFsFileExists(char const* path);
 void VFsMountDrive(char const let, char const* path);
+
+// vim: set expandtab ts=2 sw=2 :

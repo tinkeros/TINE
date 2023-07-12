@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static char* UnescapeString(char* str, char* where);
 static std::string MStrPrint(char const* fmt, uint64_t /* argc*/,
                              int64_t* argv);
+static char* UnescapeString(char* __restrict str, char* __restrict where);
 
 void TOSPrint(char const* fmt, uint64_t argc, int64_t* argv) {
   (std::cerr << MStrPrint(fmt, argc, argv)).flush();
@@ -37,8 +37,6 @@ loop:;
   start = end + 1;
   if (*start == '-')
     ++start;
-  if (*start == '0')
-    ++start;
   /* this skips output format specifiers
    * because i dont think a debug printer
    * needs such a thing */
@@ -55,12 +53,11 @@ loop:;
     // decimals += *start - '0';
     ++start;
   }
-  while (strchr("t,$/", *start))
+  while (strchr("t,$/", *start) != nullptr)
     ++start;
   int64_t aux = 1;
   if (*start == '*') {
-    aux = argv[arg];
-    ++arg;
+    aux = argv[arg++];
     ++start;
   } else if (*start == 'h') {
     while (isdigit(*start)) {
@@ -103,18 +100,17 @@ loop:;
         uint8_t c = chr & 0xff;
         chr >>= 8;
         if (c > 0)
-          ret += (char)c;
+          ret += static_cast<char>(c);
       }
     }
   } break;
   case 's': {
-    while (--aux >= 0) {
-      ret += ((char**)argv)[arg];
-    }
+    while (--aux >= 0)
+      ret += reinterpret_cast<char**>(argv)[arg];
   } break;
   case 'q': {
-    char *str = ((char**)argv)[arg],
-         *buf = new (std::nothrow) char[strlen(str) * 4 + 1]{};
+    char *str = reinterpret_cast<char**>(argv)[arg],
+         *buf = new (std::nothrow) char[strlen(str) * 4 + 1];
     UnescapeString(str, buf);
     ret += buf;
     delete[] buf;
@@ -129,7 +125,7 @@ loop:;
   goto loop;
 }
 
-static char* UnescapeString(char* str, char* where) {
+static char* UnescapeString(char* __restrict str, char* __restrict where) {
   while (*str) {
     char const* to;
     switch (*str) {
@@ -155,7 +151,8 @@ static char* UnescapeString(char* str, char* where) {
     continue;
 
   check_us_key:; // you bear a striking resemblance
-    if (isalnum(*str) == 0 &&
+                 // you look just like my bathroom mirror
+    if (isalnum(static_cast<unsigned char>(*str)) == 0 &&
         strchr(" ~!@#$%^&*()_+|{}[]\\;':\",./<>?", *str) == nullptr) {
       // Note: this was giving me bizarre buffer overflow
       // errors and it turns out you MUST use uint8_t when
@@ -169,10 +166,10 @@ static char* UnescapeString(char* str, char* where) {
       ++str;
       continue;
     }
-    *where = *str;
-    ++str;
-    ++where;
+    *where++ = *str++;
   }
   *where = '\0';
   return where;
 }
+
+// vim: set expandtab ts=2 sw=2 :

@@ -21,3 +21,5 @@ void FreeVirtualChunk(void* ptr, size_t s);
 enum : uint32_t {
   MAX_CODE_HEAP_ADDR = 0x7fffFFFF
 };
+
+// vim: set expandtab ts=2 sw=2 :

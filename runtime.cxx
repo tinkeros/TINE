@@ -674,3 +674,5 @@ void RegisterFuncPtrs() {
     sym.val = blob + (uintptr_t)sym.val;
   }
 }
+
+// vim: set expandtab ts=2 sw=2 :

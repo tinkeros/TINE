@@ -70,12 +70,14 @@ static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
   uint64_t sig_i64 = sig;
 #ifdef __linux__
 #define REG(x) static_cast<uint64_t>(ctx->uc_mcontext.gregs[REG_##x])
+  // clang-format off
+  //
   // apparently ucontext is implementation defined idk
   // if your on musl or something fix this yourself and send me a patch
   // probably only works on glibc lmao
-  // clang-format off
   // heres why i dont take the address of fpregs on linux
   // https://github.com/bminor/glibc/blob/4290aed05135ae4c0272006442d147f2155e70d7/sysdeps/unix/sysv/linux/x86/sys/ucontext.h#L239
+  //
   // clang-format on
   uint64_t regs[] = {
       REG(RAX), REG(RCX), REG(RDX),
@@ -118,3 +120,5 @@ void SetupDebugger() {
 }
 
 #endif
+
+// vim: set expandtab ts=2 sw=2 :

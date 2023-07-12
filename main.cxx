@@ -183,3 +183,5 @@ int main(int argc, char** argv) {
   }
   return exit_code;
 }
+
+// vim: set expandtab ts=2 sw=2 :

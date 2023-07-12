@@ -24,3 +24,5 @@ uint64_t FFI_CALL_TOS_0_ZERO_BP(void*);
 #ifdef __cplusplus
 }
 #endif
+
+// vim: set expandtab ts=2 sw=2 :

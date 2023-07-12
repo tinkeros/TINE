@@ -9,3 +9,5 @@ void HolyFree(void* p);
 char* HolyStrDup(char const* s);
 void RegisterFuncPtrs();
 uint64_t mp_cnt(void*);
+
+// vim: set expandtab ts=2 sw=2 :
