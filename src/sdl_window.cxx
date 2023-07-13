@@ -604,7 +604,7 @@ void SetMSCallback(void* fptr) {
 
 static int ExitCb(void* off, SDL_Event* event) {
   if (event->type == SDL_QUIT)
-    *(bool*)off = true;
+    *static_cast<bool*>(off) = true;
   return 0;
 }
 

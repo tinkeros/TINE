@@ -47,7 +47,6 @@ using std::thread;
 #include "dyad.h"
 #include "linenoise-ng/linenoise.h"
 
-
 void HolyFree(void* ptr) {
   static void* fptr = nullptr;
   if (!fptr)
@@ -98,27 +97,28 @@ static void* STK_DyadNewStream() {
   return dyad_newStream();
 }
 
-static int64_t STK_DyadListen(uintptr_t* stk) {
-  return dyad_listen((dyad_Stream*)stk[0], stk[1]);
+static int64_t STK_DyadListen(intptr_t* stk) {
+  return dyad_listen((dyad_Stream*)stk[0], static_cast<int>(stk[1]));
 }
 
-static int64_t STK_DyadConnect(uintptr_t* stk) {
-  return dyad_connect((dyad_Stream*)stk[0], (char const*)stk[1], stk[2]);
+static int64_t STK_DyadConnect(intptr_t* stk) {
+  return dyad_connect((dyad_Stream*)stk[0], (char const*)stk[1],
+                      static_cast<int>(stk[2]));
 }
 
 static void STK_DyadWrite(intptr_t* stk) {
-  dyad_write((dyad_Stream*)stk[0], (void*)stk[1], (int)stk[2]);
+  dyad_write((dyad_Stream*)stk[0], (void*)stk[1], static_cast<int>(stk[2]));
 }
 
 static void STK_DyadEnd(uintptr_t* stk) {
   dyad_end((dyad_Stream*)stk[0]);
 }
 
-static void STK_DyadClose(int64_t* stk) {
+static void STK_DyadClose(uintptr_t* stk) {
   dyad_close((dyad_Stream*)stk[0]);
 }
 
-static char* STK_DyadGetAddress(int64_t* stk) {
+static char* STK_DyadGetAddress(uintptr_t* stk) {
   const char* ret = dyad_getAddress((dyad_Stream*)stk[0]);
   return HolyStrDup(ret);
 }
@@ -128,13 +128,13 @@ static void DyadReadCB(dyad_Event* e) {
                  (uintptr_t)e->udata2);
 }
 
-static void STK_DyadSetReadCallback(int64_t* stk) {
+static void STK_DyadSetReadCallback(uintptr_t* stk) {
   // This is for a line of text
   dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_LINE, DyadReadCB,
                    (void*)stk[1], (void*)stk[2]);
 }
 
-static void STK_DyadSetDataCallback(int64_t* stk) {
+static void STK_DyadSetDataCallback(uintptr_t* stk) {
   // This is for binary data
   dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_DATA, DyadReadCB,
                    (void*)stk[1], (void*)stk[2]);
@@ -148,46 +148,46 @@ static void DyadCloseCB(dyad_Event* e) {
   FFI_CALL_TOS_2(e->udata, (uintptr_t)e->stream, (uintptr_t)e->udata2);
 }
 
-static void STK_DyadSetOnCloseCallback(int64_t* stk) {
-  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_CLOSE, &DyadCloseCB,
+static void STK_DyadSetOnCloseCallback(uintptr_t* stk) {
+  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_CLOSE, DyadCloseCB,
                    (void*)stk[1], (void*)stk[2]);
 }
-static void STK_DyadSetOnConnectCallback(int64_t* stk) {
-  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_CONNECT, &DyadListenCB,
+static void STK_DyadSetOnConnectCallback(uintptr_t* stk) {
+  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_CONNECT, DyadListenCB,
                    (void*)stk[1], (void*)stk[2]);
 }
-static void STK_DyadSetOnDestroyCallback(int64_t* stk) {
-  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_DESTROY, &DyadCloseCB,
+static void STK_DyadSetOnDestroyCallback(uintptr_t* stk) {
+  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_DESTROY, DyadCloseCB,
                    (void*)stk[1], (void*)stk[2]);
 }
-static void STK_DyadSetOnErrorCallback(int64_t* stk) {
-  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_ERROR, &DyadCloseCB,
+static void STK_DyadSetOnErrorCallback(uintptr_t* stk) {
+  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_ERROR, DyadCloseCB,
                    (void*)stk[1], (void*)stk[2]);
 }
-static void STK_DyadSetOnReadyCallback(int64_t* stk) {
-  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_READY, &DyadListenCB,
+static void STK_DyadSetOnReadyCallback(uintptr_t* stk) {
+  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_READY, DyadListenCB,
                    (void*)stk[1], (void*)stk[2]);
 }
-static void STK_DyadSetOnTickCallback(int64_t* stk) {
-  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_TICK, &DyadListenCB,
+static void STK_DyadSetOnTickCallback(uintptr_t* stk) {
+  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_TICK, DyadListenCB,
                    (void*)stk[1], (void*)stk[2]);
 }
-static void STK_DyadSetOnTimeoutCallback(int64_t* stk) {
-  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_TIMEOUT, &DyadListenCB,
-                   (void*)stk[1], (void*)stk[2]);
-}
-
-static void STK_DyadSetOnListenCallback(int64_t* stk) {
-  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_ACCEPT, &DyadListenCB,
+static void STK_DyadSetOnTimeoutCallback(uintptr_t* stk) {
+  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_TIMEOUT, DyadListenCB,
                    (void*)stk[1], (void*)stk[2]);
 }
 
-static void STK_DyadSetTimeout(int64_t* stk) {
+static void STK_DyadSetOnListenCallback(uintptr_t* stk) {
+  dyad_addListener((dyad_Stream*)stk[0], DYAD_EVENT_ACCEPT, DyadListenCB,
+                   (void*)stk[1], (void*)stk[2]);
+}
+
+static void STK_DyadSetTimeout(uintptr_t* stk) {
   dyad_setTimeout((dyad_Stream*)stk[0], ((double*)stk)[1]);
 }
 
-static void STK_DyadSetNoDelay(int64_t* stk) {
-  dyad_setNoDelay((dyad_Stream*)stk[0], stk[1]);
+static void STK_DyadSetNoDelay(intptr_t* stk) {
+  dyad_setNoDelay((dyad_Stream*)stk[0], static_cast<int>(stk[1]));
 }
 
 static void STK_UnblockSignals() {
@@ -198,7 +198,7 @@ static void STK_UnblockSignals() {
 #endif
 }
 
-static void STK__GrPaletteColorSet(int64_t* stk) {
+static void STK__GrPaletteColorSet(uint64_t* stk) {
   GrPaletteColorSet(stk[0], stk[1]);
 }
 
@@ -213,11 +213,7 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
   MEMORY_BASIC_INFORMATION mbi{};
   if (VirtualQuery((void*)stk[0], &mbi, sizeof mbi)) {
     // https://archive.md/ehBq4
-    DWORD mask = (stk[0] <= MAX_CODE_HEAP_ADDR)
-                   ? (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
-                      PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
-                      PAGE_EXECUTE_WRITECOPY)
-                   : (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY);
+    DWORD mask = PAGE_READONLY | PAGE_READWRITE;
     return !!(mbi.Protect & mask);
   }
   return false;
@@ -263,7 +259,7 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
 #endif
 }
 
-static void STK_InterruptCore(int64_t* stk) {
+static void STK_InterruptCore(uint64_t* stk) {
   InterruptCore(stk[0]);
 }
 
@@ -341,7 +337,7 @@ static void STK_SndFreq(uint64_t* stk) {
   SndFreq(stk[0]);
 }
 
-static void STK_SetClipboardText(int64_t* stk) {
+static void STK_SetClipboardText(uintptr_t* stk) {
   SetClipboard((char*)stk[0]);
 }
 
@@ -355,7 +351,7 @@ static char* STK___GetStr(uintptr_t* stk) {
   return r;
 }
 
-static char* STK_GetClipboardText(int64_t*) {
+static char* STK_GetClipboardText(void*) {
   std::string clip{ClipboardText()};
   return HolyStrDup(clip.c_str());
 }
@@ -499,7 +495,7 @@ static uint64_t STK_GetVolume(void*) {
 }
 
 static void STK_ExitTINE(int64_t* stk) {
-  ShutdownTINE(stk[0]);
+  ShutdownTINE(static_cast<int>(stk[0]));
 }
 
 // arity must be <= 0xffFF/sizeof U64
