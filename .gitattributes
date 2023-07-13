@@ -1,8 +1,7 @@
 * text=auto
 *.HH linguist-language=HolyC
 *.HC linguist-language=HolyC
-*.yasm linguist-language=Assembly
-ext/** linguist-vendored
+vendor/** linguist-vendored
 cmake/** linguist-vendored
 T/Community/blazeitfgt2/** linguist-vendored
 T/Community/blazeitfgt/** linguist-vendored

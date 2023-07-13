@@ -44,8 +44,9 @@ using std::thread;
 #include <unistd.h>
 #endif
 
-#include "ext/dyad.h"
-#include "ext/linenoise/linenoise.h"
+#include "dyad.h"
+#include "linenoise-ng/linenoise.h"
+
 
 void HolyFree(void* ptr) {
   static void* fptr = nullptr;

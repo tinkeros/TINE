@@ -14,11 +14,11 @@
 ### only supports >=Win10(complain to msys2 devs not me), msvc unsupported
 install msys2, launch the "MSYS2 MINGW64 Shell", and run the following
 ```
-pacman -Syu yasm make mingw-w64-x86_64-{cmake,gcc,SDL2}
+pacman -Syu make mingw-w64-x86_64-{cmake,gcc,SDL2}
 ```
 if pacman tells you to restart the terminal then do it and run the cmd again(rtfm)
 ## unix-like system users
-install SDL2, cmake, make, yasm and gcc/clang
+install SDL2, cmake, make and gcc/clang
 ## building the loader
 ```
 mkdir build;

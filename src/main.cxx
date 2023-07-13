@@ -8,8 +8,7 @@
 #include "tos_aot.hxx"
 #include "vfs.hxx"
 
-// its dangerous and lonely out here socrates
-#include "ext/argtable3.h"
+#include "argtable3.h"
 
 #include <algorithm>
 #include <filesystem>
