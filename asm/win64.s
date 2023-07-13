@@ -28,7 +28,7 @@ FFI_CALL_TOS_0:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 FFI_CALL_TOS_1:
@@ -50,7 +50,7 @@ FFI_CALL_TOS_1:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 FFI_CALL_TOS_2:
@@ -73,7 +73,7 @@ FFI_CALL_TOS_2:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 FFI_CALL_TOS_3:
@@ -97,7 +97,7 @@ FFI_CALL_TOS_3:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 # https://archive.md/4HDA0#selection-2085.429-2085.1196
@@ -130,7 +130,7 @@ FFI_CALL_TOS_4:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 FFI_CALL_TOS_5:
@@ -156,7 +156,7 @@ FFI_CALL_TOS_5:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 FFI_CALL_TOS_6:
@@ -183,7 +183,7 @@ FFI_CALL_TOS_6:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 FFI_CALL_TOS_7:
@@ -211,7 +211,7 @@ FFI_CALL_TOS_7:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 FFI_CALL_TOS_8:
@@ -240,7 +240,7 @@ FFI_CALL_TOS_8:
   pop rsi
   pop rdi
   pop rbx
-  leave
+  pop rbp
   ret
 
 FFI_CALL_TOS_0_ZERO_BP:
@@ -253,8 +253,8 @@ FFI_CALL_TOS_0_ZERO_BP:
   push r14
   push r15
   push 0 # fake return address
-  push 0 # fake rbp(stacktrace ends here)
-  mov rbp, rsp
+  push 0 # fake rbp
+  mov rbp, rsp # pass modified stack to TempleOS function
   call rcx
   add rsp, 0x10
   pop r15
