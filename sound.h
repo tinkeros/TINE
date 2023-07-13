@@ -13,3 +13,5 @@ void SetVolume(double);
 #ifdef __cplusplus
 }
 #endif
+
+// vim: set expandtab ts=2 sw=2 :

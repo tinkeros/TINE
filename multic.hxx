@@ -35,3 +35,5 @@ void ShutdownCores(int ec);
 void AwakeFromSleeping(size_t core);
 
 void SleepHP(uint64_t us);
+
+// vim: set expandtab ts=2 sw=2 :

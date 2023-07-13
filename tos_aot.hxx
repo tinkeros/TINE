@@ -70,3 +70,5 @@ extern MapCHashVec TOSLoader;
 
 void BackTrace();
 void LoadHCRT(std::string const&);
+
+// vim: set expandtab ts=2 sw=2 :

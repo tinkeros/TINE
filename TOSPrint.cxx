@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static char* UnescapeString(char* str, char* where);
 static std::string MStrPrint(char const* fmt, uint64_t /* argc*/,
                              int64_t* argv);
+static char* UnescapeString(char* __restrict str, char* __restrict where);
 
 void TOSPrint(char const* fmt, uint64_t argc, int64_t* argv) {
   (std::cerr << MStrPrint(fmt, argc, argv)).flush();
@@ -37,8 +37,6 @@ loop:;
   start = end + 1;
   if (*start == '-')
     ++start;
-  if (*start == '0')
-    ++start;
   /* this skips output format specifiers
    * because i dont think a debug printer
    * needs such a thing */
@@ -55,12 +53,11 @@ loop:;
     // decimals += *start - '0';
     ++start;
   }
-  while (strchr("t,$/", *start))
+  while (strchr("t,$/", *start) != nullptr)
     ++start;
   int64_t aux = 1;
   if (*start == '*') {
-    aux = argv[arg];
-    ++arg;
+    aux = argv[arg++];
     ++start;
   } else if (*start == 'h') {
     while (isdigit(*start)) {
@@ -69,52 +66,51 @@ loop:;
       ++start;
     }
   }
-#define FMT_CH(x, T, ...)                                                \
-  do {                                                                   \
-    size_t sz = snprintf(nullptr, 0, "%" x, __VA_ARGS__((T*)argv)[arg]); \
-    char* tmp = new (std::nothrow) char[sz + 1]{};                       \
-    snprintf(tmp, sz + 1, "%" x, __VA_ARGS__((T*)argv)[arg]);            \
-    ret += tmp;                                                          \
-    delete[] tmp;                                                        \
+#define FMT_CH(x, T)                                                          \
+  do {                                                                        \
+    size_t sz = snprintf(nullptr, 0, "%" x, reinterpret_cast<T*>(argv)[arg]); \
+    char* tmp = new (std::nothrow) char[sz + 1];                              \
+    snprintf(tmp, sz + 1, "%" x, reinterpret_cast<T*>(argv)[arg]);            \
+    ret += tmp;                                                               \
+    delete[] tmp;                                                             \
   } while (false);
   switch (*start) {
   case 'd':
-  case 'i': // extra commas are for preprocessor standards compliance
-    FMT_CH(PRId64, int64_t, );
+  case 'i':
+    FMT_CH(PRId64, int64_t);
     break;
   case 'u':
-    FMT_CH(PRIu64, uint64_t, );
+    FMT_CH(PRIu64, uint64_t);
     break;
   case 'o':
-    FMT_CH(PRIo64, uint64_t, );
+    FMT_CH(PRIo64, uint64_t);
     break;
   case 'n':
     static_assert(sizeof(double) == sizeof(uint64_t));
-    FMT_CH("f", double, );
+    FMT_CH("f", double);
     break;
   case 'p':
-    FMT_CH("p", uint64_t, (void*));
+    FMT_CH("p", void*);
     break;
   case 'c': {
     while (--aux >= 0) {
-      uint64_t chr = argv[arg];
+      auto chr = reinterpret_cast<uint64_t*>(argv)[arg];
       // this accounts for HolyC's multichar character literals too
       while (chr > 0) {
         uint8_t c = chr & 0xff;
         chr >>= 8;
         if (c > 0)
-          ret += (char)c;
+          ret += static_cast<char>(c);
       }
     }
   } break;
   case 's': {
-    while (--aux >= 0) {
-      ret += ((char**)argv)[arg];
-    }
+    while (--aux >= 0)
+      ret += reinterpret_cast<char**>(argv)[arg];
   } break;
   case 'q': {
-    char *str = ((char**)argv)[arg],
-         *buf = new (std::nothrow) char[strlen(str) * 4 + 1]{};
+    char *str = reinterpret_cast<char**>(argv)[arg],
+         *buf = new (std::nothrow) char[strlen(str) * 4 + 1];
     UnescapeString(str, buf);
     ret += buf;
     delete[] buf;
@@ -129,7 +125,7 @@ loop:;
   goto loop;
 }
 
-static char* UnescapeString(char* str, char* where) {
+static char* UnescapeString(char* __restrict str, char* __restrict where) {
   while (*str) {
     char const* to;
     switch (*str) {
@@ -155,7 +151,8 @@ static char* UnescapeString(char* str, char* where) {
     continue;
 
   check_us_key:; // you bear a striking resemblance
-    if (isalnum(*str) == 0 &&
+                 // you look just like my bathroom mirror
+    if (isalnum(static_cast<unsigned char>(*str)) == 0 &&
         strchr(" ~!@#$%^&*()_+|{}[]\\;':\",./<>?", *str) == nullptr) {
       // Note: this was giving me bizarre buffer overflow
       // errors and it turns out you MUST use uint8_t when
@@ -163,16 +160,16 @@ static char* UnescapeString(char* str, char* where) {
       // probably it's typical GNU bullshittery or there's something
       // deep inside the Standard that I'm missing, either way, this works
       char buf[5];
-      snprintf(buf, sizeof buf, "\\%" PRIo8, (uint8_t)*str);
+      snprintf(buf, sizeof buf, "\\%" PRIo8, static_cast<uint8_t>(*str));
       std::copy(buf, buf + 4, where);
       where += 4;
       ++str;
       continue;
     }
-    *where = *str;
-    ++str;
-    ++where;
+    *where++ = *str++;
   }
   *where = '\0';
   return where;
 }
+
+// vim: set expandtab ts=2 sw=2 :

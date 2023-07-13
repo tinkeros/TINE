@@ -15,7 +15,7 @@ set(VERSION_SIMPLE "${PROJECT_MAJOR_VERSION}.${PROJECT_MINOR_VERSION}.${PROJECT_
 project(tine
   VERSION ${VERSION_SIMPLE}
   DESCRIPTION "TINE Is Not an Emulator"
-  LANGUAGES C CXX
+  LANGUAGES CXX C
 )
 
 # set a default build type if none was specified
@@ -79,8 +79,8 @@ set_source_files_properties(C_EXECUTABLE_SOURCE_FILES}
 )
 
 add_executable(${PROJECT_NAME}
-  ${C_EXECUTABLE_SOURCE_FILES}
   ${CXX_EXECUTABLE_SOURCE_FILES}
+  ${C_EXECUTABLE_SOURCE_FILES}
 )
 
 # outputs bin to src tree dir
@@ -89,9 +89,9 @@ set_target_properties(${PROJECT_NAME}
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS YES
     C_STANDARD 11
     C_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS YES
     C_EXTENSIONS YES
     LINKER_LANGUAGE CXX
     INTERPROCEDURAL_OPTIMIZATION ON
@@ -122,13 +122,13 @@ target_compile_features(${PROJECT_NAME}
 
 target_compile_options(${PROJECT_NAME}
   PRIVATE
-    -Werror=shadow
-    -fno-omit-frame-pointer
     -m64
-    -fno-exceptions
     -Wall
     -Wextra
+    -Werror=shadow
     -Wno-frame-address
+    -fno-exceptions
+    -fno-omit-frame-pointer
     -fvisibility=hidden
 )
 
@@ -192,3 +192,5 @@ target_link_libraries(${PROJECT_NAME} PRIVATE FFI)
 
 find_package(Threads REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+
+# vim: set expandtab ts=2 sw=2 :

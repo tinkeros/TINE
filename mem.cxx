@@ -31,7 +31,8 @@ using std::ios;
 #endif
 
 #ifdef __linux__
-static inline uint64_t Hex2U64(char const* ptr, char const** res) {
+static inline uint64_t Hex2U64(char const* __restrict ptr,
+                               char const** __restrict res) {
   uint64_t ret = 0;
   char c;
   while (isxdigit(c = *ptr)) {
@@ -139,3 +140,5 @@ void FreeVirtualChunk(void* ptr, [[maybe_unused]] size_t s) {
   munmap(ptr, s / ps * ps + pad);
 #endif
 }
+
+// vim: set expandtab ts=2 sw=2 :

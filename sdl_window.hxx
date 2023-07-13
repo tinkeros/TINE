@@ -14,3 +14,5 @@ void GrPaletteColorSet(uint64_t, uint64_t);
 
 void SetKBCallback(void* fp, void* data);
 void SetMSCallback(void* fp);
+
+// vim: set expandtab ts=2 sw=2 :

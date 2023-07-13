@@ -649,3 +649,5 @@ void GrPaletteColorSet(uint64_t i, uint64_t bgr48) {
   for (int repeat = 0; repeat < 256 / 16; ++repeat)
     SDL_SetPaletteColors(win.palette, &sdl_c, i + repeat * 16, 1);
 }
+
+// vim: set expandtab ts=2 sw=2 :
