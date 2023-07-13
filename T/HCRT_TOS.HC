@@ -163,5 +163,3 @@ U0 PutKey(I64 ch=0,I64 sc=0)
 #include "HomeKeyPlugIns.HC"
 
 #endif
-
-#include "Boot/MakeBoot.HC"
