@@ -213,11 +213,9 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
   MEMORY_BASIC_INFORMATION mbi{};
   if (VirtualQuery((void*)stk[0], &mbi, sizeof mbi)) {
     // https://archive.md/ehBq4
-    DWORD mask = (stk[0] <= MAX_CODE_HEAP_ADDR)
-                   ? (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
-                      PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE |
-                      PAGE_EXECUTE_WRITECOPY)
-                   : (PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY);
+    DWORD const mask = PAGE_READONLY | PAGE_READWRITE | PAGE_WRITECOPY |
+                       PAGE_EXECUTE | PAGE_EXECUTE_READ |
+                       PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY;
     return !!(mbi.Protect & mask);
   }
   return false;
