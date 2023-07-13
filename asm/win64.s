@@ -12,7 +12,7 @@
 
 FFI_CALL_TOS_0:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -33,7 +33,7 @@ FFI_CALL_TOS_0:
 
 FFI_CALL_TOS_1:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -55,7 +55,7 @@ FFI_CALL_TOS_1:
 
 FFI_CALL_TOS_2:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -78,7 +78,7 @@ FFI_CALL_TOS_2:
 
 FFI_CALL_TOS_3:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -110,7 +110,7 @@ FFI_CALL_TOS_3:
 #          rbp 
 FFI_CALL_TOS_4:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -118,7 +118,7 @@ FFI_CALL_TOS_4:
   push r13
   push r14
   push r15
-  push qword ptr [rbp + 0x30]
+  push QWORD PTR [rbp+0x30]
   push r9
   push r8
   push rdx
@@ -135,7 +135,7 @@ FFI_CALL_TOS_4:
 
 FFI_CALL_TOS_5:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -143,8 +143,8 @@ FFI_CALL_TOS_5:
   push r13
   push r14
   push r15
-  push qword ptr [rbp + 0x38]
-  push qword ptr [rbp + 0x30]
+  push QWORD PTR [rbp+0x38]
+  push QWORD PTR [rbp+0x30]
   push r9
   push r8
   push rdx
@@ -161,7 +161,7 @@ FFI_CALL_TOS_5:
 
 FFI_CALL_TOS_6:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -169,9 +169,9 @@ FFI_CALL_TOS_6:
   push r13
   push r14
   push r15
-  push qword ptr [rbp + 0x40]
-  push qword ptr [rbp + 0x38]
-  push qword ptr [rbp + 0x30]
+  push QWORD PTR [rbp+0x40]
+  push QWORD PTR [rbp+0x38]
+  push QWORD PTR [rbp+0x30]
   push r9
   push r8
   push rdx
@@ -188,7 +188,7 @@ FFI_CALL_TOS_6:
 
 FFI_CALL_TOS_7:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -196,10 +196,10 @@ FFI_CALL_TOS_7:
   push r13
   push r14
   push r15
-  push qword ptr [rbp + 0x48]
-  push qword ptr [rbp + 0x40]
-  push qword ptr [rbp + 0x38]
-  push qword ptr [rbp + 0x30]
+  push QWORD PTR [rbp+0x48]
+  push QWORD PTR [rbp+0x40]
+  push QWORD PTR [rbp+0x38]
+  push QWORD PTR [rbp+0x30]
   push r9
   push r8
   push rdx
@@ -216,7 +216,7 @@ FFI_CALL_TOS_7:
 
 FFI_CALL_TOS_8:
   push rbp
-  mov rbp, rsp
+  mov rbp,rsp
   push rbx
   push rdi
   push rsi
@@ -224,11 +224,11 @@ FFI_CALL_TOS_8:
   push r13
   push r14
   push r15
-  push qword ptr [rbp + 0x50]
-  push qword ptr [rbp + 0x48]
-  push qword ptr [rbp + 0x40]
-  push qword ptr [rbp + 0x38]
-  push qword ptr [rbp + 0x30]
+  push QWORD PTR [rbp+0x50]
+  push QWORD PTR [rbp+0x48]
+  push QWORD PTR [rbp+0x40]
+  push QWORD PTR [rbp+0x38]
+  push QWORD PTR [rbp+0x30]
   push r9
   push r8
   push rdx
@@ -252,11 +252,11 @@ FFI_CALL_TOS_0_ZERO_BP:
   push r13
   push r14
   push r15
-  push 0 # fake return address
-  push 0 # fake rbp
-  mov rbp, rsp # pass modified stack to TempleOS function
+  push 0x0 # fake return address
+  push 0x0 # fake rbp
+  mov rbp,rsp # pass modified stack to TempleOS function
   call rcx
-  add rsp, 0x10
+  add rsp,0x10
   pop r15
   pop r14
   pop r13
@@ -267,4 +267,4 @@ FFI_CALL_TOS_0_ZERO_BP:
   pop rbp
   ret
 
-// vim: set expandtab ts=2 sw=2 :
+# vim: set expandtab ts=2 sw=2 :
