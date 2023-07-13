@@ -1,7 +1,8 @@
 clang
-%c -std=gnu17
+%c -std=gnu11
 %cpp -std=gnu++17
 -Wall
 -Wextra
 -Wno-frame-address
 -Werror=shadow,implicit-function-declarations
+-Ivendor
