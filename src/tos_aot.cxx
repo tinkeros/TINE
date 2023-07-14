@@ -4,23 +4,22 @@
 #include "ffi.h"
 #include "mem.hxx"
 
-#include <signal.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <algorithm>
 #include <filesystem>
-#include <new>
-#include <string_view>
-namespace fs = std::filesystem;
-#include <ios>
-#include <iostream>
-using std::ios;
 #include <fstream>
+#include <iostream>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 #include <utility>
+#include <vector>
+
+#include <signal.h>
+#include <stdint.h>
+#include <string.h>
+
+namespace fs = std::filesystem;
+using std::ios;
 
 MapCHashVec TOSLoader;
 

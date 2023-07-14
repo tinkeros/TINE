@@ -4,8 +4,10 @@
 
 #ifdef _WIN32
 
-#include <errhandlingapi.h>
+// clang-format off
 #include <windows.h>
+#include <errhandlingapi.h>
+// clang-format on
 
 static LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
   auto c = info->ExceptionRecord->ExceptionCode;

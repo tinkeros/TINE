@@ -1,7 +1,5 @@
 #include "main.hxx"
-#include "alloc.hxx"
 #include "dbg.hxx"
-#include "ffi.h"
 #include "multic.hxx"
 #include "runtime.hxx"
 #include "sdl_window.hxx"
@@ -14,7 +12,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
-#include <utility>
 namespace fs = std::filesystem;
 
 static constexpr bool is_win =

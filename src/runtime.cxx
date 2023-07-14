@@ -10,24 +10,18 @@
 #include "tos_aot.hxx"
 #include "vfs.hxx"
 
-#include <ios>
-#include <iostream>
-#include <string>
-#include <utility>
-#include <vector>
-using std::ios;
-#include <filesystem>
-#include <fstream>
-#include <memory>
-namespace fs = std::filesystem;
-#include <thread>
-using std::thread;
 #include <chrono>
+#include <filesystem>
+#include <thread>
+#include <vector>
+
+namespace fs = std::filesystem;
 namespace chrono = std::chrono;
+
 using chrono::system_clock;
+using std::thread;
 
 #include <stddef.h>
-#include <stdio.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -35,16 +29,11 @@ using chrono::system_clock;
 #include <winsock2.h>
 #include <windows.h>
 #include <winbase.h>
-#include <fileapi.h>
 #include <memoryapi.h>
-#include <shlwapi.h>
 // clang-format on
 #else
 #include <signal.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
 #endif
 
 #include "dyad.h"

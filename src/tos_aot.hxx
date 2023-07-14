@@ -1,9 +1,10 @@
 #pragma once
 
-#include <stdint.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include <stdint.h>
 
 extern "C" struct CHash {
   uint64_t type;

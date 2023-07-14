@@ -8,9 +8,8 @@
 #include <atomic>
 #include <vector>
 
+#include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
 #ifdef _WIN32
 // clang-format off

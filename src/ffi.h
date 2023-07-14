@@ -4,7 +4,6 @@ extern "C" {
 #endif
 #include <stdint.h>
 // please policeman is it a test?
-#include <stddef.h>
 
 uint64_t FFI_CALL_TOS_0(void*);
 uint64_t FFI_CALL_TOS_1(void*, uint64_t);

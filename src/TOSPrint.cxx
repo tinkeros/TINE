@@ -6,8 +6,6 @@
 
 #include <ctype.h>
 #include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 static std::string MStrPrint(char const* fmt, uint64_t /* argc*/,

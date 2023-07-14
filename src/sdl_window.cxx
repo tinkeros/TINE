@@ -5,10 +5,8 @@
 
 #include <algorithm>
 #include <string>
-#include <vector>
 
 #include <SDL2/SDL.h>
-#include <string.h>
 
 static bool win_init = false;
 static struct CDrawWindow {

@@ -4,7 +4,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
 
 #define VFS_CDF_MAKE         1
 #define VFS_CDF_FILENAME_ABS (1 << 1)

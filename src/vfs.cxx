@@ -1,14 +1,14 @@
 #include "vfs.hxx"
 #include "alloc.hxx"
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <vector>
-namespace fs = std::filesystem;
-#include <algorithm>
-#include <fstream>
 
+namespace fs = std::filesystem;
 using std::ios;
 
 #include <ctype.h>
