@@ -54,6 +54,10 @@ void* NewVirtualChunk(size_t sz, bool low32) {
       while (std::getline(map, buffer)) {
         char const* ptr = buffer.data();
         uint64_t lower = Hex2U64(ptr, &ptr);
+        // MAP_FIXED wants us to align `down` to the page size
+        auto const pag = down % page_size;
+        if (pag > 0)
+          down += page_size - pag;
         // basically finds a gap between the previous line's upper address
         // and the current line's lower address so it can allocate there
         if (lower - down >= padded_sz && lower > down)
