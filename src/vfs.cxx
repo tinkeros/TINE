@@ -16,21 +16,14 @@ using std::ios;
 #include <time.h>
 
 #ifdef _WIN32
-#include <processthreadsapi.h>
-#include <synchapi.h>
-#include <windows.h>
-
-#endif
-
-#ifdef _WIN32
-#include <fileapi.h>
-#include <windows.h>
 #define delim '\\'
 #else
 #define delim '/'
-#include <sys/stat.h>
-#include <sys/types.h>
 #endif
+// clang-format off
+#include <sys/types.h>
+#include <sys/stat.h>
+// clang-format on
 
 thread_local std::string thrd_pwd;
 thread_local char thrd_drv;
@@ -112,38 +105,19 @@ int64_t VFsFSize(char const* name) {
   return fs::file_size(fn);
 }
 
-#ifndef _WIN32
-
-int64_t VFsUnixTime(char const* name) {
-  std::string fn = VFsFileNameAbs(name);
-  struct stat s;
-  stat(fn.c_str(), &s);
-  return mktime(localtime(&s.st_ctime));
-}
-
-#else
-
-static int64_t FILETIME2Unix(FILETIME* t) {
-  // https://archive.md/xl8qB
-  int64_t time = t->dwLowDateTime | ((int64_t)t->dwHighDateTime << 32), adj;
-  adj = 10000 * (int64_t)11644473600000ll;
-  time -= adj;
-  return time / 10000000ll;
-}
-
-int64_t VFsUnixTime(char const* name) {
+uint64_t VFsUnixTime(char const* name) {
   std::string fn = VFsFileNameAbs(name);
   if (!FExists(fn))
     return 0;
-  FILETIME t;
-  HANDLE fh = CreateFileA(fn.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr,
-                          OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
-  GetFileTime(fh, nullptr, nullptr, &t);
-  CloseHandle(fh);
-  return FILETIME2Unix(&t);
-}
-
+#ifndef _WIN32
+  struct stat s;
+  stat(fn.c_str(), &s);
+#else
+  struct _stati64 s;
+  _stati64(fn.c_str(), &s);
 #endif
+  return s.st_mtime;
+}
 
 uint64_t VFsFileWrite(char const* name, char const* data, size_t const len) {
   std::string p = VFsFileNameAbs(name);

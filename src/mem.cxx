@@ -96,6 +96,9 @@ void* NewVirtualChunk(size_t sz, bool low32) {
     extern DWORD dwAllocationGranularity;
     // https://archive.md/ugIUC
     MEMORY_BASIC_INFORMATION mbi{};
+    // we initialize alloc with the granularity because NULL
+    // will yield weird results with VirtualQuery so
+    // we need to start from a reasonable value
     uint64_t alloc = dwAllocationGranularity;
     uintptr_t addr;
     while (alloc <= MAX_CODE_HEAP_ADDR) {

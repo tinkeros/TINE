@@ -22,6 +22,9 @@ using std::ios;
 namespace fs = std::filesystem;
 #include <thread>
 using std::thread;
+#include <chrono>
+namespace chrono = std::chrono;
+using chrono::system_clock;
 
 #include <stddef.h>
 #include <stdio.h>
@@ -355,7 +358,7 @@ static char* STK_GetClipboardText(void*) {
   return HolyStrDup(clip.c_str());
 }
 
-static int64_t STK_FUnixTime(uintptr_t* stk) {
+static uint64_t STK_FUnixTime(uintptr_t* stk) {
   return VFsUnixTime((char*)stk[0]);
 }
 
@@ -367,27 +370,9 @@ static uint64_t STK___FExists(uintptr_t* stk) {
   return VFsFileExists((char*)stk[0]);
 }
 
-#ifndef _WIN32
-
-#include <time.h>
-
 static uint64_t STK_UnixNow(void*) {
-  return time(nullptr);
+  return system_clock::to_time_t(system_clock::now());
 }
-
-#else
-
-static uint64_t STK_UnixNow(void*) {
-  FILETIME ft;
-  GetSystemTimeAsFileTime(&ft);
-  // https://archive.md/xl8qB
-  uint64_t time = ft.dwLowDateTime | ((uint64_t)ft.dwHighDateTime << 32),
-           adj = 10000 * (uint64_t)11644473600000;
-  time -= adj;
-  return time / 10000000ull;
-}
-
-#endif
 
 size_t mp_cnt(void*) {
   return thread::hardware_concurrency();
