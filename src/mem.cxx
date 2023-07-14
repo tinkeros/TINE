@@ -95,17 +95,17 @@ void* NewVirtualChunk(size_t sz, bool low32) {
   if (low32) { // code heap
     extern DWORD dwAllocationGranularity;
     // https://archive.md/ugIUC
-    MEMORY_BASIC_INFORMATION ent{};
+    MEMORY_BASIC_INFORMATION mbi{};
     uint64_t alloc = dwAllocationGranularity;
     uintptr_t addr;
     while (alloc <= MAX_CODE_HEAP_ADDR) {
-      if (VirtualQuery((void*)alloc, &ent, sizeof ent) == 0)
+      if (VirtualQuery((void*)alloc, &mbi, sizeof mbi) == 0)
         return nullptr;
-      alloc = (uint64_t)ent.BaseAddress + ent.RegionSize;
+      alloc = (uint64_t)mbi.BaseAddress + mbi.RegionSize;
       // Fancy code to round up because VirtualQuery rounds down
-      addr = ((uint64_t)ent.BaseAddress + dwAllocationGranularity - 1) &
+      addr = ((uint64_t)mbi.BaseAddress + dwAllocationGranularity - 1) &
              ~(dwAllocationGranularity - 1);
-      if (ent.State == MEM_FREE && sz <= alloc - addr)
+      if (mbi.State & MEM_FREE && sz <= alloc - addr)
         return VirtualAlloc(reinterpret_cast<void*>(addr), sz,
                             MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     }

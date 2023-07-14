@@ -24,12 +24,14 @@ HeapCtrlInit(&ahc,Fs,0);
 HeapCtrlInit(&ahd,Fs,1);
 Fs->data_heap=&ahd;
 Fs->code_heap=&ahc;
-Fs->cur_dir=StrNew(_BootDrv,&ahd);
+U8 *__bootdir="T:/";
+__bootdir[0]=VFsGetDrv;
+Fs->cur_dir=StrNew(__bootdir,&ahd);
 U32 SYS_CTRL_ALT_FLAGS=0;
 CCPU **mp_cores=CAlloc(mp_cnt*sizeof CCPU*,&ahd);
 CCPU *_boot_gs;
 CCPU *Gs() {
-  if(!GetGs) // this part only will be executed on boot
+  if (!GetGs) // this part only will be executed on boot
     SetGs(_boot_gs=CAlloc(sizeof CCPU,&ahd));
   return GetGs;
 }

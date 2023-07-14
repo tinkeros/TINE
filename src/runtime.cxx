@@ -409,10 +409,6 @@ static void STK_VFsSetPwd(uintptr_t* stk) {
   VFsSetPwd((char*)stk[0]);
 }
 
-static char* STK__BootDrv(void*) {
-  return BootDrv();
-}
-
 static uint64_t STK_VFsExists(uintptr_t* stk) {
   return VFsFileExists((char*)stk[0]);
 }
@@ -474,6 +470,10 @@ static void STK_VFsFSeek(uintptr_t* stk) {
 
 static void STK_VFsSetDrv(char* stk) {
   VFsSetDrv(stk[0]);
+}
+
+static uint64_t STK_VFsGetDrv(void*) {
+  return static_cast<uint64_t>(VFsGetDrv());
 }
 
 static void STK_SetVolume(uint64_t* stk) {
@@ -640,7 +640,6 @@ void RegisterFuncPtrs() {
   S_(DyadSetOnDestroyCallback, 3);
   S_(DyadSetTimeout, 2);
   S_(DyadSetNoDelay, 2);
-  S_(_BootDrv, 0);
   S_(VFsFTrunc, 2);
   S_(VFsSetPwd, 1);
   S_(VFsExists, 1);
@@ -658,6 +657,7 @@ void RegisterFuncPtrs() {
   S_(VFsFClose, 1);
   S_(VFsFSeek, 2);
   S_(VFsSetDrv, 1);
+  S_(VFsGetDrv, 0);
   S_(GetVolume, 0);
   S_(SetVolume, 1);
   S_(__GetTicksHP, 0);

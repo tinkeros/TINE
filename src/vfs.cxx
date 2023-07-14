@@ -35,13 +35,6 @@ using std::ios;
 thread_local std::string thrd_pwd;
 thread_local char thrd_drv;
 
-char* BootDrv() {
-  auto ret = new (std::nothrow) char[4]{};
-  ret[0] = thrd_drv;
-  strcpy(ret + 1, ":/");
-  return ret;
-}
-
 void VFsThrdInit() {
   thrd_pwd = "/";
   thrd_drv = 'T';
@@ -51,6 +44,10 @@ void VFsSetDrv(char const d) {
   if (!isalpha(d))
     return;
   thrd_drv = toupper(d);
+}
+
+char VFsGetDrv() {
+  return thrd_drv;
 }
 
 void VFsSetPwd(char const* pwd) {

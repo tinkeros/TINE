@@ -10,8 +10,8 @@
 #define VFS_CDF_FILENAME_ABS (1 << 1)
 
 void VFsThrdInit();
-char* BootDrv();
 void VFsSetDrv(char const d);
+char VFsGetDrv();
 void VFsSetPwd(char const* pwd);
 bool VFsDirMk(char const* to, int const flags);
 uint64_t VFsDel(char const* p);
