@@ -97,18 +97,33 @@ void* NewVirtualChunk(size_t sz, bool low32) {
     // https://archive.md/ugIUC
     MEMORY_BASIC_INFORMATION mbi{};
     // we initialize alloc with the granularity because NULL
-    // will yield weird results with VirtualQuery so
-    // we need to start from a reasonable value
-    uint64_t alloc = dwAllocationGranularity;
-    uintptr_t addr;
+    // will fail with VirtualQuery so we need to start
+    // from a reasonable small value
+    uintptr_t alloc = dwAllocationGranularity, addr;
     while (alloc <= MAX_CODE_HEAP_ADDR) {
-      if (VirtualQuery((void*)alloc, &mbi, sizeof mbi) == 0)
+      if (VirtualQuery(reinterpret_cast<void*>(alloc), &mbi, sizeof mbi) == 0)
         return nullptr;
-      alloc = (uint64_t)mbi.BaseAddress + mbi.RegionSize;
-      // Fancy code to round up because VirtualQuery rounds down
-      addr = ((uint64_t)mbi.BaseAddress + dwAllocationGranularity - 1) &
+      alloc = (uintptr_t)mbi.BaseAddress + mbi.RegionSize;
+      // clang-format off
+      //
+      // Fancy code to align because VirtualQuery might not give us an aligned base addr
+      // and VirtualAlloc likes values to be aligned to dwAllocationGranularity
+      // lets say we want to align to 0b100(an arbitrary dwAllocationGranularity)
+      //   0b1001
+      // + 0b0011 <- (0b100 - 1), flips bottom bits
+      // ----------
+      //   0b1110
+      // & 0b1100 <- ~(0b100 - 1), flipped
+      // ----------
+      //   0b1100 <- rounded up aligned value
+      //
+      // It'll be the same if it's already aligned
+      // We round up to get the next free allocation granularity unit
+      //
+      // clang-format on
+      addr = ((uintptr_t)mbi.BaseAddress + dwAllocationGranularity - 1) &
              ~(dwAllocationGranularity - 1);
-      if (mbi.State & MEM_FREE && sz <= alloc - addr)
+      if (mbi.State == MEM_FREE && sz <= alloc - addr)
         return VirtualAlloc(reinterpret_cast<void*>(addr), sz,
                             MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     }

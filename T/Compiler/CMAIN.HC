@@ -121,7 +121,7 @@ CAOT *CmpJoin(CCmpCtrl *cc,I64 cmp_flags,U8 *map_name=NULL,U8 mapfile_drv_let=0)
 	      while (tmpie!=&res->next_ie) {
 	        tmpie1=tmpie->next;
 	        if (!tmpie->type || IET_REL32_EXPORT<=tmpie->type<=IET_IMM64_EXPORT) {
-		  "   OLVED SYMBOL IN AOT BINARY:%s\n",fun->str;
+		  "UNRESOLVED SYMBOL IN AOT BINARY:%s\n",fun->str;
 		  goto warned;
 	        }
 	        tmpie=tmpie1;
