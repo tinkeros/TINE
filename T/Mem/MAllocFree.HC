@@ -418,7 +418,6 @@ _extern _FREE U0 Free(U8 *addr); //Free $LK,"MAlloc",A="MN:MAlloc"$()ed memory c
 _extern _MSIZE I64 MSize(U8 *src); //Size of heap object.
 _extern _MSIZE2 I64 MSize2(U8 *src); //Internal size of heap object.
 _extern _MHEAP_CTRL CHeapCtrl *MHeapCtrl(U8 *src); //$LK,"CHeapCtrl",A="MN:CHeapCtrl"$ of object.
-_extern _MALLOC U8 *MAllocRaw(I64 size,CTask *mem_task=NULL); //Alloc memory chunk.
 _extern _MALLOC U8 *MAlloc(I64 size,CTask *mem_task=NULL); //Alloc memory chunk.
 U8 *AMAlloc(I64 size)
 {//Alloc memory in Adam's heap.
@@ -427,12 +426,16 @@ U8 *AMAlloc(I64 size)
 
 U8 *CAlloc(I64 size,CTask *mem_task=NULL)
 {//Accepts a $LK,"CTask",A="MN:CTask"$ or $LK,"CHeapCtrl",A="MN:CHeapCtrl"$.  NULL allocs off current task's heap.
-  U8 *res=MAllocRaw(size,mem_task);
+  U8 *res=MAlloc(size,mem_task);
   MemSet(res,0,size);
   return res;
 }
 U8 *MAlloc32(I64 size,CTask *task=NULL) {
-  if(!task) task=Fs;
+  if (!task) task=Fs;
+  return MAlloc(size,task->code_heap);
+}
+U8 *CAlloc32(I64 size,CTask *task=NULL) {
+  if (!task) task=Fs;
   return CAlloc(size,task->code_heap);
 }
 

@@ -1,4 +1,5 @@
 #include "main.hxx"
+#include "alloc.hxx"
 #include "dbg.hxx"
 #include "ffi.h"
 #include "multic.hxx"
@@ -89,6 +90,13 @@ static void* __stdcall Core0(void*) {
   return nullptr;
 }
 
+#ifndef _WIN32
+size_t page_size; // used for allocation
+                  // and pointer checks
+#else
+DWORD dwAllocationGranularity;
+#endif
+
 int main(int argc, char** argv) {
 #ifndef _WIN32
   // https://archive.md/5cufN#selection-2369.223-2369.272
@@ -98,6 +106,11 @@ int main(int argc, char** argv) {
   getrlimit(RLIMIT_NOFILE, &rl);
   rl.rlim_cur = rl.rlim_max;
   setrlimit(RLIMIT_NOFILE, &rl);
+  page_size = sysconf(_SC_PAGESIZE);
+#else
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+  dwAllocationGranularity = si.dwAllocationGranularity;
 #endif
   void* argtable[] = {
       helpArg = arg_lit0("h", "help", "Display this help message."),

@@ -127,7 +127,7 @@ loop:;
 
 static char* UnescapeString(char* __restrict str, char* __restrict where) {
   while (*str) {
-    char const* to;
+    char const* __restrict to;
     switch (*str) {
 #define ESC(c, e) \
   case c:         \
@@ -166,6 +166,7 @@ static char* UnescapeString(char* __restrict str, char* __restrict where) {
       ++str;
       continue;
     }
+    // default when matches none of the criteria above
     *where++ = *str++;
   }
   *where = '\0';

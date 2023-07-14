@@ -132,11 +132,11 @@ fail0:
     }
   }
   if(StrLen(un->user_data1)>=STR_LEN) {
-      WikiHeader(stream,NULL,"Username is too long!",0);
-      WriteLn(stream,,"<H2>Username is too long</H2>");
-      WriteLn(stream,,"<P>Try again.</P>");
-      WikiFooter(stream,NULL,url);
-      return;
+    WikiHeader(stream,NULL,"Username is too long!",0);
+    WriteLn(stream,,"<H2>Username is too long</H2>");
+    WriteLn(stream,,"<P>Try again.</P>");
+    WikiFooter(stream,NULL,url);
+    return;
   }
   if(StrCmp(ps->user_data1,ps2->user_data1)) {
     con->response_code=200;
@@ -339,7 +339,7 @@ fail:
     WikiHeader(stream,NULL,"Banned failed!!!",0);
     WriteLn(stream,,"<H2>Maybe you areMissing the Admin Priveledge</H2>");
     WriteLn(stream,,"<P>Or maybe the server messed up.</P>");
-    WikiFooter(stream,NULL,url);
+    WikiFooter(stream,NULL,url);
     return;
   }
   if(!(cur->flags&UF_ADMIN)){

@@ -3,7 +3,7 @@ U64 FNV64(U8 *s) {
   while (*s) {
     hash*=0x100000001B3;
     hash^=*s++;
-  }
+  }
   return hash;
 }
 

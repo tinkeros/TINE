@@ -800,7 +800,7 @@ pu_ident_but_not_local_var:
 	  LexExcept(cc,"Invalid lval at ");
 	tmpc=NULL;
 pu_new_sys_sym:
-	tmpex=MAlloc32(sizeof(CHashExport));
+	tmpex=CAlloc32(sizeof(CHashExport));
 	tmpex->str=cc->cur_str;
 	cc->cur_str=NULL;
 	if (!cc->htc.local_var_lst &&

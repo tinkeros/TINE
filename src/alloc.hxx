@@ -31,4 +31,8 @@ __attribute__((always_inline)) inline T* VirtAlloc(size_t sz) {
   return static_cast<T*>(NewVirtualChunk(detail::size_of<T>::sz * sz, exec));
 }
 
+#ifndef _WIN32
+extern size_t page_size;
+#endif
+
 // vim: set expandtab ts=2 sw=2 :

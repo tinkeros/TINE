@@ -225,13 +225,10 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
 
 #else
   // #ifdef __FreeBSD__
-  static size_t ps = 0;
-  if (!ps)
-    ps = sysconf(_SC_PAGESIZE);
-  stk[0] /= ps; // align to
-  stk[0] *= ps; // page boundary
+  stk[0] /= page_size; // align to
+  stk[0] *= page_size; // page boundary
   // https://archive.md/Aj0S4
-  return -1 != msync((void*)stk[0], ps, MS_ASYNC);
+  return -1 != msync((void*)stk[0], page_size, MS_ASYNC);
   /*#elif defined(__linux__)
         // TOO FUCKING GODDAMN SLOW!!!!!
     auto constexpr Hex2U64 = [](char const *ptr, char const** res) {

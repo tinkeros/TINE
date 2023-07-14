@@ -45,7 +45,7 @@ to a class by advancing 1 struct fwd
 for one * and two fwd for two **.
 */
   I64 i;
-  CHashClass *res=MAlloc32(sizeof(CHashClass)*(PTR_STARS_NUM+1)),
+  CHashClass *res=CAlloc32(sizeof(CHashClass)*(PTR_STARS_NUM+1)),
 	*tmpc=res;
   for (i=0;i<=PTR_STARS_NUM;i++) {
     tmpc->src_link=NULL;
@@ -63,7 +63,7 @@ for one * and two fwd for two **.
 CHashFun *PrsFunNew()
 {
   I64 i;
-  CHashFun *res=MAlloc32(sizeof(CHashFun)*(PTR_STARS_NUM+1)),
+  CHashFun *res=CAlloc32(sizeof(CHashFun)*(PTR_STARS_NUM+1)),
 	*tmpf=res;
   for (i=0;i<=PTR_STARS_NUM;i++) {
     tmpf->type=HTT_FUN;
@@ -298,9 +298,9 @@ U8 *COCCompile(CCmpCtrl *cc,I64 *_code_size,CDbgInfo **_dbg,I64 *_type)
   } while (code_size<last_code_size);
 
   if (cc->flags&CCF_AOT_COMPILE)
-    res=MAlloc32(code_size);
+    res=CAlloc32(code_size);
   else {
-    res=MAlloc32(code_size);
+    res=CAlloc32(code_size);
     if (cc->htc.fun)
       Fs->last_fun=cc->htc.fun;
   }

@@ -329,7 +329,7 @@ U0 PrsGlblVarLst(CCmpCtrl *cc,I64 saved_mode,CHashClass *saved_tmpc,
 	    tmpg->data_addr_rip=val;
 	    tmpg->type=HTT_GLBL_VAR | HTF_EXPORT;
 	  } else {
-	    tmpg=MAlloc32(sizeof(CHashGlblVar));
+	    tmpg=CAlloc32(sizeof(CHashGlblVar));
 	    tmpg->data_addr=val;
 	    tmpg->type=HTT_GLBL_VAR;
 	  }
@@ -353,7 +353,7 @@ U0 PrsGlblVarLst(CCmpCtrl *cc,I64 saved_mode,CHashClass *saved_tmpc,
 	    tmpg=CAlloc(sizeof(CHashGlblVar));
 	    tmpg->type=HTT_GLBL_VAR;
 	  } else {
-	    tmpg=MAlloc32(sizeof(CHashGlblVar));
+	    tmpg=CAlloc32(sizeof(CHashGlblVar));
 	    tmpg->type=HTT_GLBL_VAR|HTF_UNRESOLVED;
 	  }
 	  break;
@@ -394,11 +394,11 @@ U0 PrsGlblVarLst(CCmpCtrl *cc,I64 saved_mode,CHashClass *saved_tmpc,
 	    }
 	  } else {
 	    if (Bt(&cc->opts,OPTf_GLBLS_ON_DATA_HEAP)) {
-	      tmpg=MAlloc32(sizeof(CHashGlblVar));
+	      tmpg=CAlloc32(sizeof(CHashGlblVar));
 	      tmpg->data_addr=MAlloc(j);
 	      tmpg->flags=GVF_DATA_HEAP;
 	    } else {
-	      tmpg=MAlloc32(sizeof(CHashGlblVar));
+	      tmpg=CAlloc32(sizeof(CHashGlblVar));
 	      tmpg->data_addr=MAlloc32(j);
 	    }
 	    tmpg->type=HTT_GLBL_VAR;

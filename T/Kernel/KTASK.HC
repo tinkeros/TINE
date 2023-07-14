@@ -282,7 +282,7 @@ CTask *Spawn(U0 (*fp_start_addr)(U8 *data),U8 *data=NULL,U8 *task_name=NULL,
 {//Create task on core running at address.
 //Alloc \dLK,"CTask",A="MN:CTask"\d structure from code heap so addr will be short.
   //Could be alloced off of data heap.
-  CTask *task=MAlloc32(sizeof(CTask),adam_task);
+  CTask *task=CAlloc32(sizeof(CTask),adam_task);
   if(target_cpu==-1)
     target_cpu=Gs->num;
   if(!parent) {

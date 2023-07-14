@@ -172,7 +172,7 @@ I64 GrFloodFillRay(CDC *dc,I64 x,I64 y,I64 z,I32 *db)
   I64 res=0;
 //We don't dynamically calculate the size to avoid
   //fragmentation of memory.
-  CFFRay *f_dc=MAllocRaw(sizeof(CFFRay)*0x80000),*f=f_dc;
+  CFFRay *f_dc=MAlloc(sizeof(CFFRay)*0x80000),*f=f_dc;
   f->x=x;
   f->y=y;
   f->state=0;
