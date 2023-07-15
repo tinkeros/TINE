@@ -671,7 +671,7 @@ U0 ListenCallback(CDyadStream *s,CServer *srv) {
 
 U0 ServeTask(CServer *srv) {
   srv->task=Fs;
-  DyadListen(srv->s_sock,srv->port);
+  DyadListen(srv->s_sock,srv->port);
   DyadSetOnListenCallback(srv->s_sock,&ListenCallback,srv);
   while (TRUE) {
     Sleep(1);
@@ -682,18 +682,19 @@ U0 ServeTask(CServer *srv) {
 U0 Serve(CServer *srv) {
   U64 core=-1;
   if (mp_cnt>1)
-    core=RandU16%(mp_cnt-1)+1; // we dont want core 0
+    core=RandU16%(mp_cnt-1)+1; // we dont want core 0 since it has
+                               // a lot of things going on
   CTask *srv_task;
   if (!__IsCmdLine) {
     "Press a button to quit serving\n";
-    srv_task=Spawn(&ServeTask,srv,core);
+    srv_task=Spawn(&ServeTask,srv,"Server",core);
     GetKey;
   } else {
     "Press enter to quit serving\n";
-    srv_task=Spawn(&ServeTask,srv,core);
+    srv_task=Spawn(&ServeTask,srv,"Server",core);
     Free(__GetStr);
   }
-  Kill(srv_task,FALSE);
+  Kill(srv_task);
   DyadShutdown;
 }
 

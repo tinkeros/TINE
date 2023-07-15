@@ -403,19 +403,19 @@ U0 DeathWait(CTask **_task,Bool send_exit=FALSE)
   Yield;
 }
 U0 KillAdam() {
-	Kill(adam_task);
+  Kill(adam_task);
 }
 U0 TaskKillDying() {
-	while (LBts(&(Gs->cpu_flags),CPUf_DYING_TASK_QUE))
-      PAUSE;
-    CTaskDying *task=Gs->next_dying,*task1;
-    while (task!=&(Gs->next_dying)) {
-      task1=task->next;
-      QueRem(task);
-      HeapCtrlDel(task(CTask*)->data_heap);
-      HeapCtrlDel(task(CTask*)->code_heap);
-      Free(task);
-      task=task1;
-    }
-    LBtr(&(Gs->cpu_flags),CPUf_DYING_TASK_QUE);
+  while (LBts(&(Gs->cpu_flags),CPUf_DYING_TASK_QUE))
+    PAUSE;
+  CTaskDying *task=Gs->next_dying,*task1;
+  while (task!=&(Gs->next_dying)) {
+    task1=task->next;
+    QueRem(task);
+    HeapCtrlDel(task(CTask*)->data_heap);
+    HeapCtrlDel(task(CTask*)->code_heap);
+    Free(task);
+    task=task1;
+  }
+  LBtr(&(Gs->cpu_flags),CPUf_DYING_TASK_QUE);
 }
