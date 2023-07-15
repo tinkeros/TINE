@@ -112,6 +112,8 @@ target_compile_options(${PROJECT_NAME}
     -Werror=shadow
     -Wno-frame-address
     -Wno-unused-command-line-argument
+    -fno-math-errno
+    -fno-trapping-math
     -fno-exceptions
     -fno-omit-frame-pointer
     -fvisibility=hidden

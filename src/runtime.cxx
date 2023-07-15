@@ -218,11 +218,10 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
   /* #ifdef __FreeBSD__ */
   // round down to page boundary (equiv to stk[0] / page_size * page_size)
   //   0b100101010 (x)
-  // & 0b000001111 <- 0b10000 - 1
+  // & 0b111110000 <- ~(0b10000 - 1)
   // --------------
-  //   0b000001010
-  // now subtract this from x to round down
-  uintptr_t const addr = stk[0] - (stk[0] & (page_size - 1));
+  //   0b100100000
+  uintptr_t addr = stk[0] & ~(page_size - 1);
   // https://archive.md/Aj0S4
   return -1 != msync((void*)addr, page_size, MS_ASYNC);
   /*#elif defined(__linux__)
