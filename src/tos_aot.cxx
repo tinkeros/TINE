@@ -21,7 +21,7 @@
 namespace fs = std::filesystem;
 using std::ios;
 
-MapCHashVec TOSLoader;
+std::unordered_map<std::string, CHash> TOSLoader;
 
 // This code is mostly copied from TempleOS
 // and does not look very C++-y
@@ -49,15 +49,11 @@ static void LoadOneImport(char** src_, char* mod_base) {
           tmpiss.type = HTT_IMPORT_SYS_SYM;
           tmpiss.mod_header_entry = st_ptr - 5;
           tmpiss.mod_base = mod_base;
-          TOSLoader[st_ptr].emplace_back(tmpiss);
+          TOSLoader[st_ptr] = tmpiss;
         } else {
-          auto& v = TOSLoader[st_ptr];
-          for (auto& tmp : v) {
-            if (tmp.type == HTT_IMPORT_SYS_SYM)
-              continue;
-            i = (uintptr_t)tmp.val;
-            break;
-          }
+          auto& tmp_sym = TOSLoader[st_ptr];
+          if (tmp_sym.type != HTT_IMPORT_SYS_SYM)
+            i = (uintptr_t)tmp_sym.val;
         }
       }
     }
@@ -96,14 +92,12 @@ static void SysSymImportsResolve(char* st_ptr) {
   char* ptr;
   if (TOSLoader.find(st_ptr) == TOSLoader.end())
     return;
-  auto& v = TOSLoader[st_ptr];
-  for (auto& sym : v) {
-    if (sym.type != HTT_IMPORT_SYS_SYM)
-      continue;
-    ptr = sym.mod_header_entry;
-    LoadOneImport(&ptr, sym.mod_base);
-    sym.type = HTT_INVALID;
-  }
+  auto& sym = TOSLoader[st_ptr];
+  if (sym.type != HTT_IMPORT_SYS_SYM)
+    return;
+  ptr = sym.mod_header_entry;
+  LoadOneImport(&ptr, sym.mod_base);
+  sym.type = HTT_INVALID;
 }
 
 static void LoadPass1(char* src, char* mod_base) {
@@ -123,11 +117,10 @@ static void LoadPass1(char* src, char* mod_base) {
     case IET_REL64_EXPORT:
     case IET_IMM64_EXPORT:
       tmpex.type = HTT_EXPORT_SYS_SYM;
-      if (etype == IET_IMM32_EXPORT || etype == IET_IMM64_EXPORT)
-        tmpex.val = (void*)i;
-      else
-        tmpex.val = mod_base + i;
-      TOSLoader[st_ptr].emplace_back(tmpex);
+      tmpex.val = reinterpret_cast<uint8_t*>(i);
+      if (etype != IET_IMM32_EXPORT && etype != IET_IMM64_EXPORT)
+        tmpex.val += reinterpret_cast<uintptr_t>(mod_base);
+      TOSLoader[st_ptr] = tmpex;
       SysSymImportsResolve(st_ptr);
       break;
     case IET_REL_I0 ... IET_IMM_I64:
@@ -209,7 +202,7 @@ void LoadHCRT(std::string const& name) {
 #ifndef _WIN32
   static void* fp = nullptr;
   if (fp == nullptr)
-    fp = TOSLoader["__InterruptCoreRoutine"][0].val;
+    fp = TOSLoader["__InterruptCoreRoutine"].val;
   signal(SIGUSR2, (void (*)(int))fp);
 #endif
   LoadPass2(bfh_addr + bfh->patch_table_offset, bfh->data);
@@ -221,13 +214,11 @@ void BackTrace() {
   static std::vector<std::string> sorted;
   static bool init = false;
   if (!init) {
-    for (auto const& e : TOSLoader) {
-      auto const& [name, v] = e;
-      sorted.emplace_back(name);
-    }
+    for (auto const& e : TOSLoader)
+      sorted.emplace_back(std::get<std::string const>(e));
     sz = sorted.size();
     std::sort(sorted.begin(), sorted.end(), [](auto const& a, auto const& b) {
-      return TOSLoader[a][0].val < TOSLoader[b][0].val;
+      return TOSLoader[a].val < TOSLoader[b].val;
     });
     init = true;
   }
@@ -241,7 +232,7 @@ void BackTrace() {
     last = "UNKOWN";
     size_t idx;
     for (idx = 0; idx < sz; idx++) {
-      void* curp = TOSLoader[sorted[idx]][0].val;
+      void* curp = TOSLoader[sorted[idx]].val;
       if (curp == ptr) {
         std::cerr << sorted[idx] << std::endl;
       } else if (curp > ptr) {
@@ -274,18 +265,16 @@ __attribute__((used, visibility("default"))) char* WhichFun(void* ptr) {
   static std::vector<std::string> sorted;
   static bool init = false;
   if (!init) {
-    for (auto const& e : TOSLoader) {
-      auto const& [name, v] = e;
-      sorted.emplace_back(name);
-    }
+    for (auto const& e : TOSLoader)
+      sorted.emplace_back(std::get<std::string const>(e));
     sz = sorted.size();
     std::sort(sorted.begin(), sorted.end(), [](auto const& a, auto const& b) {
-      return TOSLoader[a][0].val < TOSLoader[b][0].val;
+      return TOSLoader[a].val < TOSLoader[b].val;
     });
     init = true;
   }
   for (size_t idx = 0; idx < sz; idx++) {
-    void* curp = TOSLoader[sorted[idx]][0].val;
+    void* curp = TOSLoader[sorted[idx]].val;
     if (curp == ptr) {
       std::cerr << sorted[idx] << std::endl;
     } else if (curp > ptr) {

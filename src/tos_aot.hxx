@@ -2,22 +2,20 @@
 
 #include <string>
 #include <unordered_map>
-#include <vector>
 
 #include <stdint.h>
 
 extern "C" struct CHash {
   uint64_t type;
   union {
-    void* val;
+    uint8_t* val;
     struct {
       char *mod_header_entry, *mod_base;
     };
   };
 };
 
-using MapCHashVec = std::unordered_map<std::string, std::vector<CHash>>;
-extern MapCHashVec TOSLoader;
+extern std::unordered_map<std::string, CHash> TOSLoader;
 
 // clang-format off
 // copied from TempleOS, DO NOT TOUCH

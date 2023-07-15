@@ -117,7 +117,7 @@ static void* __stdcall LaunchCore(void* c) {
 #ifndef _WIN32
   static void* fp = nullptr;
   if (fp == nullptr)
-    fp = TOSLoader["__InterruptCoreRoutine"][0].val;
+    fp = TOSLoader["__InterruptCoreRoutine"].val;
   signal(SIGUSR2, (void (*)(int))fp);
   signal(SIGUSR1, [](int) {
     pthread_exit(nullptr);
@@ -144,7 +144,7 @@ void InterruptCore(size_t core) {
   //
   static void* fp = nullptr;
   if (fp == nullptr)
-    fp = TOSLoader["__InterruptCoreRoutine"][0].val;
+    fp = TOSLoader["__InterruptCoreRoutine"].val;
   // movabs rip, <fp>
   ctx.Rip = reinterpret_cast<uintptr_t>(fp);
   SetThreadContext(cores[core].thread, &ctx);

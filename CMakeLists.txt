@@ -87,7 +87,6 @@ target_compile_features(${PROJECT_NAME}
     cxx_attributes
     cxx_alignas
     cxx_thread_local
-    cxx_right_angle_brackets
     cxx_range_for
     cxx_auto_type
     cxx_nullptr
@@ -112,6 +111,7 @@ target_compile_options(${PROJECT_NAME}
     -Wextra
     -Werror=shadow
     -Wno-frame-address
+    -Wno-unused-command-line-argument
     -fno-exceptions
     -fno-omit-frame-pointer
     -fvisibility=hidden

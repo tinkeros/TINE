@@ -53,7 +53,7 @@ static LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
                    : 0;
   static void* fp = nullptr;
   if (fp == nullptr)
-    fp = TOSLoader["DebuggerLandWin"][0].val;
+    fp = TOSLoader["DebuggerLandWin"].val;
   FFI_CALL_TOS_2(fp, sig, (uintptr_t)regs);
   return EXCEPTION_CONTINUE_EXECUTION;
 }
@@ -106,7 +106,7 @@ static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
 #endif
   static void* fp = nullptr;
   if (fp == nullptr)
-    fp = TOSLoader["DebuggerLand"][0].val;
+    fp = TOSLoader["DebuggerLand"].val;
   FFI_CALL_TOS_2(fp, sig_i64, (uintptr_t)regs);
 }
 

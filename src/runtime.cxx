@@ -13,7 +13,6 @@
 #include <chrono>
 #include <filesystem>
 #include <thread>
-#include <vector>
 
 namespace fs = std::filesystem;
 namespace chrono = std::chrono;
@@ -42,14 +41,14 @@ using std::thread;
 void HolyFree(void* ptr) {
   static void* fptr = nullptr;
   if (!fptr)
-    fptr = TOSLoader["_FREE"][0].val;
+    fptr = TOSLoader["_FREE"].val;
   FFI_CALL_TOS_1(fptr, (uintptr_t)ptr);
 }
 
 void* HolyMAlloc(size_t sz) {
   static void* fptr = nullptr;
   if (!fptr)
-    fptr = TOSLoader["_MALLOC"][0].val;
+    fptr = TOSLoader["_MALLOC"].val;
   return (void*)FFI_CALL_TOS_2(fptr, sz, 0 /*NULL*/);
 }
 
@@ -261,8 +260,7 @@ static void STK_InterruptCore(uint64_t* stk) {
 
 static void STK___BootstrapForeachSymbol(uintptr_t* stk) {
   for (auto& m : TOSLoader) {
-    auto& [symname, vec] = m;
-    auto& sym = vec[0];
+    auto& [symname, sym] = m;
     FFI_CALL_TOS_3((void*)stk[0], (uintptr_t)symname.c_str(),
                    (uintptr_t)sym.val,
                    sym.type == HTT_EXPORT_SYS_SYM ? HTT_FUN : sym.type);
@@ -549,8 +547,8 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   blob.append(au.data, 2);
   CHash sym;
   sym.type = HTT_FUN;
-  sym.val = reinterpret_cast<void*>(off);
-  TOSLoader[name].emplace_back(sym);
+  sym.val = reinterpret_cast<uint8_t*>(off);
+  TOSLoader[name] = sym;
 }
 
 void RegisterFuncPtrs() {
@@ -643,11 +641,8 @@ void RegisterFuncPtrs() {
   S_(_GrPaletteColorSet, 2);
   auto blob = VirtAlloc<char>(ffi_blob.size());
   std::copy(ffi_blob.begin(), ffi_blob.end(), blob);
-  for (auto& m : TOSLoader) {
-    auto& [symname, vec] = m;
-    auto& sym = vec[0];
-    sym.val = blob + (uintptr_t)sym.val;
-  }
+  for (auto& m : TOSLoader)
+    std::get<CHash>(m).val += (uintptr_t)blob;
 }
 
 // vim: set expandtab ts=2 sw=2 :
