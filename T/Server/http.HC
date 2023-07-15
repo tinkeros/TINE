@@ -382,7 +382,7 @@ U0 SReadData(CDyadStream *s,U8 *data,I64 len,CUniqueToken *ut) {
   }
   con=CAlloc(sizeof(CConnection));
   con->hc=HeapCtrlInit(,Fs,1);
-  con->buffer=MAlloc(0xB00,con->hc);
+  con->buffer=MAlloc(0xB00,con->hc);
   con->buffer_ptr=con->buffer;
   con->buffer_len=0;
   con->unique_token=ut;
@@ -661,22 +661,39 @@ U0 CloseCallback(CDyadStream *s,CUniqueToken *ut) {
   return;
 }
 U0 ListenCallback(CDyadStream *s,CServer *srv) {
-	CUniqueToken *ut=CAlloc(sizeof(CUniqueToken));
-	ut->srv=srv;
-	DyadSetTimeout(s,60);
-	DyadSetDataCallback(s,&SReadData,ut);
-	DyadSetOnCloseCallback(s,&CloseCallback,ut);
-	DyadSetOnTimeoutCallback(s,&CloseCallback,ut);
+  CUniqueToken *ut=CAlloc(sizeof(CUniqueToken));
+  ut->srv=srv;
+  DyadSetTimeout(s,60);
+  DyadSetDataCallback(s,&SReadData,ut);
+  DyadSetOnCloseCallback(s,&CloseCallback,ut);
+  DyadSetOnTimeoutCallback(s,&CloseCallback,ut);
 }
+
+U0 ServeTask(CServer *srv) {
+  srv->task=Fs;
+  DyadListen(srv->s_sock,srv->port);
+  DyadSetOnListenCallback(srv->s_sock,&ListenCallback,srv);
+  while (TRUE) {
+    Sleep(1);
+    DyadUpdate;
+  }
+}
+
 U0 Serve(CServer *srv) {
-	srv->task=Fs;
-	DyadListen(srv->s_sock,srv->port);
-	DyadSetOnListenCallback(srv->s_sock,&ListenCallback,srv);
-	"Press a button to quit serving\n";
-	while(!ScanKey) {
-		Sleep(1);
-		DyadUpdate;
-	}
-	DyadShutdown;
+  U64 core=-1;
+  if (mp_cnt>1)
+    core=RandU16%(mp_cnt-1)+1; // we dont want core 0
+  CTask *srv_task;
+  if (!__IsCmdLine) {
+    "Press a button to quit serving\n";
+    srv_task=Spawn(&ServeTask,srv,core);
+    GetKey;
+  } else {
+    "Press enter to quit serving\n";
+    srv_task=Spawn(&ServeTask,srv,core);
+    Free(__GetStr);
+  }
+  Kill(srv_task,FALSE);
+  DyadShutdown;
 }
 
