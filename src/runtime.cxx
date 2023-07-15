@@ -12,13 +12,11 @@
 
 #include <chrono>
 #include <filesystem>
-#include <thread>
 
 namespace fs = std::filesystem;
 namespace chrono = std::chrono;
 
 using chrono::system_clock;
-using std::thread;
 
 #include <stddef.h>
 #include <string.h>
@@ -366,10 +364,8 @@ static uint64_t STK_UnixNow(void*) {
 }
 
 size_t mp_cnt(void*) {
-  static size_t n = 0;
-  if (!n)
-    n = thread::hardware_concurrency();
-  return n;
+  extern size_t proc_cnt;
+  return proc_cnt;
 }
 
 static void STK___SpawnCore(uintptr_t* stk) {

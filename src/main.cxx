@@ -12,7 +12,10 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <thread>
+
 namespace fs = std::filesystem;
+using std::thread;
 
 static constexpr bool is_win =
 #ifdef _WIN32
@@ -93,6 +96,7 @@ size_t page_size; // used for allocation
 #else
 DWORD dwAllocationGranularity;
 #endif
+size_t proc_cnt;
 
 int main(int argc, char** argv) {
 #ifndef _WIN32
@@ -109,6 +113,7 @@ int main(int argc, char** argv) {
   GetSystemInfo(&si);
   dwAllocationGranularity = si.dwAllocationGranularity;
 #endif
+  proc_cnt = thread::hardware_concurrency();
   void* argtable[] = {
       helpArg = arg_lit0("h", "help", "Display this help message."),
       sixty_fps = arg_lit0("6", "60fps", "Run in 60 fps mode."),
