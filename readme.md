@@ -1,5 +1,8 @@
 # ![](./logo.png) TINE Is Not a (TempleOS) Emulator
  \* *logo courtesy of CrunkLord420.*
+# showcase
+![](./showcase.png)
+
 ## required skills
  - knowledge of TempleOS
  - knowledge of C
