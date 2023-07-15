@@ -178,6 +178,7 @@ static void STK_DyadSetOnListenCallback(void** stk) {
 }
 
 static void STK_DyadSetTimeout(uintptr_t* stk) {
+  static_assert(sizeof(double) == sizeof(uint64_t));
   dyad_setTimeout(reinterpret_cast<dyad_Stream*>(stk[0]),
                   reinterpret_cast<double*>(stk)[1]);
 }
@@ -404,9 +405,8 @@ static int64_t STK_VFsFSize(char** stk) {
   return VFsFSize(stk[0]);
 }
 
-static uint64_t STK_VFsFRead(char** stk) {
-  return reinterpret_cast<uintptr_t>(
-      VFsFileRead(stk[0], reinterpret_cast<uint64_t*>(stk[1])));
+static void* STK_VFsFRead(char** stk) {
+  return VFsFileRead(stk[0], reinterpret_cast<uint64_t*>(stk[1]));
 }
 
 static uint64_t STK_VFsFWrite(char** stk) {
@@ -417,20 +417,20 @@ static uint64_t STK_VFsDirMk(char** stk) {
   return VFsDirMk(stk[0], VFS_CDF_MAKE);
 }
 
-static uint64_t STK_VFsDir(void*) {
-  return reinterpret_cast<uintptr_t>(VFsDir());
+static char** STK_VFsDir(void*) {
+  return VFsDir();
 }
 
 static uint64_t STK_VFsDel(char** stk) {
   return VFsDel(stk[0]);
 }
 
-static uint64_t STK_VFsFOpenW(char** stk) {
-  return reinterpret_cast<uintptr_t>(VFsFOpen(stk[0], "w+b"));
+static FILE* STK_VFsFOpenW(char** stk) {
+  return VFsFOpen(stk[0], "w+b");
 }
 
-static uint64_t STK_VFsFOpenR(char** stk) {
-  return reinterpret_cast<uintptr_t>(VFsFOpen(stk[0], "rb"));
+static FILE* STK_VFsFOpenR(char** stk) {
+  return VFsFOpen(stk[0], "rb");
 }
 
 static void STK_VFsFClose(FILE** stk) {
@@ -463,7 +463,6 @@ static uint64_t STK_VFsGetDrv(void*) {
 }
 
 static void STK_SetVolume(uint64_t* stk) {
-  static_assert(sizeof(double) == sizeof(uint64_t));
   union {
     uint64_t i;
     double flt;
