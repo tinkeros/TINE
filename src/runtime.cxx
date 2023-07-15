@@ -216,11 +216,16 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
   #endif*/
 
 #else
-  // #ifdef __FreeBSD__
-  stk[0] /= page_size; // align to
-  stk[0] *= page_size; // page boundary
+  /* #ifdef __FreeBSD__ */
+  // round down to page boundary (equiv to stk[0] / page_size * page_size)
+  //   0b100101010 (x)
+  // & 0b000001111 <- 0b10000 - 1
+  // --------------
+  //   0b000001010
+  // now subtract this from x to round down
+  uintptr_t const addr = stk[0] - (stk[0] & (page_size - 1));
   // https://archive.md/Aj0S4
-  return -1 != msync((void*)stk[0], page_size, MS_ASYNC);
+  return -1 != msync((void*)addr, page_size, MS_ASYNC);
   /*#elif defined(__linux__)
         // TOO FUCKING GODDAMN SLOW!!!!!
     auto constexpr Hex2U64 = [](char const *ptr, char const** res) {

@@ -35,19 +35,22 @@ static inline uint64_t Hex2U64(char const* ptr, char const** res) {
 
 void* NewVirtualChunk(size_t sz, bool low32) {
 #ifndef _WIN32
-  size_t const pad = sz % page_size == 0 ? 0 : page_size;
-  // sz / page_size * page_size seems meaningless
-  // but its actually aligning sz to the page size
-  size_t const padded_sz = sz / page_size * page_size + pad;
+  // explanation of (x+y-1)&~(y-1) on the bottom windows code
+  // page_size is a power of 2 so this works
+  size_t const padded_sz = (sz + page_size - 1) & ~(page_size - 1);
   void* ret;
   if (low32) { // code heap
-    // MAP_32BIT is actually 31 bits(which is actually lucky for us)
+    // MAP_32BIT is actually MAP_31BIT(which is actually lucky for us)
     ret = mmap(nullptr, padded_sz, PROT_EXEC | PROT_WRITE | PROT_READ,
                MAP_PRIVATE | MAP_ANON | MAP_32BIT, -1, 0);
 #ifdef __linux__
-    // I hear that linux doesn't like addresses within the first 16bits
     if (ret == MAP_FAILED) {
-      uintptr_t down = 0x10000;
+      // side note: Linux doesn't seem to like allocating stuff below 31 bits
+      // (<0x40000000). I don't know why so technically we have 1GB less space
+      // for the code heap than on Windows or maybe FreeBSD(I don't have it
+      // installed) but it won't really matter since machine code doesn't take
+      // up a lot of space
+      uintptr_t down = 0;
       std::ifstream map{"/proc/self/maps", ios::binary | ios::in};
       std::string buffer;
       // just fs::file_size() wont work lmao
@@ -55,9 +58,7 @@ void* NewVirtualChunk(size_t sz, bool low32) {
         char const* ptr = buffer.data();
         uint64_t lower = Hex2U64(ptr, &ptr);
         // MAP_FIXED wants us to align `down` to the page size
-        auto const pag = down % page_size;
-        if (pag > 0)
-          down += page_size - pag;
+        down = (down + page_size - 1) & ~(page_size - 1);
         // basically finds a gap between the previous line's upper address
         // and the current line's lower address so it can allocate there
         if (lower - down >= padded_sz && lower > down)
@@ -98,8 +99,15 @@ void* NewVirtualChunk(size_t sz, bool low32) {
       alloc = (uintptr_t)mbi.BaseAddress + mbi.RegionSize;
       // clang-format off
       //
-      // Fancy code to align because VirtualQuery might not give us an aligned base addr
-      // and VirtualAlloc likes values to be aligned to dwAllocationGranularity
+      // Fancy code to align to round up to the nearest allocation granularity unit
+      // since VirtualAlloc() will round down the address to the nearest
+      // granularity unit multiple and mbi.BaseAddress set by VirtualQuery()
+      // is aligned to the page boundary which can interlap with an occupied
+      // allocation granularity unit
+      //
+      // This works because dwAllocationGranularity is a power of 2
+      // (so it has only 1 bit that's 1, eg 0b10000)
+      //
       // lets say we want to align to 0b100(an arbitrary dwAllocationGranularity)
       //   0b1001
       // + 0b0011 <- (0b100 - 1), flips bottom bits
@@ -110,12 +118,6 @@ void* NewVirtualChunk(size_t sz, bool low32) {
       //   0b1100 <- rounded up aligned value
       //
       // It'll be the same if it's already aligned
-      //
-      // We round up to get the next free allocation granularity unit
-      // since VirtualAlloc() will round down the address to the nearest
-      // granularity unit multiple and mbi.BaseAddress set by VirtualQuery()
-      // is aligned to the page boundary which can interlap with an occupied
-      // allocation granularity unit
       //
       // clang-format on
       addr = ((uintptr_t)mbi.BaseAddress + dwAllocationGranularity - 1) &
@@ -135,8 +137,7 @@ void FreeVirtualChunk(void* ptr, [[maybe_unused]] size_t sz) {
 #ifdef _WIN32
   VirtualFree(ptr, 0, MEM_RELEASE);
 #else
-  size_t const pad = sz % page_size == 0 ? 0 : page_size;
-  size_t const padded_sz = sz / page_size * page_size + pad;
+  size_t const padded_sz = (sz + page_size - 1) & ~(page_size - 1);
   munmap(ptr, padded_sz);
 #endif
 }

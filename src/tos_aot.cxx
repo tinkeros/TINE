@@ -76,7 +76,7 @@ static void LoadOneImport(char** src_, char* mod_base) {
       *(int16_t*)ptr = i;
       break;
     case IET_REL_I32:
-      *(uint32_t*)ptr = (char*)i - ptr - 4;
+      *(int32_t*)ptr = (char*)i - ptr - 4;
       break;
     case IET_IMM_U32:
       *(uint32_t*)ptr = i;

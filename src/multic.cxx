@@ -247,7 +247,7 @@ static uint64_t ticks = 0;
 //
 // i killed two birds with one stoner
 static uint64_t GetTicksHP() {
-  static std::atomic<bool> init = false;
+  static bool init = false;
   if (!init) {
     init = true;
     TIMECAPS tc;
