@@ -488,16 +488,10 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
                      "\x41\x57";
   blob.append(inst, 22);
 #ifdef _WIN32
-  // https://archive.md/4HDA0#selection-2085.880-2085.1196
-  // rcx is the first arg i have to provide in win64 abi
-  // last 4 register pushes are for register "home"s
-  // that windows wants me to provide
-  inst = "\x48\x8D\x4D\x10\x41"
-         "\x51\x41\x50\x52\x51";
-  blob.append(inst, 10);
+  // rcx is the first arg i have to provide in win64
+  blob.append("\x48\x8D\x4D\x10", 4);
 #else // sysv
-  // rdi is the first arg
-  // i have to provide in sysv
+  // rdi is the first arg i have to provide in sysv
   blob.append("\x48\x8D\x7D\x10", 4);
 #endif
   // movabs rax, <fp>
@@ -509,11 +503,6 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   blob.append(fu.data, 8);
   // call rax
   blob.append("\xFF\xD0", 2);
-#ifdef _WIN32
-  // can just add to rsp since
-  // those 4 registers are volatile
-  blob.append("\x48\x83\xC4\x20", 4);
-#endif
   // pops stack. boring stuff
   inst = "\x41\x5F\x41\x5E\x41"
          "\x5D\x41\x5C\x41\x5B"
