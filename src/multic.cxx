@@ -39,7 +39,8 @@ uint64_t GetTicks() {
 #else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (uint64_t)(ts.tv_nsec / 1000000) + 1000 * (uint64_t)ts.tv_sec;
+  return static_cast<uint64_t>(ts.tv_nsec / 1000000) +
+         1000 * static_cast<uint64_t>(ts.tv_sec);
 #endif
 }
 
@@ -113,12 +114,12 @@ static std::vector<CCore> cores;
 static void* __stdcall LaunchCore(void* c) {
   VFsThrdInit();
   SetupDebugger();
-  core_num = (uintptr_t)c;
+  core_num = reinterpret_cast<uintptr_t>(c);
 #ifndef _WIN32
   static void* fp = nullptr;
   if (fp == nullptr)
     fp = TOSLoader["__InterruptCoreRoutine"].val;
-  signal(SIGUSR2, (void (*)(int))fp);
+  signal(SIGUSR2, reinterpret_cast<void (*)(int)>(fp));
   signal(SIGUSR1, [](int) {
     pthread_exit(nullptr);
   });
@@ -140,7 +141,7 @@ void InterruptCore(size_t core) {
   GetThreadContext(cores[core].thread, &ctx);
   // push rip
   ctx.Rsp -= 8;
-  ((DWORD64*)ctx.Rsp)[0] = ctx.Rip;
+  reinterpret_cast<DWORD64*>(ctx.Rsp)[0] = ctx.Rip;
   //
   static void* fp = nullptr;
   if (fp == nullptr)
@@ -160,7 +161,7 @@ void LaunchCore0(ThreadCallback* fp) {
 #ifdef _WIN32
   // sorry for this piece of utter garbage code, I wanted it to compile
   // without warnings
-#define C_(x) reinterpret_cast<WinCB>((void*)x)
+#define C_(x) ((WinCB)((void*)x))
   cores[0].thread = CreateThread(nullptr, 0, C_(fp), nullptr, 0, nullptr);
   cores[0].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[0].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -177,13 +178,14 @@ void CreateCore(size_t core, void* fp) {
   // CoreAPSethTask(...) passed from SpawnCore
   cores[core].fp = fp;
 #ifdef _WIN32
-  cores[core].thread =
-      CreateThread(nullptr, 0, C_(LaunchCore), (void*)core, 0, nullptr);
+  cores[core].thread = CreateThread(nullptr, 0, C_(LaunchCore),
+                                    reinterpret_cast<void*>(core), 0, nullptr);
   cores[core].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[core].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[core].thread, THREAD_PRIORITY_HIGHEST);
 #else
-  pthread_create(&cores[core].thread, nullptr, LaunchCore, (void*)core);
+  pthread_create(&cores[core].thread, nullptr, LaunchCore,
+                 reinterpret_cast<void*>(core));
   pthread_setname_np(cores[core].thread, "Seth");
 #endif
 }
@@ -289,7 +291,7 @@ void SleepHP(uint64_t us) {
           0);
 #elif defined(__FreeBSD__)
   _umtx_op(&cores[core_num].is_sleeping, UMTX_OP_WAIT_UINT, 1,
-           (void*)sizeof(struct timespec), &ts);
+           reinterpret_cast<void*>(sizeof(struct timespec)), &ts);
 #endif
 #endif
 }

@@ -108,7 +108,7 @@ static void DrawWindowUpdate_EV(uint8_t* colors, uint64_t internal_width) {
     return;
   SDL_Surface* s = win.surf;
   uint64_t y;
-  uint8_t *src = colors, *dst = (uint8_t*)s->pixels;
+  uint8_t *src = colors, *dst = static_cast<uint8_t*>(s->pixels);
   SDL_LockSurface(s);
   for (y = 0; y < 480; ++y) {
     std::copy(src, src + 640, dst);
@@ -163,7 +163,7 @@ void DrawWindowUpdate(uint8_t* colors, uintptr_t internal_width) {
   userevent.type = SDL_USEREVENT;
   userevent.code = 0;
   userevent.data1 = colors;
-  userevent.data2 = (void*)internal_width;
+  userevent.data2 = reinterpret_cast<void*>(internal_width);
 
   event.type = SDL_USEREVENT;
   event.user = userevent;
@@ -179,7 +179,8 @@ void DrawWindowUpdate(uint8_t* colors, uintptr_t internal_width) {
 
 static void UserEvHandler(SDL_UserEvent* ev) {
   if (ev->type == SDL_USEREVENT)
-    DrawWindowUpdate_EV((uint8_t*)ev->data1, (uintptr_t)ev->data2);
+    DrawWindowUpdate_EV(static_cast<uint8_t*>(ev->data1),
+                        reinterpret_cast<uintptr_t>(ev->data2));
 }
 
 enum : uint8_t {
@@ -633,9 +634,9 @@ void GrPaletteColorSet(uint64_t i, uint64_t bgr48) {
   // clang-format off
   // 0xffff is 100% so 0x7fff/0xffff would be about .50
   // this gets multiplied by 0xff to get 0x7f
-  Uint8 b = u.b / (double)0xffff * 0xff,
-        g = u.g / (double)0xffff * 0xff,
-        r = u.r / (double)0xffff * 0xff;
+  Uint8 b = u.b / static_cast<double>(0xffff) * 0xff,
+        g = u.g / static_cast<double>(0xffff) * 0xff,
+        r = u.r / static_cast<double>(0xffff) * 0xff;
   // clang-format on
   // i seriously need designated inits in c++
   SDL_Color sdl_c;

@@ -53,7 +53,7 @@ static void LoadOneImport(char** src_, char* mod_base) {
         } else {
           auto& tmp_sym = TOSLoader[st_ptr];
           if (tmp_sym.type != HTT_IMPORT_SYS_SYM)
-            i = (uintptr_t)tmp_sym.val;
+            i = reinterpret_cast<uintptr_t>(tmp_sym.val);
         }
       }
     }
@@ -133,7 +133,7 @@ static void LoadPass1(char* src, char* mod_base) {
       for (size_t j = 0; j < cnt; j++) {
         ptr = mod_base + *(uint32_t*)src;
         src += 4;
-        *(uint32_t*)ptr += (uintptr_t)mod_base;
+        *(uint32_t*)ptr += reinterpret_cast<uintptr_t>(mod_base);
       }
     } break;
     default:; // the other ones wont be used
@@ -204,7 +204,7 @@ void LoadHCRT(std::string const& name) {
   static void* fp = nullptr;
   if (fp == nullptr)
     fp = TOSLoader["__InterruptCoreRoutine"].val;
-  signal(SIGUSR2, (void (*)(int))fp);
+  signal(SIGUSR2, reinterpret_cast<void (*)(int)>(fp));
 #endif
   LoadPass2(bfh_addr + bfh->patch_table_offset, bfh->data);
 }
@@ -223,7 +223,7 @@ void BackTrace() {
     });
     init = true;
   }
-  auto rbp = (void**)__builtin_frame_address(0);
+  auto rbp = reinterpret_cast<void**>(__builtin_frame_address(0));
   void* oldp;
   // its 1 because we want to know the return
   // addr of BackTrace()'s caller
@@ -246,7 +246,7 @@ void BackTrace() {
     }
   next:;
     ptr = rbp[1];
-    rbp = (void**)*rbp;
+    rbp = static_cast<void**>(*rbp);
   }
   std::cerr << std::endl;
 }

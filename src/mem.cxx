@@ -96,7 +96,7 @@ void* NewVirtualChunk(size_t sz, bool low32) {
     while (alloc <= MAX_CODE_HEAP_ADDR) {
       if (0 == VirtualQuery(reinterpret_cast<void*>(alloc), &mbi, sizeof mbi))
         return nullptr;
-      alloc = (uintptr_t)mbi.BaseAddress + mbi.RegionSize;
+      alloc = reinterpret_cast<uintptr_t>(mbi.BaseAddress) + mbi.RegionSize;
       // clang-format off
       //
       // Fancy code to align to round up to the nearest allocation granularity unit
@@ -120,7 +120,8 @@ void* NewVirtualChunk(size_t sz, bool low32) {
       // It'll be the same if it's already aligned
       //
       // clang-format on
-      addr = ((uintptr_t)mbi.BaseAddress + dwAllocationGranularity - 1) &
+      addr = (reinterpret_cast<uintptr_t>(mbi.BaseAddress) +
+              dwAllocationGranularity - 1) &
              ~(dwAllocationGranularity - 1);
       if (mbi.State & MEM_FREE && sz <= alloc - addr)
         return VirtualAlloc(reinterpret_cast<void*>(addr), sz,

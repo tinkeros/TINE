@@ -15,6 +15,7 @@
 #include <thread>
 
 namespace fs = std::filesystem;
+
 using std::thread;
 
 static constexpr bool is_win =
