@@ -642,7 +642,7 @@ void RegisterFuncPtrs() {
   auto blob = VirtAlloc<char>(ffi_blob.size());
   std::copy(ffi_blob.begin(), ffi_blob.end(), blob);
   for (auto& m : TOSLoader)
-    std::get<CHash>(m).val += (uintptr_t)blob;
+    m.second.val += reinterpret_cast<uintptr_t>(blob);
 }
 
 // vim: set expandtab ts=2 sw=2 :

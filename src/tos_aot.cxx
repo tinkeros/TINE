@@ -215,7 +215,7 @@ void BackTrace() {
   static bool init = false;
   if (!init) {
     for (auto const& e : TOSLoader)
-      sorted.emplace_back(std::get<std::string const>(e));
+      sorted.emplace_back(e.first);
     sz = sorted.size();
     std::sort(sorted.begin(), sorted.end(), [](auto const& a, auto const& b) {
       return TOSLoader[a].val < TOSLoader[b].val;
@@ -266,7 +266,7 @@ __attribute__((used, visibility("default"))) char* WhichFun(void* ptr) {
   static bool init = false;
   if (!init) {
     for (auto const& e : TOSLoader)
-      sorted.emplace_back(std::get<std::string const>(e));
+      sorted.emplace_back(e.first);
     sz = sorted.size();
     std::sort(sorted.begin(), sorted.end(), [](auto const& a, auto const& b) {
       return TOSLoader[a].val < TOSLoader[b].val;
