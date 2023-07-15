@@ -196,6 +196,7 @@ void LoadHCRT(std::string const& name) {
   auto bfh = reinterpret_cast<CBinFile*>(bfh_addr);
   if (std::string_view{bfh->bin_signature, 4} != "TOSB") {
     std::cerr << "INVALID TEMPLEOS BINARY FILE " << name << std::endl;
+    f.close();
     std::terminate();
   }
   LoadPass1(bfh_addr + bfh->patch_table_offset, bfh->data);

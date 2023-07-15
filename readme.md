@@ -3,7 +3,7 @@
 # showcase
 ![](./showcase.png)
 
-An example of HolyC's `#exe{}` and freedom of fiddling with the compiler directly mimicing `#undef` of ISO C.
+An example of HolyC's `#exe{}` and freedom of directly fiddling with the task's hash table mimicing `#undef` of ISO C.
 
 ## required skills
  - knowledge of TempleOS

@@ -366,7 +366,10 @@ static uint64_t STK_UnixNow(void*) {
 }
 
 size_t mp_cnt(void*) {
-  return thread::hardware_concurrency();
+  static size_t n = 0;
+  if (!n)
+    n = thread::hardware_concurrency();
+  return n;
 }
 
 static void STK___SpawnCore(uintptr_t* stk) {
