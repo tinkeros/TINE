@@ -680,7 +680,7 @@ U0 ServeTask(CServer *srv) {
 }
 
 U0 Serve(CServer *srv) {
-  U64 core=-1;
+  I64 core=-1;
   if (mp_cnt>1)
     core=RandU16%(mp_cnt-1)+1; // we dont want core 0 since it has
                                // a lot of things going on
