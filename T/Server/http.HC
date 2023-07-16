@@ -633,7 +633,7 @@ process:
   Free(buf),Free(buf2);
 //If we have content,make sure we recieved all the data
   if((con->content_len&&con->content_len==con->field_ptr)||!con->content_len){
-    Spawn(&ParseRequest,con,"Request");
+    Spawn(&ParseRequest,con,"Request",,Fs);
   }
   return FALSE;
 }
@@ -688,7 +688,7 @@ U0 Serve(CServer *srv) {
   I64 core=-1;
   CTask *srv_task;
   if (mp_cnt>1)
-    core=RandU16%(mp_cnt-1)+1;
+    core=RandU64%(mp_cnt-1)+1;
       // we dont want core 0 since it has
       // a lot of things going on
   #exe {
@@ -701,7 +701,7 @@ U0 Serve(CServer *srv) {
     // the default wallpaper shows running tasks
     // and the server launches a bunch of tasks which
     // creates a race condition somehow so we replace it
-    // with a temporary one that doesn't show them
+    // with a temporary one that doesn't show them
   }
   if (!__IsCmdLine) {
     "Press a button to quit serving\n";
@@ -712,11 +712,11 @@ U0 Serve(CServer *srv) {
     srv_task=Spawn(&ServeTask,srv,"Server",core);
     Free(__GetStr);
   }
-  Kill(srv_task);
   DyadShutdown;
+  Kill(srv_task);
   #exe {
     if (!__IsCmdLine)
-      StreamPrint("gr.fp_wall_paper=fp;\n");
+      StreamPrint("Sleep(100);gr.fp_wall_paper=fp;\n");
   }
 }
 
