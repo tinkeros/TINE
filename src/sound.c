@@ -25,6 +25,8 @@ static void AudioCB(void* userdata, Uint8* out, int len) {
 }
 
 void InitSound(void) {
+  if (!SDL_WasInit(SDL_INIT_AUDIO))
+    SDL_Init(SDL_INIT_AUDIO);
   SDL_AudioSpec want = {
       .freq = 24000,
       .format = AUDIO_S8,
@@ -32,8 +34,6 @@ void InitSound(void) {
       .samples = 256,
       .callback = AudioCB,
   };
-  if (!SDL_WasInit(SDL_INIT_AUDIO))
-    SDL_Init(SDL_INIT_AUDIO);
   output = SDL_OpenAudioDevice(NULL, 0, &want, &have,
                                SDL_AUDIO_ALLOW_FREQUENCY_CHANGE |
                                    SDL_AUDIO_ALLOW_CHANNELS_CHANGE);

@@ -18,7 +18,7 @@ static struct CDrawWindow {
   SDL_Renderer* rend;
   Uint32 sz_x, sz_y;
   Sint32 margin_x, margin_y;
-  ~CDrawWindow() {
+  ~CDrawWindow() noexcept {
     if (!win_init)
       return;
     // somehow segfaults idk lmao im just gonna leak memory for a
@@ -58,18 +58,17 @@ std::string const ClipboardText() {
   return s;
 }
 
-CDrawWindow* NewDrawWindow() {
-  if (win_init)
-    return &win;
-  win_init = true;
-  if (!SDL_WasInit(SDL_INIT_EVERYTHING)) {
+void NewDrawWindow() {
+  if (!SDL_WasInit(SDL_INIT_EVERYTHING) || !win_init) {
     SDL_Init(SDL_INIT_EVERYTHING);
     // sdl disables compositor in kde by default
     SDL_SetHintWithPriority(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0",
                             SDL_HINT_OVERRIDE);
     SDL_SetHintWithPriority(SDL_HINT_RENDER_SCALE_QUALITY, "linear",
                             SDL_HINT_OVERRIDE);
-  }
+  } else
+    return;
+  win_init = true;
   win.screen_mutex = SDL_CreateMutex();
   win.screen_done_cond = SDL_CreateCond();
   win.window =
@@ -98,7 +97,6 @@ CDrawWindow* NewDrawWindow() {
   win.sz_y = 480;
   // let templeos manage the cursor
   SDL_ShowCursor(SDL_DISABLE);
-  return &win;
 }
 
 static void DrawWindowUpdate_EV(uint8_t* colors, uint64_t internal_width) {
