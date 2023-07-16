@@ -679,15 +679,25 @@ U0 ServeTask(CServer *srv) {
   }
 }
 
+#include "wallpaper.HC";
+
 U0 Serve(CServer *srv) {
   I64 core=-1;
   if (mp_cnt>1)
-    core=RandU16%(mp_cnt-1)+1; // we dont want core 0 since it has
-                               // a lot of things going on
+    core=RandU16%(mp_cnt-1)+1;
+      // we dont want core 0 since it has
+      // a lot of things going on
+  U8 *fp=gr.fp_wall_paper;
+  gr.fp_wall_paper=&TempWallPaper;
+     // we do this because
+     // the default wallpaper shows running tasks
+     // and the server launches a bunch of tasks which
+     // creates a race condition somehow so we replace it
+     // with a temporary one that doesn't show them
   CTask *srv_task;
   if (!__IsCmdLine) {
     "Press a button to quit serving\n";
-    srv_task=Spawn(&ServeTask,srv,"Server",core);
+    srv_task=Spawn(&ServeTask,srv,"Server",core);
     GetKey;
   } else {
     "Press enter to quit serving\n";
@@ -696,5 +706,6 @@ U0 Serve(CServer *srv) {
   }
   Kill(srv_task);
   DyadShutdown;
+  gr.fp_wall_paper=fp;
 }
 
