@@ -293,10 +293,10 @@ static uint64_t STK___GetTicksHP(void*) {
   static uint64_t freq = 0;
   uint64_t cur;
   if (!freq) {
-    QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq));
+    QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
     freq /= 1000000U;
   }
-  QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER*>(&cur));
+  QueryPerformanceCounter((LARGE_INTEGER*)&cur);
   return cur / freq;
 #endif
 }
@@ -478,8 +478,8 @@ static uint64_t STK_GetVolume(void*) {
   return un.i;
 }
 
-static void STK_ExitTINE(int64_t* stk) {
-  ShutdownTINE(static_cast<int>(stk[0]));
+static void STK_ExitTINE(int* stk) {
+  ShutdownTINE(stk[0]);
 }
 
 // arity must be <= 0xffFF/sizeof U64

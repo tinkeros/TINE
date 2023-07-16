@@ -119,7 +119,7 @@ static void* __stdcall LaunchCore(void* c) {
   static void* fp = nullptr;
   if (fp == nullptr)
     fp = TOSLoader["__InterruptCoreRoutine"].val;
-  signal(SIGUSR2, reinterpret_cast<void (*)(int)>(fp));
+  signal(SIGUSR2, (void (*)(int))fp);
   signal(SIGUSR1, [](int) {
     pthread_exit(nullptr);
   });
@@ -291,7 +291,7 @@ void SleepHP(uint64_t us) {
           0);
 #elif defined(__FreeBSD__)
   _umtx_op(&cores[core_num].is_sleeping, UMTX_OP_WAIT_UINT, 1,
-           reinterpret_cast<void*>(sizeof(struct timespec)), &ts);
+           (void*)sizeof(struct timespec), &ts);
 #endif
 #endif
 }

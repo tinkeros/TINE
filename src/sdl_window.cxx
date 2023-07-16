@@ -614,7 +614,7 @@ void InputLoop(bool* off) {
     if (!SDL_WaitEvent(&e))
       continue;
     if (e.type == SDL_USEREVENT)
-      UserEvHandler(reinterpret_cast<SDL_UserEvent*>(&e));
+      UserEvHandler((SDL_UserEvent*)&e);
   }
 }
 

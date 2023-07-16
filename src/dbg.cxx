@@ -45,7 +45,7 @@ static LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
       REG(Rsi),    REG(Rdi), REG(R8),
       REG(R9),     REG(R10), REG(R11),
       REG(R12),    REG(R13), REG(R14),
-      REG(R15),    REG(Rip), reinterpret_cast<uintptr_t>(&ctx->FltSave),
+      REG(R15),    REG(Rip), (uintptr_t)&ctx->FltSave,
       REG(EFlags),
   };
   uint64_t sig = (c == EXCEPTION_BREAKPOINT || c == STATUS_SINGLE_STEP)
@@ -87,7 +87,7 @@ static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
       REG(RSI), REG(RDI), REG(R8),
       REG(R9),  REG(R10), REG(R11),
       REG(R12), REG(R13), REG(R14),
-      REG(R15), REG(RIP), reinterpret_cast<uintptr_t>(ctx->uc_mcontext.fpregs),
+      REG(R15), REG(RIP), (uintptr_t)ctx->uc_mcontext.fpregs,
       REG(EFL),
   };
 #elif defined(__FreeBSD__)
@@ -95,15 +95,12 @@ static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
   // freebsd seems to just use an
   // array of longs for their floating point context lmao
   uint64_t regs[] = {
-      REG(rax),    REG(rcx),
-      REG(rdx),    REG(rbx),
-      REG(rsp),    REG(rbp),
-      REG(rsi),    REG(rdi),
-      REG(r8),     REG(r9),
-      REG(r10),    REG(r11),
-      REG(r12),    REG(r13),
-      REG(r14),    REG(r15),
-      REG(rip),    reinterpret_cast<uintptr_t>(&ctx->uc_mcontext.mc_fpstate),
+      REG(rax),    REG(rcx), REG(rdx),
+      REG(rbx),    REG(rsp), REG(rbp),
+      REG(rsi),    REG(rdi), REG(r8),
+      REG(r9),     REG(r10), REG(r11),
+      REG(r12),    REG(r13), REG(r14),
+      REG(r15),    REG(rip), (uintptr_t)&ctx->uc_mcontext.mc_fpstate,
       REG(rflags),
   };
 #endif
@@ -116,8 +113,8 @@ static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
 void SetupDebugger() {
   struct sigaction inf;
   inf.sa_flags = SA_SIGINFO | SA_NODEFER;
-  inf.sa_sigaction =
-      reinterpret_cast<void (*)(int, siginfo_t*, void*)>(routine);
+  // ugly piece of shit
+  inf.sa_sigaction = (void (*)(int, siginfo_t*, void*))routine;
   sigemptyset(&inf.sa_mask);
   sigaction(SIGTRAP, &inf, nullptr);
   sigaction(SIGBUS, &inf, nullptr);

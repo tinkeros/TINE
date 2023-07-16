@@ -26,13 +26,14 @@ std::unordered_map<std::string, CHash> TOSLoader;
 // This code is mostly copied from TempleOS
 // and does not look very C++-y
 static void LoadOneImport(char** src_, char* mod_base) {
-  char *src = *src_, *st_ptr, *ptr = nullptr;
+  char* __restrict src = *src_, *st_ptr, *ptr = nullptr;
   uintptr_t i = 0;
   uint8_t etype;
   bool first = true;
+#define AS_(x, T) (*reinterpret_cast<T*>(x))
   while ((etype = *src++)) {
-    ptr = mod_base + *(uint32_t*)src;
-    src += 4;
+    ptr = mod_base + AS_(src, uint32_t);
+    src += sizeof(uint32_t);
     st_ptr = src;
     src += strlen(st_ptr) + 1;
     // First occurance of a string means
@@ -58,32 +59,36 @@ static void LoadOneImport(char** src_, char* mod_base) {
       }
     }
     // probably breaks strict aliasing :(
+#define OFF_(T) (reinterpret_cast<char*>(i) - ptr - sizeof(T))
     switch (etype) {
+      break;
     case IET_REL_I8:
-      *(int8_t*)ptr = (char*)i - ptr - 1;
+      AS_(ptr, int8_t) = OFF_(int8_t);
       break;
     case IET_IMM_U8:
-      *(uint8_t*)ptr = i;
+      AS_(ptr, uint8_t) = i;
       break;
     case IET_REL_I16:
-      *(int16_t*)ptr = (char*)i - ptr - 2;
+      AS_(ptr, int16_t) = OFF_(int16_t);
       break;
     case IET_IMM_U16:
-      *(int16_t*)ptr = i;
+      AS_(ptr, uint16_t) = i;
       break;
     case IET_REL_I32:
-      *(int32_t*)ptr = (char*)i - ptr - 4;
+      AS_(ptr, int32_t) = OFF_(int32_t);
       break;
     case IET_IMM_U32:
-      *(uint32_t*)ptr = i;
+      AS_(ptr, uint32_t) = i;
       break;
     case IET_REL_I64:
-      *(int64_t*)ptr = (char*)i - ptr - 8;
+      AS_(ptr, int64_t) = OFF_(int64_t);
       break;
     case IET_IMM_I64:
-      *(int64_t*)ptr = static_cast<int64_t>(i);
+      AS_(ptr, int64_t) = static_cast<int64_t>(i);
       break;
+    default:;
     }
+#undef OFF_
   }
   *src_ = src - 1;
 }
@@ -107,7 +112,7 @@ static void LoadPass1(char* src, char* mod_base) {
   uint8_t etype;
   CHash tmpex;
   while ((etype = *src++)) {
-    i = *(uint32_t*)src;
+    i = AS_(src, uint32_t);
     src += 4;
     st_ptr = src;
     src += strlen(st_ptr) + 1;
@@ -131,9 +136,9 @@ static void LoadPass1(char* src, char* mod_base) {
     case IET_ABS_ADDR: {
       cnt = i;
       for (size_t j = 0; j < cnt; j++) {
-        ptr = mod_base + *(uint32_t*)src;
+        ptr = mod_base + AS_(src, uint32_t);
         src += 4;
-        *(uint32_t*)ptr += reinterpret_cast<uintptr_t>(mod_base);
+        AS_(ptr, uint32_t) += reinterpret_cast<uintptr_t>(mod_base);
       }
     } break;
     default:; // the other ones wont be used
@@ -147,7 +152,7 @@ static void LoadPass2(char* src, char* mod_base) {
   uint32_t i;
   uint8_t etype;
   while ((etype = *src++)) {
-    i = *(uint32_t*)src;
+    i = AS_(src, uint32_t);
     src += 4;
     st_ptr = src;
     src += strlen(st_ptr) + 1;
@@ -204,7 +209,7 @@ void LoadHCRT(std::string const& name) {
   static void* fp = nullptr;
   if (fp == nullptr)
     fp = TOSLoader["__InterruptCoreRoutine"].val;
-  signal(SIGUSR2, reinterpret_cast<void (*)(int)>(fp));
+  signal(SIGUSR2, (void (*)(int))fp);
 #endif
   LoadPass2(bfh_addr + bfh->patch_table_offset, bfh->data);
 }
@@ -223,7 +228,7 @@ void BackTrace() {
     });
     init = true;
   }
-  auto rbp = reinterpret_cast<void**>(__builtin_frame_address(0));
+  auto rbp = static_cast<void**>(__builtin_frame_address(0));
   void* oldp;
   // its 1 because we want to know the return
   // addr of BackTrace()'s caller
@@ -238,7 +243,9 @@ void BackTrace() {
         std::cerr << sorted[idx] << std::endl;
       } else if (curp > ptr) {
         std::cerr << last << "[" << ptr << "+"
-                  << reinterpret_cast<void*>((char*)ptr - (char*)oldp) << "]\n";
+                  << (void*)(static_cast<uint8_t*>(ptr) -
+                             static_cast<uint8_t*>(oldp))
+                  << "]\n";
         goto next;
       }
       oldp = curp;
