@@ -12,9 +12,8 @@
 #include <stdint.h>
 
 #ifdef _WIN32
-  #include <windows.h> /* For SOCKET */
+#include <windows.h> /* For SOCKET */
 #endif
-
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,12 +30,12 @@ typedef struct dyad_Stream dyad_Stream;
 
 typedef struct {
   int type;
-  void *udata;
-  void *udata2;
-  dyad_Stream *stream;
-  dyad_Stream *remote;
-  const char *msg;
-  char *data;
+  void* udata;
+  void* udata2;
+  dyad_Stream* stream;
+  dyad_Stream* remote;
+  const char* msg;
+  char* data;
   int size;
 } dyad_Event;
 
@@ -66,40 +65,38 @@ enum {
   DYAD_STATE_LISTENING
 };
 
-
 void dyad_init(void);
 void dyad_update(void);
 void dyad_shutdown(void);
-const char *dyad_getVersion(void);
+const char* dyad_getVersion(void);
 double dyad_getTime(void);
-int  dyad_getStreamCount(void);
+int dyad_getStreamCount(void);
 void dyad_setTickInterval(double seconds);
 void dyad_setUpdateTimeout(double seconds);
 dyad_PanicCallback dyad_atPanic(dyad_PanicCallback func);
 
-dyad_Stream *dyad_newStream(void);
-int  dyad_listen(dyad_Stream *stream, int port);
-int  dyad_listenEx(dyad_Stream *stream, const char *host, int port,
-                   int backlog);
-int  dyad_connect(dyad_Stream *stream, const char *host, int port);
-void dyad_addListener(dyad_Stream *stream, int event,
-                      dyad_Callback callback, void *udata,void *udata2);
-void dyad_removeListener(dyad_Stream *stream, int event,
-                         dyad_Callback callback, void *udata);
-void dyad_removeAllListeners(dyad_Stream *stream, int event);
-void dyad_end(dyad_Stream *stream);
-void dyad_close(dyad_Stream *stream);
-void dyad_write(dyad_Stream *stream, const void *data, int size);
-void dyad_vwritef(dyad_Stream *stream, const char *fmt, va_list args);
-void dyad_writef(dyad_Stream *stream, const char *fmt, ...);
-void dyad_setTimeout(dyad_Stream *stream, double seconds);
-void dyad_setNoDelay(dyad_Stream *stream, int opt);
-int  dyad_getState(dyad_Stream *stream);
-const char *dyad_getAddress(dyad_Stream *stream);
-int  dyad_getPort(dyad_Stream *stream);
-int  dyad_getBytesSent(dyad_Stream *stream);
-int  dyad_getBytesReceived(dyad_Stream *stream);
-dyad_Socket dyad_getSocket(dyad_Stream *stream);
+dyad_Stream* dyad_newStream(void);
+int dyad_listen(dyad_Stream* stream, int port);
+int dyad_listenEx(dyad_Stream* stream, const char* host, int port, int backlog);
+int dyad_connect(dyad_Stream* stream, const char* host, int port);
+void dyad_addListener(dyad_Stream* stream, int event, dyad_Callback callback,
+                      void* udata, void* udata2);
+void dyad_removeListener(dyad_Stream* stream, int event, dyad_Callback callback,
+                         void* udata);
+void dyad_removeAllListeners(dyad_Stream* stream, int event);
+void dyad_end(dyad_Stream* stream);
+void dyad_close(dyad_Stream* stream);
+void dyad_write(dyad_Stream* stream, const void* data, int size);
+void dyad_vwritef(dyad_Stream* stream, const char* fmt, va_list args);
+void dyad_writef(dyad_Stream* stream, const char* fmt, ...);
+void dyad_setTimeout(dyad_Stream* stream, double seconds);
+void dyad_setNoDelay(dyad_Stream* stream, int opt);
+int dyad_getState(dyad_Stream* stream);
+const char* dyad_getAddress(dyad_Stream* stream);
+int dyad_getPort(dyad_Stream* stream);
+int dyad_getBytesSent(dyad_Stream* stream);
+int dyad_getBytesReceived(dyad_Stream* stream);
+dyad_Socket dyad_getSocket(dyad_Stream* stream);
 
 #ifdef __cplusplus
 } // extern "C"

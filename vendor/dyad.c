@@ -6,95 +6,99 @@
  */
 
 #ifdef _WIN32
-  #define _WIN32_WINNT 0x501
-  #ifndef _CRT_SECURE_NO_WARNINGS
-    #define _CRT_SECURE_NO_WARNINGS
-  #endif
-  #include <winsock2.h>
-  #include <ws2tcpip.h>
-  #include <windows.h>
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <stdint.h>
-  #include <string.h>
-  #include <stdarg.h>
-  #include <signal.h>
-  #include <errno.h>
-  #include <limits.h>
+// clang-format off
+#define _WIN32_WINNT 0x501
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#include <winsock2.h>
+#include <windows.h>
+#include <ws2tcpip.h>
+#include <errno.h>
+#include <limits.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+// clang-format on
 #else
-  #ifndef _GNU_SOURCE
-    #define _GNU_SOURCE
-  #endif
-  #if defined(__FreeBSD__) && !defined(_BSD_SOURCE)
-    #define _BSD_SOURCE
-  #endif
-  #include <stdio.h>
-  #include <stdlib.h>
-  #include <string.h>
-  #include <stdint.h>
-  #include <stdarg.h>
-  #include <signal.h>
-  #include <errno.h>
-  #include <limits.h>
-  #include <time.h>
-  #include <unistd.h>
-  #include <netdb.h>
-  #include <fcntl.h>
-  #include <sys/types.h>
-  #include <sys/socket.h>
-  #include <sys/time.h>
-  #include <netinet/in.h>
-  #include <netinet/tcp.h>
-  #include <arpa/inet.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#if defined(__FreeBSD__) && !defined(_BSD_SOURCE)
+#define _BSD_SOURCE
+#endif
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <signal.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 #endif
 #include "dyad.h"
 
 #define DYAD_VERSION "0.2.1"
 
-
 #ifdef _WIN32
-  #define close(a) closesocket(a)
-  #define getsockopt(a,b,c,d,e) getsockopt((a),(b),(c),(char*)(d),(e))
-  #define setsockopt(a,b,c,d,e) setsockopt((a),(b),(c),(char*)(d),(e))
-  #define select(a,b,c,d,e) select((int)(a),(b),(c),(d),(e))
-  #define bind(a,b,c) bind((a),(b),(int)(c))
-  #define connect(a,b,c) connect((a),(b),(int)(c))
+#define close(a)                  closesocket(a)
+#define getsockopt(a, b, c, d, e) getsockopt((a), (b), (c), (char*)(d), (e))
+#define setsockopt(a, b, c, d, e) setsockopt((a), (b), (c), (char*)(d), (e))
+#define select(a, b, c, d, e)     select((int)(a), (b), (c), (d), (e))
+#define bind(a, b, c)             bind((a), (b), (int)(c))
+#define connect(a, b, c)          connect((a), (b), (int)(c))
 
-  #undef  errno
-  #define errno WSAGetLastError()
+#undef errno
+#define errno WSAGetLastError()
 
-  #undef  EWOULDBLOCK
-  #define EWOULDBLOCK WSAEWOULDBLOCK
+#undef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
 
-  const char *inet_ntop(int af, const void *src, char *dst, socklen_t size) {
-    union { struct sockaddr sa; struct sockaddr_in sai;
-            struct sockaddr_in6 sai6; } addr;
-    int res;
-    memset(&addr, 0, sizeof(addr));
-    addr.sa.sa_family = af;
-    if (af == AF_INET6) {
-      memcpy(&addr.sai6.sin6_addr, src, sizeof(addr.sai6.sin6_addr));
-    } else {
-      memcpy(&addr.sai.sin_addr, src, sizeof(addr.sai.sin_addr));
-    }
-    res = WSAAddressToStringA(&addr.sa, sizeof(addr), 0, dst, (LPDWORD) &size);
-    if (res != 0) return NULL;
-    return dst;
+const char* inet_ntop(int af, const void* src, char* dst, socklen_t size) {
+  union {
+    struct sockaddr sa;
+    struct sockaddr_in sai;
+    struct sockaddr_in6 sai6;
+  } addr;
+  int res;
+  memset(&addr, 0, sizeof(addr));
+  addr.sa.sa_family = af;
+  if (af == AF_INET6) {
+    memcpy(&addr.sai6.sin6_addr, src, sizeof(addr.sai6.sin6_addr));
+  } else {
+    memcpy(&addr.sai.sin_addr, src, sizeof(addr.sai.sin_addr));
   }
+  res = WSAAddressToStringA(&addr.sa, sizeof(addr), 0, dst, (LPDWORD)&size);
+  if (res != 0)
+    return NULL;
+  return dst;
+}
 #endif
 
 #ifndef INVALID_SOCKET
-  #define INVALID_SOCKET -1
+#define INVALID_SOCKET -1
 #endif
-
 
 /*===========================================================================*/
 /* Memory                                                                    */
 /*===========================================================================*/
 
-static void panic(const char *fmt, ...);
+static void panic(const char* fmt, ...);
 
-static void *dyad_realloc(void *ptr, int n) {
+static void* dyad_realloc(void* ptr, int n) {
   ptr = realloc(ptr, n);
   if (!ptr && n != 0) {
     panic("out of memory");
@@ -102,17 +106,15 @@ static void *dyad_realloc(void *ptr, int n) {
   return ptr;
 }
 
-
-static void dyad_free(void *ptr) {
+static void dyad_free(void* ptr) {
   free(ptr);
 }
-
 
 /*===========================================================================*/
 /* Vec (dynamic array)                                                       */
 /*===========================================================================*/
 
-static void vec_expand(char **data, int *length, int *capacity, int memsz) {
+static void vec_expand(char** data, int* length, int* capacity, int memsz) {
   if (*length + 1 > *capacity) {
     if (*capacity == 0) {
       *capacity = 1;
@@ -123,46 +125,33 @@ static void vec_expand(char **data, int *length, int *capacity, int memsz) {
   }
 }
 
-static void vec_splice(
-  char **data, int *length, int *capacity, int memsz, int start, int count
-) {
-  (void) capacity;
-  memmove(*data + start * memsz,
-          *data + (start + count) * memsz,
+static void vec_splice(char** data, int* length, int* capacity, int memsz,
+                       int start, int count) {
+  (void)capacity;
+  memmove(*data + start * memsz, *data + (start + count) * memsz,
           (*length - start - count) * memsz);
 }
 
+#define Vec(T)            \
+  struct {                \
+    T* data;              \
+    int length, capacity; \
+  }
 
-#define Vec(T)\
-  struct { T *data; int length, capacity; }
-
-
-#define vec_unpack(v)\
+#define vec_unpack(v) \
   (char**)&(v)->data, &(v)->length, &(v)->capacity, sizeof(*(v)->data)
 
+#define vec_init(v)   memset((v), 0, sizeof(*(v)))
 
-#define vec_init(v)\
-  memset((v), 0, sizeof(*(v)))
+#define vec_deinit(v) dyad_free((v)->data)
 
+#define vec_clear(v)  ((v)->length = 0)
 
-#define vec_deinit(v)\
-  dyad_free((v)->data)
+#define vec_push(v, val) \
+  (vec_expand(vec_unpack(v)), (v)->data[(v)->length++] = (val))
 
-
-#define vec_clear(v)\
-  ((v)->length = 0)
-
-
-#define vec_push(v, val)\
-  ( vec_expand(vec_unpack(v)),\
-    (v)->data[(v)->length++] = (val) )
-
-
-#define vec_splice(v, start, count)\
-  ( vec_splice(vec_unpack(v), start, count),\
-    (v)->length -= (count) )
-
-
+#define vec_splice(v, start, count) \
+  (vec_splice(vec_unpack(v), start, count), (v)->length -= (count))
 
 /*===========================================================================*/
 /* SelectSet                                                                 */
@@ -192,13 +181,12 @@ enum {
 typedef struct {
   int capacity;
   dyad_Socket maxfd;
-  fd_set *fds[SELECT_MAX];
+  fd_set* fds[SELECT_MAX];
 } SelectSet;
 
 #define DYAD_UNSIGNED_BIT (sizeof(unsigned) * CHAR_BIT)
 
-
-static void select_deinit(SelectSet *s) {
+static void select_deinit(SelectSet* s) {
   int i;
   for (i = 0; i < SELECT_MAX; i++) {
     dyad_free(s->fds[i]);
@@ -207,8 +195,7 @@ static void select_deinit(SelectSet *s) {
   s->capacity = 0;
 }
 
-
-static void select_grow(SelectSet *s) {
+static void select_grow(SelectSet* s) {
   int i;
   int oldCapacity = s->capacity;
   s->capacity = s->capacity ? s->capacity << 1 : 1;
@@ -219,10 +206,10 @@ static void select_grow(SelectSet *s) {
   }
 }
 
-
-static void select_zero(SelectSet *s) {
+static void select_zero(SelectSet* s) {
   int i;
-  if (s->capacity == 0) return;
+  if (s->capacity == 0)
+    return;
   s->maxfd = 0;
   for (i = 0; i < SELECT_MAX; i++) {
 #if _WIN32
@@ -233,33 +220,34 @@ static void select_zero(SelectSet *s) {
   }
 }
 
-
-static void select_add(SelectSet *s, int set, dyad_Socket fd) {
+static void select_add(SelectSet* s, int set, dyad_Socket fd) {
 #ifdef _WIN32
-  fd_set *f;
-  if (s->capacity == 0) select_grow(s);
-  while ((unsigned) (s->capacity * FD_SETSIZE) < s->fds[set]->fd_count + 1) {
+  fd_set* f;
+  if (s->capacity == 0)
+    select_grow(s);
+  while ((unsigned)(s->capacity * FD_SETSIZE) < s->fds[set]->fd_count + 1) {
     select_grow(s);
   }
   f = s->fds[set];
   f->fd_array[f->fd_count++] = fd;
 #else
-  unsigned *p;
+  unsigned* p;
   while (s->capacity * FD_SETSIZE < fd) {
     select_grow(s);
   }
-  p = (unsigned*) s->fds[set];
+  p = (unsigned*)s->fds[set];
   p[fd / DYAD_UNSIGNED_BIT] |= 1 << (fd % DYAD_UNSIGNED_BIT);
-  if (fd > s->maxfd) s->maxfd = fd;
+  if (fd > s->maxfd)
+    s->maxfd = fd;
 #endif
 }
 
-
-static int select_has(SelectSet *s, int set, dyad_Socket fd) {
+static int select_has(SelectSet* s, int set, dyad_Socket fd) {
 #ifdef _WIN32
   unsigned i;
-  fd_set *f;
-  if (s->capacity == 0) return 0;
+  fd_set* f;
+  if (s->capacity == 0)
+    return 0;
   f = s->fds[set];
   for (i = 0; i < f->fd_count; i++) {
     if (f->fd_array[i] == fd) {
@@ -268,13 +256,13 @@ static int select_has(SelectSet *s, int set, dyad_Socket fd) {
   }
   return 0;
 #else
-  unsigned *p;
-  if (s->maxfd < fd) return 0;
-  p = (unsigned*) s->fds[set];
+  unsigned* p;
+  if (s->maxfd < fd)
+    return 0;
+  p = (unsigned*)s->fds[set];
   return p[fd / DYAD_UNSIGNED_BIT] & (1 << (fd % DYAD_UNSIGNED_BIT));
 #endif
 }
-
 
 /*===========================================================================*/
 /* Core                                                                      */
@@ -283,29 +271,27 @@ static int select_has(SelectSet *s, int set, dyad_Socket fd) {
 typedef struct {
   int event;
   dyad_Callback callback;
-  void *udata;
-  void *udata2;
+  void* udata;
+  void* udata2;
 } Listener;
-
 
 struct dyad_Stream {
   int state, flags;
   dyad_Socket sockfd;
-  char *address;
+  char* address;
   int port;
   int bytesSent, bytesReceived;
   double lastActivity, timeout;
   Vec(Listener) listeners;
   Vec(char) lineBuffer;
   Vec(char) writeBuffer;
-  dyad_Stream *next;
+  dyad_Stream* next;
 };
 
 #define DYAD_FLAG_READY   (1 << 0)
 #define DYAD_FLAG_WRITTEN (1 << 1)
 
-
-static dyad_Stream *dyad_streams;
+static dyad_Stream* dyad_streams;
 static int64_t dyad_streamCount = 0;
 static char dyad_panicMsgBuffer[128];
 static dyad_PanicCallback panicCallback;
@@ -314,8 +300,7 @@ static double dyad_updateTimeout = 1;
 static double dyad_tickInterval = 1;
 static double dyad_lastTick = 0;
 
-
-static void panic(const char *fmt, ...) {
+static void panic(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   vsprintf(dyad_panicMsgBuffer, fmt, args);
@@ -328,7 +313,6 @@ static void panic(const char *fmt, ...) {
   exit(EXIT_FAILURE);
 }
 
-
 static dyad_Event createEvent(int type) {
   dyad_Event e;
   memset(&e, 0, sizeof(e));
@@ -336,14 +320,13 @@ static dyad_Event createEvent(int type) {
   return e;
 }
 
-
-static void stream_destroy(dyad_Stream *stream);
+static void stream_destroy(dyad_Stream* stream);
 
 static void destroyClosedStreams(void) {
-  dyad_Stream *stream = dyad_streams;
+  dyad_Stream* stream = dyad_streams;
   while (stream) {
     if (stream->state == DYAD_STATE_CLOSED) {
-      dyad_Stream *next = stream->next;
+      dyad_Stream* next = stream->next;
       stream_destroy(stream);
       stream = next;
     } else {
@@ -352,8 +335,7 @@ static void destroyClosedStreams(void) {
   }
 }
 
-
-static void stream_emitEvent(dyad_Stream *stream, dyad_Event *e);
+static void stream_emitEvent(dyad_Stream* stream, dyad_Event* e);
 
 static void updateTickTimer(void) {
   /* Update tick timer */
@@ -362,7 +344,7 @@ static void updateTickTimer(void) {
   }
   while (dyad_lastTick < dyad_getTime()) {
     /* Emit event on all streams */
-    dyad_Stream *stream;
+    dyad_Stream* stream;
     dyad_Event e = createEvent(DYAD_EVENT_TICK);
     e.msg = "a tick has occured";
     stream = dyad_streams;
@@ -374,10 +356,9 @@ static void updateTickTimer(void) {
   }
 }
 
-
 static void updateStreamTimeouts(void) {
   double currentTime = dyad_getTime();
-  dyad_Stream *stream;
+  dyad_Stream* stream;
   dyad_Event e = createEvent(DYAD_EVENT_TIMEOUT);
   e.msg = "stream timed out";
   stream = dyad_streams;
@@ -392,15 +373,13 @@ static void updateStreamTimeouts(void) {
   }
 }
 
-
-
 /*===========================================================================*/
 /* Stream                                                                    */
 /*===========================================================================*/
 
-static void stream_destroy(dyad_Stream *stream) {
+static void stream_destroy(dyad_Stream* stream) {
   dyad_Event e;
-  dyad_Stream **next;
+  dyad_Stream** next;
   /* Close socket */
   if (stream->sockfd != INVALID_SOCKET) {
     close(stream->sockfd);
@@ -424,15 +403,14 @@ static void stream_destroy(dyad_Stream *stream) {
   dyad_free(stream);
 }
 
-
-static void stream_emitEvent(dyad_Stream *stream, dyad_Event *e) {
+static void stream_emitEvent(dyad_Stream* stream, dyad_Event* e) {
   int i;
   e->stream = stream;
   for (i = 0; i < stream->listeners.length; i++) {
-    Listener *listener = &stream->listeners.data[i];
+    Listener* listener = &stream->listeners.data[i];
     if (listener->event == e->type) {
       e->udata = listener->udata;
-      e->udata2=listener->udata2;
+      e->udata2 = listener->udata2;
       listener->callback(e);
     }
     /* Check to see if this listener was removed: If it was we decrement `i`
@@ -443,8 +421,7 @@ static void stream_emitEvent(dyad_Stream *stream, dyad_Event *e) {
   }
 }
 
-
-static void stream_error(dyad_Stream *stream, const char *msg, int err) {
+static void stream_error(dyad_Stream* stream, const char* msg, int err) {
   char buf[256];
   dyad_Event e = createEvent(DYAD_EVENT_ERROR);
   if (err) {
@@ -457,10 +434,13 @@ static void stream_error(dyad_Stream *stream, const char *msg, int err) {
   dyad_close(stream);
 }
 
-
-static void stream_initAddress(dyad_Stream *stream) {
-  union { struct sockaddr sa; struct sockaddr_storage sas;
-          struct sockaddr_in sai; struct sockaddr_in6 sai6; } addr;
+static void stream_initAddress(dyad_Stream* stream) {
+  union {
+    struct sockaddr sa;
+    struct sockaddr_storage sas;
+    struct sockaddr_in sai;
+    struct sockaddr_in6 sai6;
+  } addr;
   socklen_t size;
   memset(&addr, 0, sizeof(addr));
   size = sizeof(addr);
@@ -483,8 +463,7 @@ static void stream_initAddress(dyad_Stream *stream) {
   }
 }
 
-
-static void stream_setSocketNonBlocking(dyad_Stream *stream, int opt) {
+static void stream_setSocketNonBlocking(dyad_Stream* stream, int opt) {
 #ifdef _WIN32
   u_long mode = opt;
   ioctlsocket(stream->sockfd, FIONBIO, &mode);
@@ -495,17 +474,14 @@ static void stream_setSocketNonBlocking(dyad_Stream *stream, int opt) {
 #endif
 }
 
-
-static void stream_setSocket(dyad_Stream *stream, dyad_Socket sockfd) {
+static void stream_setSocket(dyad_Stream* stream, dyad_Socket sockfd) {
   stream->sockfd = sockfd;
   stream_setSocketNonBlocking(stream, 1);
   stream_initAddress(stream);
 }
 
-
-static int stream_initSocket(
-  dyad_Stream *stream, int domain, int type, int protocol
-) {
+static int stream_initSocket(dyad_Stream* stream, int domain, int type,
+                             int protocol) {
   stream->sockfd = socket(domain, type, protocol);
   if (stream->sockfd == INVALID_SOCKET) {
     stream_error(stream, "could not create socket", errno);
@@ -515,11 +491,10 @@ static int stream_initSocket(
   return 0;
 }
 
-
-static int stream_hasListenerForEvent(dyad_Stream *stream, int event) {
+static int stream_hasListenerForEvent(dyad_Stream* stream, int event) {
   int i;
   for (i = 0; i < stream->listeners.length; i++) {
-    Listener *listener = &stream->listeners.data[i];
+    Listener* listener = &stream->listeners.data[i];
     if (listener->event == event) {
       return 1;
     }
@@ -527,22 +502,22 @@ static int stream_hasListenerForEvent(dyad_Stream *stream, int event) {
   return 0;
 }
 
-
-static void stream_handleReceivedData(dyad_Stream *stream) {
+static void stream_handleReceivedData(dyad_Stream* stream) {
   for (;;) {
     /* Receive data */
     dyad_Event e;
     char data[8192];
     int size = recv(stream->sockfd, data, sizeof(data) - 1, 0);
     if (size <= 0) {
-	  if(stream->lineBuffer.length) {
-		  e=createEvent(DYAD_EVENT_LINE);
-		  e.msg = "received line";
-		  vec_push(&stream->lineBuffer,0);
-		  e.data = stream->lineBuffer.data;
-		  e.size = stream->lineBuffer.length-1;
-		  stream_emitEvent(stream, &e);
-		  stream->lineBuffer.length=0; //Changed line(we want to not repeat the data later)
+      if (stream->lineBuffer.length) {
+        e = createEvent(DYAD_EVENT_LINE);
+        e.msg = "received line";
+        vec_push(&stream->lineBuffer, 0);
+        e.data = stream->lineBuffer.data;
+        e.size = stream->lineBuffer.length - 1;
+        stream_emitEvent(stream, &e);
+        stream->lineBuffer.length =
+            0; // Changed line(we want to not repeat the data later)
       }
       return;
     }
@@ -565,30 +540,30 @@ static void stream_handleReceivedData(dyad_Stream *stream) {
     /* Handle line event */
     if (stream_hasListenerForEvent(stream, DYAD_EVENT_LINE)) {
       int i, start;
-      char *buf;
+      char* buf;
       for (i = 0; i < size; i++) {
         vec_push(&stream->lineBuffer, data[i]);
       }
       start = 0;
-      vec_push(&stream->lineBuffer,0);
+      vec_push(&stream->lineBuffer, 0);
       buf = stream->lineBuffer.data;
-      for (i = 0; i < stream->lineBuffer.length-1; i++) {
+      for (i = 0; i < stream->lineBuffer.length - 1; i++) {
         if (buf[i] == '\n') {
           dyad_Event e_;
           e_ = createEvent(DYAD_EVENT_LINE);
           e_.msg = "received line";
           e_.data = &buf[start];
-          e_.size = i - start+1;
-          char next=buf[i+1];
-          buf[i+1]=0;
+          e_.size = i - start + 1;
+          char next = buf[i + 1];
+          buf[i + 1] = 0;
           stream_emitEvent(stream, &e_);
-          buf[i+1]=next;
+          buf[i + 1] = next;
           start = i + 1;
           /* Check stream state in case it was closed during one of the line
            * event handlers. */
           if (stream->state != DYAD_STATE_CONNECTED) {
-			stream->lineBuffer.length--;
-			return;
+            stream->lineBuffer.length--;
+            return;
           }
         }
       }
@@ -602,10 +577,9 @@ static void stream_handleReceivedData(dyad_Stream *stream) {
   }
 }
 
-
-static void stream_acceptPendingConnections(dyad_Stream *stream) {
+static void stream_acceptPendingConnections(dyad_Stream* stream) {
   for (;;) {
-    dyad_Stream *remote;
+    dyad_Stream* remote;
     dyad_Event e;
     int err = 0;
     dyad_Socket sockfd = accept(stream->sockfd, NULL, NULL);
@@ -635,8 +609,7 @@ static void stream_acceptPendingConnections(dyad_Stream *stream) {
   }
 }
 
-
-static int stream_flushWriteBuffer(dyad_Stream *stream) {
+static int stream_flushWriteBuffer(dyad_Stream* stream) {
   stream->flags &= ~DYAD_FLAG_WRITTEN;
   if (stream->writeBuffer.length > 0) {
     /* Send data */
@@ -680,8 +653,6 @@ static int stream_flushWriteBuffer(dyad_Stream *stream) {
   return 1;
 }
 
-
-
 /*===========================================================================*/
 /* API                                                                       */
 /*===========================================================================*/
@@ -691,7 +662,7 @@ static int stream_flushWriteBuffer(dyad_Stream *stream) {
 /*---------------------------------------------------------------------------*/
 
 void dyad_update(void) {
-  dyad_Stream *stream;
+  dyad_Stream* stream;
   struct timeval tv;
 
   destroyClosedStreams();
@@ -704,45 +675,42 @@ void dyad_update(void) {
   stream = dyad_streams;
   while (stream) {
     switch (stream->state) {
-      case DYAD_STATE_CONNECTED:
-        select_add(&dyad_selectSet, SELECT_READ, stream->sockfd);
-        if (!(stream->flags & DYAD_FLAG_READY) ||
-            stream->writeBuffer.length != 0
-        ) {
-          select_add(&dyad_selectSet, SELECT_WRITE, stream->sockfd);
-        }
-        break;
-      case DYAD_STATE_CLOSING:
+    case DYAD_STATE_CONNECTED:
+      select_add(&dyad_selectSet, SELECT_READ, stream->sockfd);
+      if (!(stream->flags & DYAD_FLAG_READY) ||
+          stream->writeBuffer.length != 0) {
         select_add(&dyad_selectSet, SELECT_WRITE, stream->sockfd);
-        break;
-      case DYAD_STATE_CONNECTING:
-        select_add(&dyad_selectSet, SELECT_WRITE, stream->sockfd);
-        select_add(&dyad_selectSet, SELECT_EXCEPT, stream->sockfd);
-        break;
-      case DYAD_STATE_LISTENING:
-        select_add(&dyad_selectSet, SELECT_READ, stream->sockfd);
-        break;
+      }
+      break;
+    case DYAD_STATE_CLOSING:
+      select_add(&dyad_selectSet, SELECT_WRITE, stream->sockfd);
+      break;
+    case DYAD_STATE_CONNECTING:
+      select_add(&dyad_selectSet, SELECT_WRITE, stream->sockfd);
+      select_add(&dyad_selectSet, SELECT_EXCEPT, stream->sockfd);
+      break;
+    case DYAD_STATE_LISTENING:
+      select_add(&dyad_selectSet, SELECT_READ, stream->sockfd);
+      break;
     }
     stream = stream->next;
   }
 
-  /* Init timeout value and do select */
-  #ifdef _MSC_VER
-    #pragma warning(push)
-    /* Disable double to long implicit conversion warning,
-     * because the type of timeval's fields don't agree across platforms */
-    #pragma warning(disable: 4244)
-  #endif
+/* Init timeout value and do select */
+#ifdef _MSC_VER
+#pragma warning(push)
+/* Disable double to long implicit conversion warning,
+ * because the type of timeval's fields don't agree across platforms */
+#pragma warning(disable : 4244)
+#endif
   tv.tv_sec = dyad_updateTimeout;
   tv.tv_usec = (dyad_updateTimeout - tv.tv_sec) * 1e6;
-  #ifdef _MSC_VER
-    #pragma warning(pop)
-  #endif
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
-  select(dyad_selectSet.maxfd + 1,
-         dyad_selectSet.fds[SELECT_READ],
-         dyad_selectSet.fds[SELECT_WRITE],
-         dyad_selectSet.fds[SELECT_EXCEPT],
+  select(dyad_selectSet.maxfd + 1, dyad_selectSet.fds[SELECT_READ],
+         dyad_selectSet.fds[SELECT_WRITE], dyad_selectSet.fds[SELECT_EXCEPT],
          &tv);
 
   /* Handle streams */
@@ -750,66 +718,62 @@ void dyad_update(void) {
   while (stream) {
     switch (stream->state) {
 
-      case DYAD_STATE_CONNECTED:
-        if (select_has(&dyad_selectSet, SELECT_READ, stream->sockfd)) {
-          stream_handleReceivedData(stream);
-          if (stream->state == DYAD_STATE_CLOSED) {
-            break;
-          }
+    case DYAD_STATE_CONNECTED:
+      if (select_has(&dyad_selectSet, SELECT_READ, stream->sockfd)) {
+        stream_handleReceivedData(stream);
+        if (stream->state == DYAD_STATE_CLOSED) {
+          break;
         }
-        /* Fall through */
+      }
+      /* Fall through */
 
-      case DYAD_STATE_CLOSING:
-        if (select_has(&dyad_selectSet, SELECT_WRITE, stream->sockfd)) {
-          stream_flushWriteBuffer(stream);
-        }
-        break;
+    case DYAD_STATE_CLOSING:
+      if (select_has(&dyad_selectSet, SELECT_WRITE, stream->sockfd)) {
+        stream_flushWriteBuffer(stream);
+      }
+      break;
 
-      case DYAD_STATE_CONNECTING:
-        if (select_has(&dyad_selectSet, SELECT_WRITE, stream->sockfd)) {
-          /* Check socket for error */
-          int optval = 0;
-          socklen_t optlen = sizeof(optval);
-          dyad_Event e;
-          getsockopt(stream->sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen);
-          if (optval != 0) goto connectFailed;
-          /* Handle succeselful connection */
-          stream->state = DYAD_STATE_CONNECTED;
-          stream->lastActivity = dyad_getTime();
-          stream_initAddress(stream);
-          /* Emit connect event */
-          e = createEvent(DYAD_EVENT_CONNECT);
-          e.msg = "connected to server";
-          stream_emitEvent(stream, &e);
-        } else if (
-          select_has(&dyad_selectSet, SELECT_EXCEPT, stream->sockfd)
-        ) {
-          /* Handle failed connection */
-connectFailed:
-          stream_error(stream, "could not connect to server", 0);
-        }
-        break;
+    case DYAD_STATE_CONNECTING:
+      if (select_has(&dyad_selectSet, SELECT_WRITE, stream->sockfd)) {
+        /* Check socket for error */
+        int optval = 0;
+        socklen_t optlen = sizeof(optval);
+        dyad_Event e;
+        getsockopt(stream->sockfd, SOL_SOCKET, SO_ERROR, &optval, &optlen);
+        if (optval != 0)
+          goto connectFailed;
+        /* Handle succeselful connection */
+        stream->state = DYAD_STATE_CONNECTED;
+        stream->lastActivity = dyad_getTime();
+        stream_initAddress(stream);
+        /* Emit connect event */
+        e = createEvent(DYAD_EVENT_CONNECT);
+        e.msg = "connected to server";
+        stream_emitEvent(stream, &e);
+      } else if (select_has(&dyad_selectSet, SELECT_EXCEPT, stream->sockfd)) {
+        /* Handle failed connection */
+      connectFailed:
+        stream_error(stream, "could not connect to server", 0);
+      }
+      break;
 
-      case DYAD_STATE_LISTENING:
-        if (select_has(&dyad_selectSet, SELECT_READ, stream->sockfd)) {
-          stream_acceptPendingConnections(stream);
-        }
-        break;
+    case DYAD_STATE_LISTENING:
+      if (select_has(&dyad_selectSet, SELECT_READ, stream->sockfd)) {
+        stream_acceptPendingConnections(stream);
+      }
+      break;
     }
 
     /* If data was just now written to the stream we should immediately try to
      * send it */
-    if (
-      stream->flags & DYAD_FLAG_WRITTEN &&
-      stream->state != DYAD_STATE_CLOSED
-    ) {
+    if (stream->flags & DYAD_FLAG_WRITTEN &&
+        stream->state != DYAD_STATE_CLOSED) {
       stream_flushWriteBuffer(stream);
     }
 
     stream = stream->next;
   }
 }
-
 
 void dyad_init(void) {
 #ifdef _WIN32
@@ -824,7 +788,6 @@ void dyad_init(void) {
 #endif
 }
 
-
 void dyad_shutdown(void) {
   /* Close and destroy all the streams */
   while (dyad_streams) {
@@ -838,11 +801,9 @@ void dyad_shutdown(void) {
 #endif
 }
 
-
-const char *dyad_getVersion(void) {
+const char* dyad_getVersion(void) {
   return DYAD_VERSION;
 }
-
 
 double dyad_getTime(void) {
 #ifdef _WIN32
@@ -856,21 +817,17 @@ double dyad_getTime(void) {
 #endif
 }
 
-
 int dyad_getStreamCount(void) {
   return dyad_streamCount;
 }
-
 
 void dyad_setTickInterval(double seconds) {
   dyad_tickInterval = seconds;
 }
 
-
 void dyad_setUpdateTimeout(double seconds) {
   dyad_updateTimeout = seconds;
 }
-
 
 dyad_PanicCallback dyad_atPanic(dyad_PanicCallback func) {
   dyad_PanicCallback old = panicCallback;
@@ -878,13 +835,12 @@ dyad_PanicCallback dyad_atPanic(dyad_PanicCallback func) {
   return old;
 }
 
-
 /*---------------------------------------------------------------------------*/
 /* Stream                                                                    */
 /*---------------------------------------------------------------------------*/
 
-dyad_Stream *dyad_newStream(void) {
-  dyad_Stream *stream = dyad_realloc(NULL, sizeof(*stream));
+dyad_Stream* dyad_newStream(void) {
+  dyad_Stream* stream = dyad_realloc(NULL, sizeof(*stream));
   memset(stream, 0, sizeof(*stream));
   stream->state = DYAD_STATE_CLOSED;
   stream->sockfd = INVALID_SOCKET;
@@ -896,33 +852,28 @@ dyad_Stream *dyad_newStream(void) {
   return stream;
 }
 
-
-void dyad_addListener(
-  dyad_Stream *stream, int event, dyad_Callback callback, void *udata,void *udata2
-) {
+void dyad_addListener(dyad_Stream* stream, int event, dyad_Callback callback,
+                      void* udata, void* udata2) {
   Listener listener;
   listener.event = event;
   listener.callback = callback;
   listener.udata = udata;
-  listener.udata2=udata2;
+  listener.udata2 = udata2;
   vec_push(&stream->listeners, listener);
 }
 
-
-void dyad_removeListener(
-  dyad_Stream *stream, int event, dyad_Callback callback, void *udata
-) {
+void dyad_removeListener(dyad_Stream* stream, int event, dyad_Callback callback,
+                         void* udata) {
   int i = stream->listeners.length;
   while (i--) {
-    Listener *x = &stream->listeners.data[i];
+    Listener* x = &stream->listeners.data[i];
     if (x->event == event && x->callback == callback && x->udata == udata) {
       vec_splice(&stream->listeners, i, 1);
     }
   }
 }
 
-
-void dyad_removeAllListeners(dyad_Stream *stream, int event) {
+void dyad_removeAllListeners(dyad_Stream* stream, int event) {
   if (event == DYAD_EVENT_NULL) {
     vec_clear(&stream->listeners);
   } else {
@@ -935,10 +886,10 @@ void dyad_removeAllListeners(dyad_Stream *stream, int event) {
   }
 }
 
-
-void dyad_close(dyad_Stream *stream) {
+void dyad_close(dyad_Stream* stream) {
   dyad_Event e;
-  if (stream->state == DYAD_STATE_CLOSED) return;
+  if (stream->state == DYAD_STATE_CLOSED)
+    return;
   stream->state = DYAD_STATE_CLOSED;
   /* Close socket */
   if (stream->sockfd != INVALID_SOCKET) {
@@ -954,9 +905,9 @@ void dyad_close(dyad_Stream *stream) {
   vec_clear(&stream->writeBuffer);
 }
 
-
-void dyad_end(dyad_Stream *stream) {
-  if (stream->state == DYAD_STATE_CLOSED) return;
+void dyad_end(dyad_Stream* stream) {
+  if (stream->state == DYAD_STATE_CLOSED)
+    return;
   if (stream->writeBuffer.length > 0) {
     stream->state = DYAD_STATE_CLOSING;
   } else {
@@ -964,10 +915,8 @@ void dyad_end(dyad_Stream *stream) {
   }
 }
 
-
-int dyad_listenEx(
-  dyad_Stream *stream, const char *host, int port, int backlog
-) {
+int dyad_listenEx(dyad_Stream* stream, const char* host, int port,
+                  int backlog) {
   struct addrinfo hints, *ai = NULL;
   int err, optval;
   char buf[64];
@@ -987,12 +936,12 @@ int dyad_listenEx(
   /* Init socket */
   err = stream_initSocket(stream, ai->ai_family, ai->ai_socktype,
                           ai->ai_protocol);
-  if (err) goto fail;
+  if (err)
+    goto fail;
   /* Set SO_REUSEADDR so that the socket can be immediately bound without
    * having to wait for any closed socket on the same port to timeout */
   optval = 1;
-  setsockopt(stream->sockfd, SOL_SOCKET, SO_REUSEADDR,
-             &optval, sizeof(optval));
+  setsockopt(stream->sockfd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
   /* Bind and listen */
   err = bind(stream->sockfd, ai->ai_addr, ai->ai_addrlen);
   if (err) {
@@ -1013,18 +962,17 @@ int dyad_listenEx(
   stream_emitEvent(stream, &e);
   freeaddrinfo(ai);
   return 0;
-  fail:
-  if (ai) freeaddrinfo(ai);
+fail:
+  if (ai)
+    freeaddrinfo(ai);
   return -1;
 }
 
-
-int dyad_listen(dyad_Stream *stream, int port) {
+int dyad_listen(dyad_Stream* stream, int port) {
   return dyad_listenEx(stream, NULL, port, 511);
 }
 
-
-int dyad_connect(dyad_Stream *stream, const char *host, int port) {
+int dyad_connect(dyad_Stream* stream, const char* host, int port) {
   struct addrinfo hints, *ai = NULL;
   int err;
   char buf[64];
@@ -1042,78 +990,89 @@ int dyad_connect(dyad_Stream *stream, const char *host, int port) {
   /* Start connecting */
   err = stream_initSocket(stream, ai->ai_family, ai->ai_socktype,
                           ai->ai_protocol);
-  if (err) goto fail;
+  if (err)
+    goto fail;
   connect(stream->sockfd, ai->ai_addr, ai->ai_addrlen);
   stream->state = DYAD_STATE_CONNECTING;
   freeaddrinfo(ai);
   return 0;
 fail:
-  if (ai) freeaddrinfo(ai);
+  if (ai)
+    freeaddrinfo(ai);
   return -1;
 }
 
-
-void dyad_write(dyad_Stream *stream, const void *data, int size) {
-  const char *p = data;
+void dyad_write(dyad_Stream* stream, const void* data, int size) {
+  const char* p = data;
   while (size--) {
     vec_push(&stream->writeBuffer, *p++);
   }
   stream->flags |= DYAD_FLAG_WRITTEN;
 }
 
-
-void dyad_vwritef(dyad_Stream *stream, const char *fmt, va_list args) {
+void dyad_vwritef(dyad_Stream* stream, const char* fmt, va_list args) {
   char buf[512];
-  char *str;
+  char* str;
   char f[] = "%_";
-  FILE *fp;
+  FILE* fp;
   int c;
   while (*fmt) {
     if (*fmt == '%') {
       fmt++;
       switch (*fmt) {
-        case 'r':
-          fp = va_arg(args, FILE*);
-          if (fp == NULL) {
-            str = "(null)";
-            goto writeStr;
-          }
-          while ((c = fgetc(fp)) != EOF) {
-            vec_push(&stream->writeBuffer, c);
-          }
+      case 'r':
+        fp = va_arg(args, FILE*);
+        if (fp == NULL) {
+          str = "(null)";
+          goto writeStr;
+        }
+        while ((c = fgetc(fp)) != EOF) {
+          vec_push(&stream->writeBuffer, c);
+        }
+        break;
+      case 'c':
+        vec_push(&stream->writeBuffer, va_arg(args, int));
+        break;
+      case 's':
+        str = va_arg(args, char*);
+        if (str == NULL)
+          str = "(null)";
+      writeStr:
+        while (*str) {
+          vec_push(&stream->writeBuffer, *str++);
+        }
+        break;
+      case 'b':
+        str = va_arg(args, char*);
+        c = va_arg(args, int);
+        while (c--) {
+          vec_push(&stream->writeBuffer, *str++);
+        }
+        break;
+      default:
+        f[1] = *fmt;
+        switch (*fmt) {
+        case 'f':
+        case 'g':
+          sprintf(buf, f, va_arg(args, double));
           break;
-        case 'c':
-          vec_push(&stream->writeBuffer, va_arg(args, int));
+        case 'd':
+        case 'i':
+          sprintf(buf, f, va_arg(args, int));
           break;
-        case 's':
-          str = va_arg(args, char*);
-          if (str == NULL) str = "(null)";
-          writeStr:
-          while (*str) {
-            vec_push(&stream->writeBuffer, *str++);
-          }
+        case 'x':
+        case 'X':
+          sprintf(buf, f, va_arg(args, unsigned));
           break;
-        case 'b':
-          str = va_arg(args, char*);
-          c = va_arg(args, int);
-          while (c--) {
-            vec_push(&stream->writeBuffer, *str++);
-          }
+        case 'p':
+          sprintf(buf, f, va_arg(args, void*));
           break;
         default:
-          f[1] = *fmt;
-          switch (*fmt) {
-            case 'f':
-            case 'g': sprintf(buf, f, va_arg(args, double));    break;
-            case 'd':
-            case 'i': sprintf(buf, f, va_arg(args, int));       break;
-            case 'x':
-            case 'X': sprintf(buf, f, va_arg(args, unsigned));  break;
-            case 'p': sprintf(buf, f, va_arg(args, void*));     break;
-            default : buf[0] = *fmt; buf[1] = '\0';
-          }
-          str = buf;
-          goto writeStr;
+          buf[0] = *fmt;
+          buf[1] = '\0';
+        }
+        str = buf;
+        goto writeStr;
       }
     } else {
       vec_push(&stream->writeBuffer, *fmt);
@@ -1123,51 +1082,42 @@ void dyad_vwritef(dyad_Stream *stream, const char *fmt, va_list args) {
   stream->flags |= DYAD_FLAG_WRITTEN;
 }
 
-
-void dyad_writef(dyad_Stream *stream, const char *fmt, ...) {
+void dyad_writef(dyad_Stream* stream, const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   dyad_vwritef(stream, fmt, args);
   va_end(args);
 }
 
-
-void dyad_setTimeout(dyad_Stream *stream, double seconds) {
+void dyad_setTimeout(dyad_Stream* stream, double seconds) {
   stream->timeout = seconds;
 }
 
-
-void dyad_setNoDelay(dyad_Stream *stream, int opt) {
+void dyad_setNoDelay(dyad_Stream* stream, int opt) {
   opt = !!opt;
   setsockopt(stream->sockfd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
 }
 
-
-int dyad_getState(dyad_Stream *stream) {
+int dyad_getState(dyad_Stream* stream) {
   return stream->state;
 }
 
-
-const char *dyad_getAddress(dyad_Stream *stream) {
+const char* dyad_getAddress(dyad_Stream* stream) {
   return stream->address ? stream->address : "";
 }
 
-
-int dyad_getPort(dyad_Stream *stream) {
+int dyad_getPort(dyad_Stream* stream) {
   return stream->port;
 }
 
-
-int dyad_getBytesSent(dyad_Stream *stream) {
+int dyad_getBytesSent(dyad_Stream* stream) {
   return stream->bytesSent;
 }
 
-
-int dyad_getBytesReceived(dyad_Stream *stream) {
+int dyad_getBytesReceived(dyad_Stream* stream) {
   return stream->bytesReceived;
 }
 
-
-dyad_Socket dyad_getSocket(dyad_Stream *stream) {
+dyad_Socket dyad_getSocket(dyad_Stream* stream) {
   return stream->sockfd;
 }

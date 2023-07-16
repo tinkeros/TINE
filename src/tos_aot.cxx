@@ -127,7 +127,16 @@ static void LoadPass1(char* src, char* mod_base) {
       TOSLoader[st_ptr] = tmpex;
       SysSymImportsResolve(st_ptr);
       break;
-    case IET_REL_I0 ... IET_IMM_I64:
+    case IET_REL_I0:
+    case IET_IMM_U0:
+    case IET_REL_I8:
+    case IET_IMM_U8:
+    case IET_REL_I16:
+    case IET_IMM_U16:
+    case IET_REL_I32:
+    case IET_IMM_U32:
+    case IET_REL_I64:
+    case IET_IMM_I64:
       src = st_ptr - 5;
       LoadOneImport(&src, mod_base);
       break;

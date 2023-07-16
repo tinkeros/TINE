@@ -227,13 +227,13 @@ void AwakeFromSleeping(size_t core) {
   ReleaseMutex(cores[core].mtx);
 #else
   uint32_t old = 1;
-  __atomic_compare_exchange_n(&cores[core].is_sleeping, &old, 0, false,
+  __atomic_compare_exchange_n(&cores[core].is_sleeping, &old, 0u, false,
                               __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 #ifdef __linux__
-  syscall(SYS_futex, &cores[core].is_sleeping, FUTEX_WAKE, 1, nullptr, nullptr,
+  syscall(SYS_futex, &cores[core].is_sleeping, FUTEX_WAKE, 1u, nullptr, nullptr,
           0);
 #elif defined(__FreeBSD__)
-  _umtx_op(&cores[core].is_sleeping, UMTX_OP_WAKE, 1, nullptr, nullptr);
+  _umtx_op(&cores[core].is_sleeping, UMTX_OP_WAKE, 1u, nullptr, nullptr);
 #endif
 #endif
 }
@@ -285,12 +285,12 @@ void SleepHP(uint64_t us) {
 #else
   struct timespec ts {};
   ts.tv_nsec = us * 1000;
-  __atomic_store_n(&cores[core_num].is_sleeping, 1, __ATOMIC_SEQ_CST);
+  __atomic_store_n(&cores[core_num].is_sleeping, 1u, __ATOMIC_SEQ_CST);
 #ifdef __linux__
-  syscall(SYS_futex, &cores[core_num].is_sleeping, FUTEX_WAIT, 1, &ts, nullptr,
+  syscall(SYS_futex, &cores[core_num].is_sleeping, FUTEX_WAIT, 1u, &ts, nullptr,
           0);
 #elif defined(__FreeBSD__)
-  _umtx_op(&cores[core_num].is_sleeping, UMTX_OP_WAIT_UINT, 1,
+  _umtx_op(&cores[core_num].is_sleeping, UMTX_OP_WAIT_UINT, 1u,
            (void*)sizeof(struct timespec), &ts);
 #endif
 #endif
