@@ -94,14 +94,12 @@ static void LoadOneImport(char** src_, char* mod_base) {
 }
 
 static void SysSymImportsResolve(char* st_ptr) {
-  char* ptr;
   if (TOSLoader.find(st_ptr) == TOSLoader.end())
     return;
   auto& sym = TOSLoader[st_ptr];
   if (sym.type != HTT_IMPORT_SYS_SYM)
     return;
-  ptr = sym.mod_header_entry;
-  LoadOneImport(&ptr, sym.mod_base);
+  LoadOneImport(&sym.mod_header_entry, sym.mod_base);
   sym.type = HTT_INVALID;
 }
 
@@ -137,7 +135,7 @@ static void LoadPass1(char* src, char* mod_base) {
       cnt = i;
       for (size_t j = 0; j < cnt; j++) {
         ptr = mod_base + AS_(src, uint32_t);
-        src += 4;
+        src += sizeof(uint32_t);
         AS_(ptr, uint32_t) += reinterpret_cast<uintptr_t>(mod_base);
       }
     } break;

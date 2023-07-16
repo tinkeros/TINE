@@ -679,22 +679,30 @@ U0 ServeTask(CServer *srv) {
   }
 }
 
-#include "wallpaper.HC";
+#exe {
+  if (!__IsCmdLine)
+    StreamPrint("#include \"wallpaper.HC\";\n");
+}
 
 U0 Serve(CServer *srv) {
   I64 core=-1;
+  CTask *srv_task;
   if (mp_cnt>1)
     core=RandU16%(mp_cnt-1)+1;
       // we dont want core 0 since it has
       // a lot of things going on
-  U8 *fp=gr.fp_wall_paper;
-  gr.fp_wall_paper=&TempWallPaper;
-     // we do this because
-     // the default wallpaper shows running tasks
-     // and the server launches a bunch of tasks which
-     // creates a race condition somehow so we replace it
-     // with a temporary one that doesn't show them
-  CTask *srv_task;
+  #exe {
+    if (!__IsCmdLine)
+      StreamPrint(
+        "U8 *fp=gr.fp_wall_paper;
+         gr.fp_wall_paper=&TempWallPaper;"
+      );
+    // we do this because
+    // the default wallpaper shows running tasks
+    // and the server launches a bunch of tasks which
+    // creates a race condition somehow so we replace it
+    // with a temporary one that doesn't show them
+  }
   if (!__IsCmdLine) {
     "Press a button to quit serving\n";
     srv_task=Spawn(&ServeTask,srv,"Server",core);
@@ -706,6 +714,9 @@ U0 Serve(CServer *srv) {
   }
   Kill(srv_task);
   DyadShutdown;
-  gr.fp_wall_paper=fp;
+  #exe {
+    if (!__IsCmdLine)
+      StreamPrint("gr.fp_wall_paper=fp;\n");
+  }
 }
 
