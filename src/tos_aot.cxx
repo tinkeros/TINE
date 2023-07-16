@@ -44,7 +44,8 @@ static void LoadOneImport(char** src_, char* mod_base) {
         return;
       } else {
         first = false;
-        if (TOSLoader.find(st_ptr) == TOSLoader.end()) {
+        decltype(TOSLoader)::iterator it;
+        if ((it = TOSLoader.find(st_ptr)) == TOSLoader.end()) {
           std::cerr << "Unresolved reference " << st_ptr << std::endl;
           CHash tmpiss;
           tmpiss.type = HTT_IMPORT_SYS_SYM;
@@ -52,7 +53,7 @@ static void LoadOneImport(char** src_, char* mod_base) {
           tmpiss.mod_base = mod_base;
           TOSLoader[st_ptr] = tmpiss;
         } else {
-          auto& tmp_sym = TOSLoader[st_ptr];
+          auto& tmp_sym = it->second;
           if (tmp_sym.type != HTT_IMPORT_SYS_SYM)
             i = reinterpret_cast<uintptr_t>(tmp_sym.val);
         }
@@ -61,7 +62,6 @@ static void LoadOneImport(char** src_, char* mod_base) {
     // probably breaks strict aliasing :(
 #define OFF_(T) (reinterpret_cast<char*>(i) - ptr - sizeof(T))
     switch (etype) {
-      break;
     case IET_REL_I8:
       AS_(ptr, int8_t) = OFF_(int8_t);
       break;
@@ -94,9 +94,10 @@ static void LoadOneImport(char** src_, char* mod_base) {
 }
 
 static void SysSymImportsResolve(char* st_ptr) {
-  if (TOSLoader.find(st_ptr) == TOSLoader.end())
+  decltype(TOSLoader)::iterator it;
+  if ((it = TOSLoader.find(st_ptr)) == TOSLoader.end())
     return;
-  auto& sym = TOSLoader[st_ptr];
+  auto& sym = it->second;
   if (sym.type != HTT_IMPORT_SYS_SYM)
     return;
   LoadOneImport(&sym.mod_header_entry, sym.mod_base);
@@ -111,7 +112,7 @@ static void LoadPass1(char* src, char* mod_base) {
   CHash tmpex;
   while ((etype = *src++)) {
     i = AS_(src, uint32_t);
-    src += 4;
+    src += sizeof(uint32_t);
     st_ptr = src;
     src += strlen(st_ptr) + 1;
     switch (etype) {
@@ -151,7 +152,7 @@ static void LoadPass2(char* src, char* mod_base) {
   uint8_t etype;
   while ((etype = *src++)) {
     i = AS_(src, uint32_t);
-    src += 4;
+    src += sizeof(uint32_t);
     st_ptr = src;
     src += strlen(st_ptr) + 1;
     switch (etype) {

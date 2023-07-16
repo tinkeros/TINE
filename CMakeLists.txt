@@ -92,7 +92,7 @@ target_compile_features(${PROJECT_NAME}
     cxx_nullptr
     cxx_constexpr
     cxx_relaxed_constexpr
-    cxx_variadic_macros
+    cxx_decltype
     cxx_uniform_initialization
     cxx_generalized_initializers
     cxx_strong_enums
