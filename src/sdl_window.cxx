@@ -59,15 +59,12 @@ std::string const ClipboardText() {
 }
 
 void NewDrawWindow() {
-  if (!SDL_WasInit(SDL_INIT_EVERYTHING) || !win_init) {
-    SDL_Init(SDL_INIT_EVERYTHING);
-    // sdl disables compositor in kde by default
-    SDL_SetHintWithPriority(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0",
-                            SDL_HINT_OVERRIDE);
-    SDL_SetHintWithPriority(SDL_HINT_RENDER_SCALE_QUALITY, "linear",
-                            SDL_HINT_OVERRIDE);
-  } else
-    return;
+  SDL_Init(SDL_INIT_EVERYTHING);
+  // sdl disables compositor in kde by default
+  SDL_SetHintWithPriority(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0",
+                          SDL_HINT_OVERRIDE);
+  SDL_SetHintWithPriority(SDL_HINT_RENDER_SCALE_QUALITY, "linear",
+                          SDL_HINT_OVERRIDE);
   win_init = true;
   win.screen_mutex = SDL_CreateMutex();
   win.screen_done_cond = SDL_CreateCond();

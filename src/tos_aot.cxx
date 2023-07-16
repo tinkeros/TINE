@@ -49,7 +49,7 @@ static void LoadOneImport(char** src_, char* mod_base) {
           std::cerr << "Unresolved reference " << st_ptr << std::endl;
           CHash tmpiss;
           tmpiss.type = HTT_IMPORT_SYS_SYM;
-          tmpiss.mod_header_entry = st_ptr - 5;
+          tmpiss.mod_header_entry = st_ptr - sizeof(uint32_t) - 1;
           tmpiss.mod_base = mod_base;
           TOSLoader[st_ptr] = tmpiss;
         } else {

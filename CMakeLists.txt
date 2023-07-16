@@ -90,6 +90,7 @@ target_compile_features(${PROJECT_NAME}
     cxx_range_for
     cxx_auto_type
     cxx_nullptr
+    cxx_noexcept
     cxx_constexpr
     cxx_relaxed_constexpr
     cxx_decltype
