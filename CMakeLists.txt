@@ -143,7 +143,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR
      int main() {
        uint32_t i = 1, j = 1;
        __atomic_compare_exchange_n(
-         &i, &j, 0, false,
+         &i, &j, 0u, false,
          __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST
       );
       return !(i == 0 && j == 1);

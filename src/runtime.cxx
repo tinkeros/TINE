@@ -498,6 +498,11 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   blob.append(inst, 22);
 #ifdef _WIN32
   // rcx is the first arg i have to provide in win64
+  // there used to be additional code to push&pop 4 imaginary stack args
+  // to provide "register homes" that windows functions expect but
+  // it seems like individual functions are required to provide
+  // space for their own reg homes so we dont have to
+  // (which does actually make sense)
   blob.append("\x48\x8D\x4D\x10", 4);
 #else // sysv
   // rdi is the first arg i have to provide in sysv

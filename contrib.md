@@ -19,7 +19,7 @@ build hcrt and loader again, copy HCRT.BIN to HCRT\_BOOTSTRAP.BIN and commit
 # extending the kernel
 T/KERNELA.HH
 ```C
-//same as ffi
+//same as ffi without the "import" line
 ```
 T/HCRT\_TOS.HC
 ```C

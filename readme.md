@@ -1,27 +1,33 @@
 # ![](./logo.png) TINE Is Not a (TempleOS) Emulator
- \* *logo courtesy of CrunkLord420.*
-# showcase
-![](./showcase.png)
+ \* *logo courtesy of CrunkLord420*
 
-An example of HolyC's `#exe{}` and freedom of directly fiddling with the task's hash table mimicing `#undef` of ISO C.
+## features
+- seamless filesystem integration, no mounting virtual disks or anything(primary annoyance when working with TOS)
+- networking with FFI using the dyad library(powers builtin wiki)
+- [wiki that guides you through HolyC and TempleOS](#documentation)
 
 ## required skills
  - knowledge of TempleOS
- - knowledge of C
- - (optional but recommended)knowledge of GDB/LLDB(for debugging the loader)
+ - knowledge of C(HolyC specifically but you'll catch on easily)
+ - (optional but recommended)knowledge of GDB/LLDB for debugging the loader(in case something goes wrong)
 
 ## system requirements
  - AMD64 architecture
  - Operating System: Linux, FreeBSD or Windows
 
-# building
+# showcase
+![](./showcase.png)
+
+an example of HolyC/TempleOS' `#exe{}` and freedom of directly fiddling with system-level facilities mimicing `#undef` of ISO C
+
+# **building**
 ## windows users
 ### only supports >=Win10(complain to msys2 devs not me), msvc unsupported
 install msys2, launch the "MSYS2 MINGW64 Shell", and run the following
 ```
 pacman -Syu make mingw-w64-x86_64-{cmake,gcc,SDL2}
 ```
-if pacman tells you to restart the terminal then do it and run the cmd again(rtfm)
+if pacman tells you to restart the terminal then do it and run the cmd again
 ## unix-like system users
 install SDL2, cmake, make and gcc/clang
 ## building the loader
@@ -29,10 +35,10 @@ install SDL2, cmake, make and gcc/clang
 mkdir build;
 cd build;
 cmake ..; # *nix ***THIS LINE ISNT FOR WINDOWS***
-cmake .. -G 'MSYS Makefiles' # ***WINDOWS***
+cmake .. -G 'MSYS Makefiles'; # ***WINDOWS***
 make -j$(nproc);
 ```
-side note: there used to be a makefile to completely statically build an exe on windows but it seems like windows doesnt like it(doesnt output anything, just hangs) so i removed it, so make sure to run the built binary in the mingw terminal to avoid dll hell
+side note: statically linking SDL2 on windows seems like std{in,out} gets borked so make sure to run the built binary in the mingw terminal to avoid dll hell
 ## build runtime
 ```
 ./tine -f HCRT_BOOTSTRAP.BIN -ctT BuildHCRT.HC

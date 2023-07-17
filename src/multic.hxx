@@ -1,7 +1,4 @@
 #pragma once
-// am i bad, am i bad, am i really that bad?
-// if you were in my shoes you'll walk the same damn miles i'll do
-// (who knows, he will know. he might stumble upon this someday)
 
 #include <stddef.h>
 #include <stdint.h>
