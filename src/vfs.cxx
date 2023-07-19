@@ -98,9 +98,7 @@ int64_t VFsFSize(char const* name) {
     return -1;
   } else if (FIsDir(fn)) {
     fs::directory_iterator it{fn};
-    // https://archive.md/1Ojr3#7
-    // accounts for . and ..
-    return 2 + std::distance(fs::begin(it), fs::end(it));
+    return std::distance(fs::begin(it), fs::end(it));
   }
   return fs::file_size(fn);
 }
@@ -129,9 +127,9 @@ uint64_t VFsFileWrite(char const* name, char const* data, size_t const len) {
   return !!name;
 }
 
-void* VFsFileRead(char const* name, uint64_t* len) {
-  if (len)
-    *len = 0;
+void* VFsFileRead(char const* name, uint64_t* len_ptr) {
+  if (len_ptr)
+    *len_ptr = 0;
   if (!name)
     return nullptr;
   char* data = nullptr;
@@ -145,8 +143,8 @@ void* VFsFileRead(char const* name, uint64_t* len) {
     return nullptr;
   size_t sz = fs::file_size(p);
   f.read(data = HolyAlloc<char, true>(sz + 1), sz);
-  if (len)
-    *len = sz;
+  if (len_ptr != nullptr)
+    *len_ptr = sz;
   return data;
 }
 
