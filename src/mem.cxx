@@ -1,5 +1,5 @@
 #include "mem.hxx"
-#include "alloc.hxx"
+#include "main.hxx"
 
 #include <fstream>
 #include <string>
@@ -16,6 +16,7 @@ using std::ios;
 // clang-format off
 #include <windows.h>
 #include <memoryapi.h>
+extern DWORD dwAllocationGranularity;
 // clang-format on
 #endif
 
@@ -86,7 +87,6 @@ void* NewVirtualChunk(size_t sz, bool low32) {
   return ret;
 #else
   if (low32) { // code heap
-    extern DWORD dwAllocationGranularity;
     // https://archive.md/ugIUC
     MEMORY_BASIC_INFORMATION mbi{};
     // we initialize alloc with the granularity because NULL

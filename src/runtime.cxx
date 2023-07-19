@@ -373,7 +373,6 @@ static uint64_t STK_UnixNow(void*) {
 }
 
 size_t mp_cnt(void*) {
-  extern size_t proc_cnt;
   return proc_cnt;
 }
 
@@ -644,7 +643,7 @@ void RegisterFuncPtrs() {
   auto blob = VirtAlloc<char>(ffi_blob.size());
   std::copy(ffi_blob.begin(), ffi_blob.end(), blob);
   for (auto& m : TOSLoader)
-    m.second.val += reinterpret_cast<uintptr_t>(blob);
+    m.second.val += reinterpret_cast<ptrdiff_t>(blob);
 }
 
 // vim: set expandtab ts=2 sw=2 :
