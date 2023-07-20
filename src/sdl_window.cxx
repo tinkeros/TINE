@@ -44,14 +44,14 @@ std::string const ClipboardText() {
   std::string s = sdl_clip;
   SDL_free(sdl_clip);
   if (sanitize_clipboard) {
-    /*std::erase_if(s, [](uint8_t c) {
-      return ' ' - 1 > c;
+    /*std::erase_if(s, [](auto c) {
+      return ' ' - 1 > static_cast<uint8_t>(c);
     }); C++20
     below is the C++17 equivalent because reasons*/
-    // uint8 is important here since signed char
-    // might become negative for utf-8 bytes
-    auto it = std::remove_if(s.begin(), s.end(), [](uint8_t c) {
-      return ' ' - 1 > c;
+    auto it = std::remove_if(s.begin(), s.end(), [](auto c) {
+      // we dont want negative values here
+      // (TOS uses U8, UTF-8 on the host, etc)
+      return ' ' - 1 > static_cast<uint8_t>(c);
     });
     s.erase(it, s.end());
   }
