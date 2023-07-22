@@ -8,15 +8,56 @@
 #include <inttypes.h>
 #include <string.h>
 
-static std::string MStrPrint(char const* fmt, uint64_t /* argc*/,
-                             int64_t* argv);
-static char* UnescapeString(char* __restrict str, char* __restrict where);
+namespace {
+char* UnescapeString(char* __restrict str, char* __restrict where) {
+  while (*str) {
+    char const* __restrict to;
+    switch (*str) {
+#define ESC(c, e) \
+  case c:         \
+    to = e;       \
+    break
+      ESC('\\', "\\\\");
+      ESC('\a', "\\a");
+      ESC('\b', "\\b");
+      ESC('\f', "\\f");
+      ESC('\n', "\\n");
+      ESC('\r', "\\r");
+      ESC('\t', "\\t");
+      ESC('\v', "\\v");
+      ESC('\"', "\\\"");
+    default:
+      goto check_us_key;
+    }
+    std::copy(to, to + 2, where);
+    where += 2;
+    ++str;
+    continue;
 
-void TOSPrint(char const* fmt, uint64_t argc, int64_t* argv) {
-  (std::cerr << MStrPrint(fmt, argc, argv)).flush();
+  check_us_key:; // you bear a striking resemblance
+                 // you look just like my bathroom mirror
+    if (isalnum(static_cast<unsigned char>(*str)) == 0 &&
+        strchr(" ~!@#$%^&*()_+|{}[]\\;':\",./<>?", *str) == nullptr) {
+      // Note: this was giving me bizarre buffer overflow
+      // errors and it turns out you MUST use uint8_t when
+      // printing a 8 bit wide octal value to get the correct digits
+      // probably it's typical GNU bullshittery or there's something
+      // deep inside the Standard that I'm missing, either way, this works
+      char buf[5];
+      snprintf(buf, sizeof buf, "\\%" PRIo8, static_cast<uint8_t>(*str));
+      std::copy(buf, buf + 4, where);
+      where += 4;
+      ++str;
+      continue;
+    }
+    // default when matches none of the criteria above
+    *where++ = *str++;
+  }
+  *where = '\0';
+  return where;
 }
 
-static std::string MStrPrint(char const* fmt, uint64_t, int64_t* argv) {
+std::string MStrPrint(char const* fmt, uint64_t, int64_t* argv) {
   // this does not compare argument count(argc)
   // with StrOcc(fmt, '%'), be careful i guess
   // it also isn't a fully featured one but should
@@ -122,53 +163,10 @@ loop:;
   ++start;
   goto loop;
 }
+} // namespace
 
-static char* UnescapeString(char* __restrict str, char* __restrict where) {
-  while (*str) {
-    char const* __restrict to;
-    switch (*str) {
-#define ESC(c, e) \
-  case c:         \
-    to = e;       \
-    break
-      ESC('\\', "\\\\");
-      ESC('\a', "\\a");
-      ESC('\b', "\\b");
-      ESC('\f', "\\f");
-      ESC('\n', "\\n");
-      ESC('\r', "\\r");
-      ESC('\t', "\\t");
-      ESC('\v', "\\v");
-      ESC('\"', "\\\"");
-    default:
-      goto check_us_key;
-    }
-    std::copy(to, to + 2, where);
-    where += 2;
-    ++str;
-    continue;
-
-  check_us_key:; // you bear a striking resemblance
-                 // you look just like my bathroom mirror
-    if (isalnum(static_cast<unsigned char>(*str)) == 0 &&
-        strchr(" ~!@#$%^&*()_+|{}[]\\;':\",./<>?", *str) == nullptr) {
-      // Note: this was giving me bizarre buffer overflow
-      // errors and it turns out you MUST use uint8_t when
-      // printing a 8 bit wide octal value to get the correct digits
-      // probably it's typical GNU bullshittery or there's something
-      // deep inside the Standard that I'm missing, either way, this works
-      char buf[5];
-      snprintf(buf, sizeof buf, "\\%" PRIo8, static_cast<uint8_t>(*str));
-      std::copy(buf, buf + 4, where);
-      where += 4;
-      ++str;
-      continue;
-    }
-    // default when matches none of the criteria above
-    *where++ = *str++;
-  }
-  *where = '\0';
-  return where;
+void TOSPrint(char const* fmt, uint64_t argc, int64_t* argv) {
+  (std::cerr << MStrPrint(fmt, argc, argv)).flush();
 }
 
 // vim: set expandtab ts=2 sw=2 :

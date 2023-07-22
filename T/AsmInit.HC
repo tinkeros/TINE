@@ -37,7 +37,7 @@ U0 AsmPrsInsFlags(CCmpCtrl *cc,CInst *tmpins)
       case '%': tmpins->flags|=IEF_NOT_IN_64_BIT;	break;
       case '=': tmpins->flags|=IEF_48_REX;		break;
       case '`': tmpins->flags|=IEF_REX_ONLY_R8_R15;	break;
-      case '^': tmpins->flags|=IEF_REX_XOR_LIKE;		break;
+      case '^': tmpins->flags|=IEF_REX_XOR_LIKE;	break;
       case '*': tmpins->flags|=IEF_STI_LIKE;		break;
       case '$$': tmpins->flags|=IEF_ENDING_ZERO;		break;
       default:

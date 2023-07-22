@@ -28,7 +28,7 @@ using WinCB = LPTHREAD_START_ROUTINE;
 #ifdef __linux__
 #include <linux/futex.h>
 #include <sys/syscall.h>
-#elif defined __FreeBSD__
+#elif defined(__FreeBSD__)
 #include <sys/types.h>
 #include <sys/umtx.h>
 #endif
@@ -81,7 +81,8 @@ size_t CoreNum() {
   return core_num;
 }
 
-// have you ever died in a nightmare surprised you havent earned your fate?
+namespace {
+
 struct CCore {
 #ifdef _WIN32
   HANDLE thread;
@@ -109,9 +110,9 @@ struct CCore {
   void* fp;
 };
 
-static std::vector<CCore> cores;
+std::vector<CCore> cores;
 
-static void* __stdcall LaunchCore(void* c) {
+void* __stdcall LaunchCore(void* c) {
   VFsThrdInit();
   SetupDebugger();
   core_num = reinterpret_cast<uintptr_t>(c);
@@ -125,9 +126,13 @@ static void* __stdcall LaunchCore(void* c) {
   });
 #endif
   // CoreAPSethTask(...) (T/FULL_PACKAGE.HC)
+  // ZERO_BP so the return addr&rbp is 0 and
+  // stack traces don't climb up the C++ stack
   FFI_CALL_TOS_0_ZERO_BP(cores[core_num].fp);
   return nullptr;
 }
+
+} // namespace
 
 // this may look like bad code but HolyC cannot switch
 // contexts unless you call Yield() in a loop so
@@ -240,15 +245,17 @@ void AwakeFromSleeping(size_t core) {
 
 #ifdef _WIN32
 
-static UINT tick_inc;
-static uint64_t ticks = 0;
+namespace {
+
+UINT tick_inc;
+uint64_t ticks = 0;
 
 // To just get ticks we can use QueryPerformanceFrequency
 // and QueryPerformanceCounter but we want to set an winmm
 // event that updates the tick count while also helping cores wake up
 //
 // i killed two birds with one stoner
-static uint64_t GetTicksHP() {
+uint64_t GetTicksHP() {
   static bool init = false;
   if (!init) {
     init = true;
@@ -273,6 +280,9 @@ static uint64_t GetTicksHP() {
   }
   return ticks;
 }
+
+} // namespace
+
 #endif
 
 void SleepHP(uint64_t us) {

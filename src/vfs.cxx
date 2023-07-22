@@ -9,6 +9,7 @@
 #include <vector>
 
 namespace fs = std::filesystem;
+
 using std::ios;
 
 #include <ctype.h>
@@ -49,12 +50,32 @@ void VFsSetPwd(char const* pwd) {
   thrd_pwd = pwd;
 }
 
-static bool FExists(std::string const& path) {
+namespace {
+
+inline bool FExists(std::string const& path) {
   return fs::exists(path);
 }
 
-static int FIsDir(std::string const& path) {
+inline bool FIsDir(std::string const& path) {
   return fs::is_directory(path);
+}
+
+std::array<std::string, 'z' - 'a' + 1> mount_points;
+
+} // namespace
+
+std::string VFsFileNameAbs(char const* name) {
+  std::string ret;
+  // thrd_drv is always uppercase
+  ret += mount_points[thrd_drv - 'A']; // T
+  ret += delim;                        // /
+  if (thrd_pwd.size() > 1) {
+    ret.pop_back();
+    ret += thrd_pwd; // /
+    ret += delim;    // /
+  }
+  ret += name; // Name
+  return ret;
 }
 
 bool VFsDirMk(char const* to, int const flags) {
@@ -77,21 +98,6 @@ uint64_t VFsDel(char const* p) {
   return 1;
 }
 
-static std::array<std::string, 'z' - 'a' + 1> mount_points;
-std::string VFsFileNameAbs(char const* name) {
-  std::string ret;
-  // thrd_drv is always uppercase
-  ret += mount_points[thrd_drv - 'A']; // T
-  ret += delim;                        // /
-  if (thrd_pwd.size() > 1) {
-    ret.pop_back();
-    ret += thrd_pwd; // /
-    ret += delim;    // /
-  }
-  ret += name; // Name
-  return ret;
-}
-
 int64_t VFsFSize(char const* name) {
   std::string fn = VFsFileNameAbs(name);
   if (!FExists(fn)) {
@@ -111,6 +117,7 @@ uint64_t VFsUnixTime(char const* name) {
   struct stat s;
   stat(fn.c_str(), &s);
 #else
+  // wtf lmao
   struct _stati64 s;
   _stati64(fn.c_str(), &s);
 #endif

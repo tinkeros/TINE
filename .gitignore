@@ -56,10 +56,13 @@ T/TempleOS.ISO.C
 T/HCRT.BIN
 T/HCRT.DBG.Z
 T/Registry.HC.Z
+T/@TMP
+T/Tmp.DD.Z
 T/WikiBackups
 HCRT.BIN
 .ccls-cache
 T/Headers.HH
 T/unfound.DD
+T/AutoComplete/ACDefs.DATA
 build
 tine

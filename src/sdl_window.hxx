@@ -9,7 +9,14 @@ std::string const ClipboardText();
 void NewDrawWindow();
 void DrawWindowUpdate(uint8_t* colors, uintptr_t internal_width);
 void InputLoop(bool* off);
-void GrPaletteColorSet(uint64_t, uint64_t);
+
+extern "C" union bgr_48 {
+  uint64_t i;
+  struct [[gnu::packed]] {
+    uint16_t b, g, r, pad;
+  };
+};
+void GrPaletteColorSet(uint64_t, bgr_48);
 
 void SetKBCallback(void* fp, void* data);
 void SetMSCallback(void* fp);

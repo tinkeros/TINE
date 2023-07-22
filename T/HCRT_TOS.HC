@@ -62,7 +62,7 @@ CTask *adam_task=Fs;
 #include "Kernel/KDBG.HC"
 #include "Kernel/KEXCEPT.HC"
 #include "Kernel/DISPLAY.HC"
-#include "MAlloc2.HC"
+#include "Mem/MakeMem.HC"
 #include "BlkDev2/MakeBlkDev.HC"
 #include "Kernel/Sched.HC"
 #ifdef COMPONENT_COMPILER

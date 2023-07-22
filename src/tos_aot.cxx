@@ -19,13 +19,15 @@
 #include <string.h>
 
 namespace fs = std::filesystem;
+
 using std::ios;
 
 std::unordered_map<std::string, CHash> TOSLoader;
 
+namespace {
 // This code is mostly copied from TempleOS
 // and does not look very C++-y
-static void LoadOneImport(char** src_, char* mod_base) {
+void LoadOneImport(char** src_, char* mod_base) {
   char* __restrict src = *src_, *st_ptr, *ptr = nullptr;
   uintptr_t i = 0;
   uint8_t etype;
@@ -93,7 +95,7 @@ static void LoadOneImport(char** src_, char* mod_base) {
   *src_ = src - 1;
 }
 
-static void SysSymImportsResolve(char* st_ptr) {
+void SysSymImportsResolve(char* st_ptr) {
   decltype(TOSLoader)::iterator it;
   if ((it = TOSLoader.find(st_ptr)) == TOSLoader.end())
     return;
@@ -104,7 +106,7 @@ static void SysSymImportsResolve(char* st_ptr) {
   sym.type = HTT_INVALID;
 }
 
-static void LoadPass1(char* src, char* mod_base) {
+void LoadPass1(char* src, char* mod_base) {
   char *ptr, *st_ptr;
   uintptr_t i;
   size_t cnt;
@@ -155,7 +157,7 @@ static void LoadPass1(char* src, char* mod_base) {
   }
 }
 
-static void LoadPass2(char* src, char* mod_base) {
+void LoadPass2(char* src, char* mod_base) {
   char* st_ptr;
   uint32_t i;
   uint8_t etype;
@@ -183,7 +185,7 @@ static void LoadPass2(char* src, char* mod_base) {
   }
 }
 
-extern "C" struct __attribute__((packed)) CBinFile {
+extern "C" struct [[gnu::packed]] CBinFile {
   uint16_t jmp;
   uint8_t mod_align_bits, pad;
   union {
@@ -194,6 +196,8 @@ extern "C" struct __attribute__((packed)) CBinFile {
   char data[]; // FAMs are technically illegal in
                // standard c++ but whatever
 };
+
+} // namespace
 
 void LoadHCRT(std::string const& name) {
   std::ifstream f{name, ios::in | ios::binary};
@@ -275,7 +279,7 @@ void BackTrace() {
 
 // great when you use lldb and get a fault
 // (lldb) p (char*)WhichFun($pc)
-__attribute__((used, visibility("default"))) char* WhichFun(void* ptr) {
+[[gnu::used, gnu::visibility("default")]] char* WhichFun(void* ptr) {
   std::string last;
   static size_t sz = 0;
   static std::vector<std::string> sorted;

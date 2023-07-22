@@ -1,17 +1,19 @@
 # ffi
 runtime.cxx
-```C
+```C++
+// inside the anonymous namespace
 uint64_t STK_FunctionName(uint64_t* stk) {
   // ...
 }
-S_(FunctionName, function arg cnt);
+// in RegisterFuncPtrs()
+S_(FunctionName, function arg cnt in HolyC);
 ```
 `STK_FunctionName` ***MUST*** return void OR a value that is 8 bytes big
 
 T/KERNELA.HH
 ```C
 ...after #ifdef IMPORT_BUILTINS
-import U64 FunctionName(....);
+import U64 FunctionName(<args>);
 ...#else then lots of extern
 extern <same function prototype>;
 ```

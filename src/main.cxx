@@ -78,8 +78,10 @@ void ShutdownTINE(int ec) {
 
 bool sanitize_clipboard = false;
 
-static std::string bin_path{"HCRT.BIN"};
-static void* __stdcall Core0(void*) {
+namespace {
+
+std::string bin_path{"HCRT.BIN"};
+void* __stdcall Core0(void*) {
   VFsThrdInit();
   LoadHCRT(bin_path);
   SetupDebugger();
@@ -90,6 +92,8 @@ static void* __stdcall Core0(void*) {
 #endif
   return nullptr;
 }
+
+} // namespace
 
 #ifndef _WIN32
 size_t page_size; // used for allocation
@@ -115,6 +119,7 @@ int main(int argc, char** argv) {
   dwAllocationGranularity = si.dwAllocationGranularity;
 #endif
   proc_cnt = thread::hardware_concurrency();
+  // i wanted to use cli11 but i dont want exceptions in this codebase
   void* argtable[] = {
       helpArg = arg_lit0("h", "help", "Display this help message."),
       sixty_fps = arg_lit0("6", "60fps", "Run in 60 fps mode."),
@@ -142,6 +147,7 @@ int main(int argc, char** argv) {
     arg_print_glossary_gnu(stderr, argtable);
     return 1;
   }
+
   if (fs::exists(TDriveArg->filename[0])) {
     VFsMountDrive('T', TDriveArg->filename[0]);
   } else {
@@ -155,6 +161,7 @@ int main(int argc, char** argv) {
   // This is called before LoadHCRT so TOSLoader will not be
   // all fucked up, fyi
   RegisterFuncPtrs();
+
   if (ndebug->count == 0)
     boot_str += "__EnableDbg;\n";
   if (noans->count == 0)
@@ -170,22 +177,24 @@ int main(int argc, char** argv) {
     std::replace(boot_str.begin(), boot_str.end(), '\\', '/');
 #endif
   }
-  if (sixty_fps->count)
+  if (sixty_fps->count != 0)
     boot_str += "SetFPS(60.);\n";
   if (!is_cmd_line)
     NewDrawWindow();
   if (is_win || !is_cmd_line)
     InitSound();
+
   if (HCRTArg->count > 0)
     bin_path = HCRTArg->filename[0];
   if (fs::exists(bin_path)) {
     if (ndebug->count == 0)
-      std::cerr << "Using " << bin_path << " as the default binary.\n";
+      std::cerr << "Using " << bin_path << " as the kernel.\n";
     LaunchCore0(Core0);
   } else {
     std::cerr << bin_path << " DOES NOT EXIST\n";
     return 1;
   }
+
   if (!is_cmd_line) {
 #ifdef _WIN32
     SetConsoleCtrlHandler(CtrlCHandlerRoutine, TRUE);

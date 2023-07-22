@@ -13,11 +13,6 @@
 #include <chrono>
 #include <filesystem>
 
-namespace fs = std::filesystem;
-namespace chrono = std::chrono;
-
-using chrono::system_clock;
-
 #include <stddef.h>
 #include <string.h>
 
@@ -60,12 +55,18 @@ char* HolyStrDup(char const* str) {
   return strcpy(HolyAlloc<char>(strlen(str) + 1), str);
 }
 
-static FILE* VFsFOpen(char const* path, char const* m) {
-  std::string p = VFsFileNameAbs(path);
-  return fopen(p.c_str(), m);
+size_t mp_cnt(void*) {
+  return proc_cnt;
 }
 
-static void STK_DyadInit() {
+namespace { // ffi shit goes here
+
+namespace fs = std::filesystem;
+namespace chrono = std::chrono;
+
+using chrono::system_clock;
+
+void STK_DyadInit() {
   static bool init = false;
   if (init)
     return;
@@ -74,121 +75,127 @@ static void STK_DyadInit() {
   dyad_setUpdateTimeout(0.);
 }
 
-static void STK_DyadUpdate() {
+void STK_DyadUpdate() {
   dyad_update();
 }
 
-static void STK_DyadShutdown() {
+void STK_DyadShutdown() {
   dyad_shutdown();
 }
 
-static void* STK_DyadNewStream() {
+void* STK_DyadNewStream() {
   return dyad_newStream();
 }
 
-static int64_t STK_DyadListen(intptr_t* stk) {
+int64_t STK_DyadListen(intptr_t* stk) {
   return dyad_listen(reinterpret_cast<dyad_Stream*>(stk[0]),
                      static_cast<int>(stk[1]));
 }
 
-static int64_t STK_DyadConnect(intptr_t* stk) {
+int64_t STK_DyadConnect(intptr_t* stk) {
   return dyad_connect(reinterpret_cast<dyad_Stream*>(stk[0]),
                       reinterpret_cast<char*>(stk[1]),
                       static_cast<int>(stk[2]));
 }
 
-static void STK_DyadWrite(intptr_t* stk) {
+void STK_DyadWrite(intptr_t* stk) {
   dyad_write(reinterpret_cast<dyad_Stream*>(stk[0]),
              reinterpret_cast<void*>(stk[1]), static_cast<int>(stk[2]));
 }
 
-static void STK_DyadEnd(dyad_Stream** stk) {
+void STK_DyadEnd(dyad_Stream** stk) {
   dyad_end(stk[0]);
 }
 
-static void STK_DyadClose(dyad_Stream** stk) {
+void STK_DyadClose(dyad_Stream** stk) {
   dyad_close(stk[0]);
 }
 
-static char* STK_DyadGetAddress(dyad_Stream** stk) {
+char* STK_DyadGetAddress(dyad_Stream** stk) {
   char const* ret = dyad_getAddress(stk[0]);
   return HolyStrDup(ret);
 }
 
-static void DyadReadCB(dyad_Event* e) {
+void DyadReadCB(dyad_Event* e) {
   FFI_CALL_TOS_4(e->udata, reinterpret_cast<uintptr_t>(e->stream),
                  reinterpret_cast<uintptr_t>(e->data), e->size,
                  reinterpret_cast<uintptr_t>(e->udata2));
 }
 
-static void STK_DyadSetReadCallback(void** stk) {
+void STK_DyadSetReadCallback(void** stk) {
   // This is for a line of text
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_LINE,
                    DyadReadCB, stk[1], stk[2]);
 }
 
-static void STK_DyadSetDataCallback(void** stk) {
+void STK_DyadSetDataCallback(void** stk) {
   // This is for binary data
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_DATA,
                    DyadReadCB, stk[1], stk[2]);
 }
 
-static void DyadListenCB(dyad_Event* e) {
+void DyadListenCB(dyad_Event* e) {
   FFI_CALL_TOS_2(e->udata, reinterpret_cast<uintptr_t>(e->remote),
                  reinterpret_cast<uintptr_t>(e->udata2));
 }
 
-static void DyadCloseCB(dyad_Event* e) {
+void DyadCloseCB(dyad_Event* e) {
   FFI_CALL_TOS_2(e->udata, reinterpret_cast<uintptr_t>(e->stream),
                  reinterpret_cast<uintptr_t>(e->udata2));
 }
 
-static void STK_DyadSetOnCloseCallback(void** stk) {
+void STK_DyadSetOnCloseCallback(void** stk) {
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_CLOSE,
                    DyadCloseCB, stk[1], stk[2]);
 }
-static void STK_DyadSetOnConnectCallback(void** stk) {
+
+void STK_DyadSetOnConnectCallback(void** stk) {
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_CONNECT,
                    DyadListenCB, stk[1], stk[2]);
 }
-static void STK_DyadSetOnDestroyCallback(void** stk) {
+
+void STK_DyadSetOnDestroyCallback(void** stk) {
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_DESTROY,
                    DyadCloseCB, stk[1], stk[2]);
 }
-static void STK_DyadSetOnErrorCallback(void** stk) {
+
+void STK_DyadSetOnErrorCallback(void** stk) {
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_ERROR,
                    DyadCloseCB, stk[1], stk[2]);
 }
-static void STK_DyadSetOnReadyCallback(void** stk) {
+
+void STK_DyadSetOnReadyCallback(void** stk) {
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_READY,
                    DyadListenCB, stk[1], stk[2]);
 }
-static void STK_DyadSetOnTickCallback(void** stk) {
+
+void STK_DyadSetOnTickCallback(void** stk) {
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_TICK,
                    DyadListenCB, stk[1], stk[2]);
 }
-static void STK_DyadSetOnTimeoutCallback(void** stk) {
+
+void STK_DyadSetOnTimeoutCallback(void** stk) {
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_TIMEOUT,
                    DyadListenCB, stk[1], stk[2]);
 }
 
-static void STK_DyadSetOnListenCallback(void** stk) {
+void STK_DyadSetOnListenCallback(void** stk) {
   dyad_addListener(static_cast<dyad_Stream*>(stk[0]), DYAD_EVENT_ACCEPT,
                    DyadListenCB, stk[1], stk[2]);
 }
 
-static void STK_DyadSetTimeout(uintptr_t* stk) {
+void STK_DyadSetTimeout(uintptr_t* stk) {
   static_assert(sizeof(double) == sizeof(uint64_t));
   dyad_setTimeout(reinterpret_cast<dyad_Stream*>(stk[0]),
                   reinterpret_cast<double*>(stk)[1]);
 }
 
-static void STK_DyadSetNoDelay(intptr_t* stk) {
+void STK_DyadSetNoDelay(intptr_t* stk) {
   dyad_setNoDelay(reinterpret_cast<dyad_Stream*>(stk[0]),
                   static_cast<int>(stk[1]));
 }
 
-static void STK_UnblockSignals() {
+void STK_UnblockSignals() {
 #ifndef _WIN32
   sigset_t all;
   sigfillset(&all);
@@ -196,11 +203,11 @@ static void STK_UnblockSignals() {
 #endif
 }
 
-static void STK__GrPaletteColorSet(uint64_t* stk) {
-  GrPaletteColorSet(stk[0], stk[1]);
+void STK__GrPaletteColorSet(uint64_t* stk) {
+  GrPaletteColorSet(stk[0], {stk[1]});
 }
 
-static uint64_t STK___IsValidPtr(uintptr_t* stk) {
+uint64_t STK___IsValidPtr(uintptr_t* stk) {
 #ifdef _WIN32
   // Wine doesnt like the
   // IsBadReadPtr,so use a polyfill
@@ -260,28 +267,26 @@ static uint64_t STK___IsValidPtr(uintptr_t* stk) {
 #endif
 }
 
-static void STK_InterruptCore(uint64_t* stk) {
+void STK_InterruptCore(uint64_t* stk) {
   InterruptCore(stk[0]);
 }
 
-static void STK___BootstrapForeachSymbol(void** stk) {
-  for (auto& m : TOSLoader) {
-    auto& [symname, sym] = m;
-    FFI_CALL_TOS_3(stk[0], reinterpret_cast<uintptr_t>(symname.c_str()),
+void STK___BootstrapForeachSymbol(void** stk) {
+  for (auto& [name, sym] : TOSLoader)
+    FFI_CALL_TOS_3(stk[0], reinterpret_cast<uintptr_t>(name.c_str()),
                    reinterpret_cast<uintptr_t>(sym.val),
                    sym.type == HTT_EXPORT_SYS_SYM ? HTT_FUN : sym.type);
-  }
 }
 
-static void STK_TOSPrint(intptr_t* stk) {
+void STK_TOSPrint(intptr_t* stk) {
   TOSPrint(reinterpret_cast<char*>(stk[0]), stk[1], stk + 2);
 }
 
-static void STK_DrawWindowUpdate(uintptr_t* stk) {
+void STK_DrawWindowUpdate(uintptr_t* stk) {
   DrawWindowUpdate(reinterpret_cast<uint8_t*>(stk[0]), stk[1]);
 }
 
-static uint64_t STK___GetTicksHP(void*) {
+uint64_t STK___GetTicksHP(void*) {
 #ifndef _WIN32
   struct timespec ts;
   uint64_t theTick = 0U;
@@ -301,47 +306,47 @@ static uint64_t STK___GetTicksHP(void*) {
 #endif
 }
 
-static uint64_t STK___GetTicks(void*) {
+uint64_t STK___GetTicks(void*) {
   return GetTicks();
 }
 
-static void STK_SetKBCallback(void** stk) {
+void STK_SetKBCallback(void** stk) {
   SetKBCallback(stk[0], stk[1]);
 }
 
-static void STK_SetMSCallback(void** stk) {
+void STK_SetMSCallback(void** stk) {
   SetMSCallback(stk[0]);
 }
 
-static void STK___AwakeCore(size_t* stk) {
+void STK___AwakeCore(size_t* stk) {
   AwakeFromSleeping(stk[0]);
 }
 
-static void STK___SleepHP(uint64_t* stk) {
+void STK___SleepHP(uint64_t* stk) {
   SleepHP(stk[0]);
 }
 
-static void STK___Sleep(uint64_t* stk) {
+void STK___Sleep(uint64_t* stk) {
   SleepHP(stk[0] * 1000);
 }
 
-static void STK_SetFs(void** stk) {
+void STK_SetFs(void** stk) {
   SetFs(stk[0]);
 }
 
-static void STK_SetGs(void** stk) {
+void STK_SetGs(void** stk) {
   SetGs(stk[0]);
 }
 
-static void STK_SndFreq(uint64_t* stk) {
+void STK_SndFreq(uint64_t* stk) {
   SndFreq(stk[0]);
 }
 
-static void STK_SetClipboardText(char** stk) {
+void STK_SetClipboardText(char** stk) {
   SetClipboard(stk[0]);
 }
 
-static char* STK___GetStr(char** stk) {
+char* STK___GetStr(char** stk) {
   char *s = linenoise(stk[0]), *r;
   if (s == nullptr)
     return nullptr;
@@ -351,117 +356,118 @@ static char* STK___GetStr(char** stk) {
   return r;
 }
 
-static char* STK_GetClipboardText(void*) {
+char* STK_GetClipboardText(void*) {
   std::string clip{ClipboardText()};
   return HolyStrDup(clip.c_str());
 }
 
-static uint64_t STK_FUnixTime(char** stk) {
+uint64_t STK_FUnixTime(char** stk) {
   return VFsUnixTime(stk[0]);
 }
 
-static void STK_VFsFTrunc(uintptr_t* stk) {
+void STK_VFsFTrunc(uintptr_t* stk) {
   fs::resize_file(VFsFileNameAbs(reinterpret_cast<char*>(stk[0])), stk[1]);
 }
 
-static uint64_t STK___FExists(char** stk) {
+uint64_t STK___FExists(char** stk) {
   return VFsFileExists(stk[0]);
 }
 
-static uint64_t STK_UnixNow(void*) {
+uint64_t STK_UnixNow(void*) {
   return system_clock::to_time_t(system_clock::now());
 }
 
-size_t mp_cnt(void*) {
-  return proc_cnt;
-}
-
-static void STK___SpawnCore(uintptr_t* stk) {
+void STK___SpawnCore(uintptr_t* stk) {
   CreateCore(stk[0], reinterpret_cast<void*>(stk[1]));
 }
 
-static void* STK_NewVirtualChunk(size_t* stk) {
+void* STK_NewVirtualChunk(size_t* stk) {
   return NewVirtualChunk(stk[0], stk[1]);
 }
 
-static void STK_FreeVirtualChunk(uintptr_t* stk) {
+void STK_FreeVirtualChunk(uintptr_t* stk) {
   FreeVirtualChunk(reinterpret_cast<void*>(stk[0]), stk[1]);
 }
 
-static void STK_VFsSetPwd(char** stk) {
+void STK_VFsSetPwd(char** stk) {
   VFsSetPwd(stk[0]);
 }
 
-static uint64_t STK_VFsExists(char** stk) {
+uint64_t STK_VFsExists(char** stk) {
   return VFsFileExists(stk[0]);
 }
 
-static uint64_t STK_VFsIsDir(char** stk) {
+uint64_t STK_VFsIsDir(char** stk) {
   return VFsIsDir(stk[0]);
 }
 
-static int64_t STK_VFsFSize(char** stk) {
+int64_t STK_VFsFSize(char** stk) {
   return VFsFSize(stk[0]);
 }
 
-static void* STK_VFsFRead(char** stk) {
+void* STK_VFsFRead(char** stk) {
   return VFsFileRead(stk[0], reinterpret_cast<uint64_t*>(stk[1]));
 }
 
-static uint64_t STK_VFsFWrite(char** stk) {
+uint64_t STK_VFsFWrite(char** stk) {
   return VFsFileWrite(stk[0], stk[1], reinterpret_cast<uintptr_t>(stk[2]));
 }
 
-static uint64_t STK_VFsDirMk(char** stk) {
+uint64_t STK_VFsDirMk(char** stk) {
   return VFsDirMk(stk[0], VFS_CDF_MAKE);
 }
 
-static char** STK_VFsDir(void*) {
+char** STK_VFsDir(void*) {
   return VFsDir();
 }
 
-static uint64_t STK_VFsDel(char** stk) {
+uint64_t STK_VFsDel(char** stk) {
   return VFsDel(stk[0]);
 }
 
-static FILE* STK_VFsFOpenW(char** stk) {
+FILE* VFsFOpen(char const* path, char const* m) {
+  std::string p = VFsFileNameAbs(path);
+  return fopen(p.c_str(), m);
+}
+
+FILE* STK_VFsFOpenW(char** stk) {
   return VFsFOpen(stk[0], "w+b");
 }
 
-static FILE* STK_VFsFOpenR(char** stk) {
+FILE* STK_VFsFOpenR(char** stk) {
   return VFsFOpen(stk[0], "rb");
 }
 
-static void STK_VFsFClose(FILE** stk) {
+void STK_VFsFClose(FILE** stk) {
   fclose(stk[0]);
 }
 
-static uint64_t STK_VFsFBlkRead(uintptr_t* stk) {
+uint64_t STK_VFsFBlkRead(uintptr_t* stk) {
   fflush(reinterpret_cast<FILE*>(stk[3]));
   return stk[2] == fread(reinterpret_cast<void*>(stk[0]), stk[1], stk[2],
                          reinterpret_cast<FILE*>(stk[3]));
 }
 
-static uint64_t STK_VFsFBlkWrite(uintptr_t* stk) {
+uint64_t STK_VFsFBlkWrite(uintptr_t* stk) {
   bool r = stk[2] == fwrite(reinterpret_cast<void*>(stk[0]), stk[1], stk[2],
                             reinterpret_cast<FILE*>(stk[3]));
   fflush(reinterpret_cast<FILE*>(stk[3]));
   return r;
 }
 
-static void STK_VFsFSeek(uintptr_t* stk) {
+void STK_VFsFSeek(uintptr_t* stk) {
   fseek(reinterpret_cast<FILE*>(stk[1]), stk[0], SEEK_SET);
 }
 
-static void STK_VFsSetDrv(char* stk) {
+void STK_VFsSetDrv(char* stk) {
   VFsSetDrv(stk[0]);
 }
 
-static uint64_t STK_VFsGetDrv(void*) {
+uint64_t STK_VFsGetDrv(void*) {
   return static_cast<uint64_t>(VFsGetDrv());
 }
 
-static void STK_SetVolume(uint64_t* stk) {
+void STK_SetVolume(uint64_t* stk) {
   union {
     uint64_t i;
     double flt;
@@ -469,7 +475,7 @@ static void STK_SetVolume(uint64_t* stk) {
   SetVolume(un.flt);
 }
 
-static uint64_t STK_GetVolume(void*) {
+uint64_t STK_GetVolume(void*) {
   union {
     double flt;
     uint64_t i;
@@ -477,13 +483,13 @@ static uint64_t STK_GetVolume(void*) {
   return un.i;
 }
 
-static void STK_ExitTINE(int* stk) {
+void STK_ExitTINE(int* stk) {
   ShutdownTINE(stk[0]);
 }
 
 // arity must be <= 0xffFF/sizeof U64
-static void RegisterFunctionPtr(std::string& blob, char const* name,
-                                uintptr_t fp, uint16_t arity) {
+void RegisterFunctionPtr(std::string& blob, char const* name, uintptr_t fp,
+                         uint16_t arity) {
   // Function entry point offset from the code blob
   uintptr_t off = blob.size();
   // https://defuse.ca/online-x86-assembler.htm
@@ -551,6 +557,8 @@ static void RegisterFunctionPtr(std::string& blob, char const* name,
   sym.val = reinterpret_cast<uint8_t*>(off);
   TOSLoader[name] = sym;
 }
+
+} // namespace
 
 void RegisterFuncPtrs() {
   std::string ffi_blob;
@@ -642,8 +650,8 @@ void RegisterFuncPtrs() {
   S_(_GrPaletteColorSet, 2);
   auto blob = VirtAlloc<char>(ffi_blob.size());
   std::copy(ffi_blob.begin(), ffi_blob.end(), blob);
-  for (auto& m : TOSLoader)
-    m.second.val += reinterpret_cast<ptrdiff_t>(blob);
+  for (auto& [name, sym] : TOSLoader)
+    sym.val += reinterpret_cast<ptrdiff_t>(blob);
 }
 
 // vim: set expandtab ts=2 sw=2 :

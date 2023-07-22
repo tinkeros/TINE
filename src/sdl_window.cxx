@@ -8,8 +8,10 @@
 
 #include <SDL2/SDL.h>
 
+namespace {
+
 static bool win_init = false;
-static struct CDrawWindow {
+struct CDrawWindow {
   SDL_mutex* screen_mutex;
   SDL_cond* screen_done_cond;
   SDL_Window* window;
@@ -33,72 +35,7 @@ static struct CDrawWindow {
   }
 } win;
 
-void SetClipboard(char const* text) {
-  SDL_SetClipboardText(text);
-}
-
-std::string const ClipboardText() {
-  char* sdl_clip = SDL_GetClipboardText();
-  if (sdl_clip == nullptr)
-    return {};
-  std::string s = sdl_clip;
-  SDL_free(sdl_clip);
-  if (sanitize_clipboard) {
-    /*std::erase_if(s, [](auto c) {
-      return ' ' - 1 > static_cast<uint8_t>(c);
-    }); C++20
-    below is the C++17 equivalent because reasons*/
-    auto it = std::remove_if(s.begin(), s.end(), [](auto c) {
-      // we dont want negative values here
-      // (TOS uses U8, UTF-8 on the host, etc)
-      return ' ' - 1 > static_cast<uint8_t>(c);
-    });
-    s.erase(it, s.end());
-  }
-  return s;
-}
-
-void NewDrawWindow() {
-  SDL_Init(SDL_INIT_EVERYTHING);
-  // sdl disables compositor in kde by default
-  SDL_SetHintWithPriority(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0",
-                          SDL_HINT_OVERRIDE);
-  SDL_SetHintWithPriority(SDL_HINT_RENDER_SCALE_QUALITY, "linear",
-                          SDL_HINT_OVERRIDE);
-  win_init = true;
-  win.screen_mutex = SDL_CreateMutex();
-  win.screen_done_cond = SDL_CreateCond();
-  win.window =
-      SDL_CreateWindow("TINE Is Not an Emulator", SDL_WINDOWPOS_CENTERED,
-                       SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_RESIZABLE);
-  SDL_Surface* icon = SDL_CreateRGBSurfaceWithFormat(
-      0, TINELogo.width, TINELogo.height,
-      8 /*bits in a byte*/ * TINELogo.bytes_per_pixel, SDL_PIXELFORMAT_RGBA32);
-  SDL_LockSurface(icon);
-  // icon->pixels = const_cast<void*>((void const*)TINELogo.pixel_data);
-  // whatever, just copy it over lmao
-  auto constexpr bytes =
-      TINELogo.width * TINELogo.height * TINELogo.bytes_per_pixel;
-  std::copy(TINELogo.pixel_data, TINELogo.pixel_data + bytes,
-            static_cast<uint8_t*>(icon->pixels));
-  SDL_UnlockSurface(icon);
-  SDL_SetWindowIcon(win.window, icon);
-  SDL_FreeSurface(icon);
-  win.surf = SDL_CreateRGBSurface(0, 640, 480, 8, 0, 0, 0, 0);
-  win.palette = SDL_AllocPalette(256);
-  SDL_SetSurfacePalette(win.surf, win.palette);
-  SDL_SetWindowMinimumSize(win.window, 640, 480);
-  win.rend = SDL_CreateRenderer(win.window, -1, SDL_RENDERER_ACCELERATED);
-  win.margin_y = win.margin_x = 0;
-  win.sz_x = 640;
-  win.sz_y = 480;
-  // let templeos manage the cursor
-  SDL_ShowCursor(SDL_DISABLE);
-}
-
-static void DrawWindowUpdate_EV(uint8_t* colors, uint64_t internal_width) {
-  if (!SDL_WasInit(SDL_INIT_EVERYTHING))
-    return;
+void DrawWindowUpdate_EV(uint8_t* colors, uint64_t internal_width) {
   if (!win_init)
     return;
   SDL_Surface* s = win.surf;
@@ -145,39 +82,19 @@ static void DrawWindowUpdate_EV(uint8_t* colors, uint64_t internal_width) {
   SDL_CondBroadcast(win.screen_done_cond);
 }
 
-void DrawWindowUpdate(uint8_t* colors, uintptr_t internal_width) {
-  // https://archive.md/yD5QL
-  SDL_Event event;
-  SDL_UserEvent userevent;
-
-  /* In this example, our callback
-  pushes an SDL_USEREVENT event into the
-  queue, and causes our callback to be
-  called again at the same interval: */
-
-  userevent.type = SDL_USEREVENT;
-  userevent.code = 0;
-  userevent.data1 = colors;
-  userevent.data2 = reinterpret_cast<void*>(internal_width);
-
-  event.type = SDL_USEREVENT;
-  event.user = userevent;
-
-  SDL_LockMutex(win.screen_mutex);
-  SDL_PushEvent(&event);
-  // If there are lots of events,it may
-  // get lost
-  SDL_CondWaitTimeout(win.screen_done_cond, win.screen_mutex, 30);
-  SDL_UnlockMutex(win.screen_mutex);
-  return;
-}
-
-static void UserEvHandler(SDL_UserEvent* ev) {
+void UserEvHandler(SDL_UserEvent* ev) {
   if (ev->type == SDL_USEREVENT)
     DrawWindowUpdate_EV(static_cast<uint8_t*>(ev->data1),
                         reinterpret_cast<uintptr_t>(ev->data2));
 }
 
+int ExitCb(void* off, SDL_Event* event) {
+  if (event->type == SDL_QUIT)
+    *static_cast<bool*>(off) = true;
+  return 0;
+}
+
+// yuck
 enum : uint8_t {
   CH_CTRLA = 0x01,
   CH_CTRLB = 0x02,
@@ -295,7 +212,7 @@ enum : uint8_t {
 };
 
 // this is templeos' keymap
-static char constexpr keys[] = {
+char constexpr keys[] = {
     0,   CH_ESC, '1',  '2', '3',  '4', '5', '6', '7', '8', '9', '0', '-',
     '=', '\b',   '\t', 'q', 'w',  'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
     '[', ']',    '\n', 0,   'a',  's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
@@ -312,7 +229,7 @@ static inline constexpr uint64_t K2SC(char ch) {
   __builtin_unreachable();
 }
 
-static int32_t ScanKey(uint64_t* sc, SDL_Event* ev) {
+int ScanKey(uint64_t* sc, SDL_Event* ev) {
   SDL_Event e = *ev;
   int64_t mod = 0;
   if (e.type == SDL_KEYDOWN) {
@@ -523,23 +440,16 @@ static void* kb_cb = nullptr;
 static void* kb_cb_data = nullptr;
 static bool kb_init = false;
 static bool ms_init = false;
-static int SDLCALL KBCallback(void*, SDL_Event* e) {
+int SDLCALL KBCallback(void*, SDL_Event* e) {
   uint64_t s;
   if (kb_cb && (-1 != ScanKey(&s, e)))
     FFI_CALL_TOS_2(kb_cb, 0 /*unused value*/, s);
   return 0;
 }
-void SetKBCallback(void* fptr, void* data) {
-  kb_cb = fptr;
-  kb_cb_data = data;
-  if (!kb_init) {
-    kb_init = true;
-    SDL_AddEventWatch(KBCallback, data);
-  }
-}
+
 // x,y,z,(l<<1)|r
 static void* ms_cb = nullptr;
-static int SDLCALL MSCallback(void*, SDL_Event* e) {
+int SDLCALL MSCallback(void*, SDL_Event* e) {
   static Sint32 x, y;
   static int state;
   static int z;
@@ -588,19 +498,7 @@ static int SDLCALL MSCallback(void*, SDL_Event* e) {
   return 0;
 }
 
-void SetMSCallback(void* fptr) {
-  ms_cb = fptr;
-  if (ms_init)
-    return;
-  ms_init = true;
-  SDL_AddEventWatch(MSCallback, nullptr);
-}
-
-static int ExitCb(void* off, SDL_Event* event) {
-  if (event->type == SDL_QUIT)
-    *static_cast<bool*>(off) = true;
-  return 0;
-}
+} // namespace
 
 void InputLoop(bool* off) {
   SDL_Event e;
@@ -613,19 +511,113 @@ void InputLoop(bool* off) {
   }
 }
 
-// please policeman am i under arrest? read me my rights please!
-// I WANT MY PHONE CALL!!!
-extern "C" union bgr_48 {
-  uint64_t i;
-  struct __attribute__((packed)) {
-    uint16_t b, g, r, pad;
-  };
-};
+void SetClipboard(char const* text) {
+  SDL_SetClipboardText(text);
+}
 
-void GrPaletteColorSet(uint64_t i, uint64_t bgr48) {
+std::string const ClipboardText() {
+  char* sdl_clip = SDL_GetClipboardText();
+  if (sdl_clip == nullptr)
+    return {};
+  std::string s = sdl_clip;
+  SDL_free(sdl_clip);
+  if (sanitize_clipboard) {
+    /*std::erase_if(s, [](auto c) {
+      return ' ' - 1 > static_cast<uint8_t>(c);
+    }); C++20
+    below is the C++17 equivalent because reasons*/
+    auto it = std::remove_if(s.begin(), s.end(), [](auto c) {
+      // we dont want negative values here
+      // (TOS uses U8, UTF-8 on the host, etc)
+      return ' ' - 1 > static_cast<uint8_t>(c);
+    });
+    s.erase(it, s.end());
+  }
+  return s;
+}
+
+void NewDrawWindow() {
+  SDL_Init(SDL_INIT_EVERYTHING);
+  // sdl disables compositor in kde by default
+  SDL_SetHintWithPriority(SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, "0",
+                          SDL_HINT_OVERRIDE);
+  SDL_SetHintWithPriority(SDL_HINT_RENDER_SCALE_QUALITY, "linear",
+                          SDL_HINT_OVERRIDE);
+  win_init = true;
+  win.screen_mutex = SDL_CreateMutex();
+  win.screen_done_cond = SDL_CreateCond();
+  win.window =
+      SDL_CreateWindow("TINE Is Not an Emulator", SDL_WINDOWPOS_CENTERED,
+                       SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_RESIZABLE);
+  SDL_Surface* icon = SDL_CreateRGBSurfaceWithFormat(
+      0, TINELogo.width, TINELogo.height,
+      8 /*bits in a byte*/ * TINELogo.bytes_per_pixel, SDL_PIXELFORMAT_RGBA32);
+  SDL_LockSurface(icon);
+  // icon->pixels = const_cast<void*>((void const*)TINELogo.pixel_data);
+  // whatever, just copy it over lmao
+  auto constexpr bytes =
+      TINELogo.width * TINELogo.height * TINELogo.bytes_per_pixel;
+  std::copy(TINELogo.pixel_data, TINELogo.pixel_data + bytes,
+            static_cast<uint8_t*>(icon->pixels));
+  SDL_UnlockSurface(icon);
+  SDL_SetWindowIcon(win.window, icon);
+  SDL_FreeSurface(icon);
+  win.surf = SDL_CreateRGBSurface(0, 640, 480, 8, 0, 0, 0, 0);
+  win.palette = SDL_AllocPalette(256);
+  SDL_SetSurfacePalette(win.surf, win.palette);
+  SDL_SetWindowMinimumSize(win.window, 640, 480);
+  win.rend = SDL_CreateRenderer(win.window, -1, SDL_RENDERER_ACCELERATED);
+  win.margin_y = win.margin_x = 0;
+  win.sz_x = 640;
+  win.sz_y = 480;
+  // let templeos manage the cursor
+  SDL_ShowCursor(SDL_DISABLE);
+}
+
+void DrawWindowUpdate(uint8_t* colors, uintptr_t internal_width) {
+  // https://archive.md/yD5QL
+  SDL_Event event;
+  SDL_UserEvent userevent;
+
+  /* our callback pushes an SDL_USEREVENT event into the
+  queue, and causes our callback to be
+  called again at the same interval: */
+
+  userevent.type = SDL_USEREVENT;
+  userevent.code = 0;
+  userevent.data1 = colors;
+  userevent.data2 = reinterpret_cast<void*>(internal_width);
+
+  event.type = SDL_USEREVENT;
+  event.user = userevent;
+
+  SDL_LockMutex(win.screen_mutex);
+  SDL_PushEvent(&event);
+  // If there are lots of events,it may get lost
+  SDL_CondWaitTimeout(win.screen_done_cond, win.screen_mutex, 30);
+  SDL_UnlockMutex(win.screen_mutex);
+}
+
+void SetKBCallback(void* fptr, void* data) {
+  kb_cb = fptr;
+  kb_cb_data = data;
+  if (kb_init)
+    return;
+  kb_init = true;
+  SDL_AddEventWatch(KBCallback, data);
+}
+
+void SetMSCallback(void* fptr) {
+  ms_cb = fptr;
+  if (ms_init)
+    return;
+  ms_init = true;
+  SDL_AddEventWatch(MSCallback, nullptr);
+}
+
+void GrPaletteColorSet(uint64_t i, bgr_48 u) {
   if (!win_init)
     return;
-  bgr_48 u = {bgr48};
   // clang-format off
   // 0xffff is 100% so 0x7fff/0xffff would be about .50
   // this gets multiplied by 0xff to get 0x7f

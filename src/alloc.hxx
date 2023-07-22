@@ -17,7 +17,7 @@ template <> struct size_of<void> {
 } // namespace detail
 
 template <class T = void, bool fill = false>
-__attribute__((always_inline)) inline T* HolyAlloc(size_t sz) {
+[[gnu::always_inline]] inline T* HolyAlloc(size_t sz) {
   // I demand a constexpr ternary right now
   if constexpr (fill)
     return static_cast<T*>(HolyCAlloc(detail::size_of<T>::sz * sz));
@@ -27,7 +27,7 @@ __attribute__((always_inline)) inline T* HolyAlloc(size_t sz) {
 
 // use with caution as its executable by default
 template <class T = void, bool exec = true>
-__attribute__((always_inline)) inline T* VirtAlloc(size_t sz) {
+[[gnu::always_inline]] inline T* VirtAlloc(size_t sz) {
   return static_cast<T*>(NewVirtualChunk(detail::size_of<T>::sz * sz, exec));
 }
 

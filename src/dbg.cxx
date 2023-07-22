@@ -9,7 +9,9 @@
 #include <errhandlingapi.h>
 // clang-format on
 
-static LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
+namespace {
+
+LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
   auto c = info->ExceptionRecord->ExceptionCode;
   switch (c) {
 #define FERR(code)       \
@@ -57,6 +59,7 @@ static LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
   FFI_CALL_TOS_2(fp, sig, reinterpret_cast<uintptr_t>(regs));
   return EXCEPTION_CONTINUE_EXECUTION;
 }
+} // namespace
 
 void SetupDebugger() {
   AddVectoredExceptionHandler(1, &VectorHandler);
@@ -67,7 +70,9 @@ void SetupDebugger() {
 #include <signal.h>
 #include <ucontext.h>
 
-static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
+namespace {
+
+void routine(int sig, siginfo_t*, ucontext_t* ctx) {
   BackTrace();
   uint64_t sig_i64 = sig;
 #ifdef __linux__
@@ -109,6 +114,7 @@ static void routine(int sig, siginfo_t*, ucontext_t* ctx) {
     fp = TOSLoader["DebuggerLand"].val;
   FFI_CALL_TOS_2(fp, sig_i64, reinterpret_cast<uintptr_t>(regs));
 }
+} // namespace
 
 void SetupDebugger() {
   struct sigaction inf;
