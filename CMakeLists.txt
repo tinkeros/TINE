@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
-# thank you justin
+# do not fuck crazy
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
   message(FATAL_ERROR "You cannot use CMake to build from the root of its source tree! Remove the CMakeCache.txt file and CMakeFiles directory from this directory, then create a separate directory (either below this directory or elsewhere), and then re-run CMake from there.")
 endif ()
@@ -17,7 +17,6 @@ project(tine
   LANGUAGES CXX C ASM
 )
 
-# set a default build type if none was specified
 set(default_build_type "Release")
 
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -47,13 +46,13 @@ file(GLOB C_EXECUTABLE_SRC src/*.c)
 set_source_files_properties(${CXX_EXECUTABLE_SRC}
   PROPERTIES
     LANGUAGE CXX
-    COMPILE_FLAGS -fno-rtti
+    COMPILE_FLAGS "-fno-rtti"
 )
 
 set_source_files_properties(${C_EXECUTABLE_SRC}
   PROPERTIES
     LANGUAGE C
-    COMPILE_FLAGS -Werror=implicit-function-declaration
+    COMPILE_FLAGS "-Werror=implicit-function-declaration -Wpedantic"
 )
 
 
@@ -70,7 +69,7 @@ set_target_properties(${PROJECT_NAME}
     CXX_EXTENSIONS YES
     C_STANDARD 11
     C_STANDARD_REQUIRED YES
-    C_EXTENSIONS YES
+    C_EXTENSIONS NO
     LINKER_LANGUAGE CXX
     INTERPROCEDURAL_OPTIMIZATION ON
     CXX_VISIBILITY_PRESET hidden
