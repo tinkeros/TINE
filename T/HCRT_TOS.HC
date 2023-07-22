@@ -93,8 +93,9 @@ CInit;
 U0 PutS(U8 *st)
 {//Use $LK,"Print",A="MN:Print"$(). See $LK,"Keyboard Devices",A="HI:Keyboard Devices/System"$.
 //Don't use this.  $LK,"See Print() shortcut.",A="FF:::/Doc/HolyC.DD,DemoHolyC"$
-  if( __IsCmdLine) {
+  if(__IsCmdLine) {
     TOSPrint("%s",st);
+    return;
   }
   I64 ch;
   U8 *ptr;
