@@ -3,10 +3,9 @@
 #include "tos_aot.hxx"
 
 #ifdef _WIN32
-
-// clang-format off
-#include <windows.h>
-#include <errhandlingapi.h>
+  // clang-format off
+  #include <windows.h>
+  #include <errhandlingapi.h>
 // clang-format on
 
 namespace {
@@ -14,27 +13,24 @@ namespace {
 LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
   auto c = info->ExceptionRecord->ExceptionCode;
   switch (c) {
-  #define FERR(code)     \
-  case EXCEPTION_##code: \
-    break;
-    FERR(ACCESS_VIOLATION);
-    FERR(ARRAY_BOUNDS_EXCEEDED);
-    FERR(DATATYPE_MISALIGNMENT);
-    FERR(FLT_DENORMAL_OPERAND);
-    FERR(FLT_DIVIDE_BY_ZERO);
-    FERR(FLT_INEXACT_RESULT);
-    FERR(FLT_INVALID_OPERATION);
-    FERR(FLT_OVERFLOW);
-    FERR(FLT_STACK_CHECK);
-    FERR(FLT_UNDERFLOW);
-    FERR(ILLEGAL_INSTRUCTION);
-    FERR(IN_PAGE_ERROR);
-    FERR(INT_DIVIDE_BY_ZERO);
-    FERR(INVALID_DISPOSITION);
-    FERR(STACK_OVERFLOW);
-    FERR(BREAKPOINT);
-  // https://archive.md/sZzVj
-  case STATUS_SINGLE_STEP:
+  #define FERR(code) case EXCEPTION_##code:
+    FERR(ACCESS_VIOLATION)
+    FERR(ARRAY_BOUNDS_EXCEEDED)
+    FERR(DATATYPE_MISALIGNMENT)
+    FERR(FLT_DENORMAL_OPERAND)
+    FERR(FLT_DIVIDE_BY_ZERO)
+    FERR(FLT_INEXACT_RESULT)
+    FERR(FLT_INVALID_OPERATION)
+    FERR(FLT_OVERFLOW)
+    FERR(FLT_STACK_CHECK)
+    FERR(FLT_UNDERFLOW)
+    FERR(ILLEGAL_INSTRUCTION)
+    FERR(IN_PAGE_ERROR)
+    FERR(INT_DIVIDE_BY_ZERO)
+    FERR(INVALID_DISPOSITION)
+    FERR(STACK_OVERFLOW)
+    FERR(BREAKPOINT)
+  case STATUS_SINGLE_STEP: // https://archive.md/sZzVj
     break;
   default:
     return EXCEPTION_CONTINUE_EXECUTION;
@@ -66,11 +62,11 @@ void SetupDebugger() {
 }
 
 #else
-
-  #include <signal.h>
   #include <ucontext.h>
 
   #include <initializer_list>
+
+  #include <signal.h>
 
 namespace {
 

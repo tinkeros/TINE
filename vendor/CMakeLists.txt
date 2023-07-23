@@ -31,6 +31,7 @@ target_compile_options(copts
     -fno-asynchronous-unwind-tables
     -fno-stack-protector
     -mno-shstk
+    -fcf-protection=none
 )
 target_link_libraries(dyad PRIVATE copts)
 target_link_libraries(argtable3 PRIVATE copts)

@@ -275,7 +275,7 @@ void BackTrace() {
 // the entire debug session not to mention
 // WhichFun() wont even be called in normal
 // circumstances
-#define str_dup(s) (strcpy(new (std::nothrow) char[strlen(s) + 1], s))
+#define STR_DUP_(s) (strcpy(new (std::nothrow) char[s.size() + 1], s.c_str()))
 
 // great when you use lldb and get a fault
 // (lldb) p (char*)WhichFun($pc)
@@ -298,11 +298,11 @@ void BackTrace() {
     if (curp == ptr) {
       std::cerr << sorted[idx] << std::endl;
     } else if (curp > ptr) {
-      return str_dup(last.c_str());
+      return STR_DUP_(last);
     }
     last = sorted[idx];
   }
-  return str_dup(last.c_str());
+  return STR_DUP_(last);
 }
 
 // vim: set expandtab ts=2 sw=2 :
