@@ -3,10 +3,9 @@
 #include "tos_aot.hxx"
 
 #ifdef _WIN32
-  // clang-format off
   #include <windows.h>
+  // fuck you bill gates, design your headers properly
   #include <errhandlingapi.h>
-// clang-format on
 
 namespace {
 
