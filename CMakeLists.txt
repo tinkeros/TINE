@@ -137,7 +137,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE SDL2::SDL2)
 target_include_directories(${PROJECT_NAME}
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/vendor
-    ${CMAKE_CURRENT_SOURCE_DIR}/asm
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR

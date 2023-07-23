@@ -6,4 +6,3 @@ clang
 -Wno-frame-address
 -Werror=shadow,implicit-function-declarations
 -Ivendor
--Iasm
