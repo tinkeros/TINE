@@ -84,37 +84,38 @@
 
 #ifdef _WIN32
 
-// clang-format off
+  // clang-format off
 #include <windows.h>
 #include <io.h>
 #include <conio.h>
 // clang-format on
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf // Microsoft headers use underscores in some names
-#endif
+  #if defined(_MSC_VER) && _MSC_VER < 1900
+    #define snprintf \
+      _snprintf // Microsoft headers use underscores in some names
+  #endif
 
-#if !defined GNUC
-#define strcasecmp _stricmp
-#endif
+  #if !defined GNUC
+    #define strcasecmp _stricmp
+  #endif
 
-#define strdup       _strdup
-#define isatty       _isatty
-#define write        _write
-#define STDIN_FILENO 0
+  #define strdup       _strdup
+  #define isatty       _isatty
+  #define write        _write
+  #define STDIN_FILENO 0
 
 #else /* _WIN32 */
 
-#include <cctype>
-#include <signal.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <termios.h>
-#include <unistd.h>
-#include <wctype.h>
+  #include <cctype>
+  #include <signal.h>
+  #include <stdint.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <sys/ioctl.h>
+  #include <sys/types.h>
+  #include <termios.h>
+  #include <unistd.h>
+  #include <wctype.h>
 
 #endif /* _WIN32 */
 
@@ -280,7 +281,7 @@ static int strncmp32(const char32_t* left, const char32_t* right, size_t len) {
 }
 
 #ifdef _WIN32
-#include <iostream>
+  #include <iostream>
 
 static size_t OutputWin(char16_t* text16, char32_t* text32, size_t len32) {
   size_t count16 = 0;
@@ -1815,8 +1816,8 @@ static char32_t linenoiseReadChar(void) {
   bool escSeen = false;
   while (true) {
     ReadConsoleInputW(console_in, &rec, 1, &count);
-#if 0 // helper for debugging keystrokes, display info in the debug "Output"
-      // window in the debugger
+  #if 0 // helper for debugging keystrokes, display info in the debug "Output"
+        // window in the debugger
         {
             if ( rec.EventType == KEY_EVENT ) {
                 //if ( rec.Event.KeyEvent.uChar.UnicodeChar ) {
@@ -1843,7 +1844,7 @@ static char32_t linenoiseReadChar(void) {
                 //}
             }
         }
-#endif
+  #endif
     if (rec.EventType != KEY_EVENT) {
       continue;
     }
@@ -1920,14 +1921,14 @@ static char32_t linenoiseReadChar(void) {
   if (c == 0)
     return 0;
 
-// If _DEBUG_LINUX_KEYBOARD is set, then ctrl-^ puts us into a keyboard
-// debugging mode
-// where we print out decimal and decoded values for whatever the "terminal"
-// program
-// gives us on different keystrokes.  Hit ctrl-C to exit this mode.
-//
-#define _DEBUG_LINUX_KEYBOARD
-#if defined(_DEBUG_LINUX_KEYBOARD)
+  // If _DEBUG_LINUX_KEYBOARD is set, then ctrl-^ puts us into a keyboard
+  // debugging mode
+  // where we print out decimal and decoded values for whatever the "terminal"
+  // program
+  // gives us on different keystrokes.  Hit ctrl-C to exit this mode.
+  //
+  #define _DEBUG_LINUX_KEYBOARD
+  #if defined(_DEBUG_LINUX_KEYBOARD)
   if (c == ctrlChar('^')) { // ctrl-^, special debug mode, prints all keys hit,
                             // ctrl-C to get out
     printf(
@@ -1978,13 +1979,13 @@ static char32_t linenoiseReadChar(void) {
       }
     }
   }
-#endif // _DEBUG_LINUX_KEYBOARD
+  #endif // _DEBUG_LINUX_KEYBOARD
 
   EscapeSequenceProcessing::thisKeyMetaCtrl =
       0; // no modifiers yet at initialDispatch
   return EscapeSequenceProcessing::doDispatch(
       c, EscapeSequenceProcessing::initialDispatch);
-#endif // #_WIN32
+#endif   // #_WIN32
 }
 
 /**

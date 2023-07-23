@@ -14,7 +14,7 @@ namespace {
 LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
   auto c = info->ExceptionRecord->ExceptionCode;
   switch (c) {
-#define FERR(code)       \
+  #define FERR(code)     \
   case EXCEPTION_##code: \
     break;
     FERR(ACCESS_VIOLATION);
@@ -40,7 +40,7 @@ LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
     return EXCEPTION_CONTINUE_EXECUTION;
   }
   CONTEXT* ctx = info->ContextRecord;
-#define REG(x) ctx->x
+  #define REG(x) ctx->x
   uint64_t regs[] = {
       REG(Rax),    REG(Rcx), REG(Rdx),
       REG(Rbx),    REG(Rsp), REG(Rbp),
@@ -67,16 +67,18 @@ void SetupDebugger() {
 
 #else
 
-#include <signal.h>
-#include <ucontext.h>
+  #include <signal.h>
+  #include <ucontext.h>
+
+  #include <initializer_list>
 
 namespace {
 
 void routine(int sig, siginfo_t*, ucontext_t* ctx) {
   BackTrace();
   uint64_t sig_i64 = sig;
-#ifdef __linux__
-#define REG(x) static_cast<uint64_t>(ctx->uc_mcontext.gregs[REG_##x])
+  #ifdef __linux__
+    #define REG(x) static_cast<uint64_t>(ctx->uc_mcontext.gregs[REG_##x])
   // clang-format off
   //
   // apparently ucontext is implementation defined idk
@@ -95,8 +97,8 @@ void routine(int sig, siginfo_t*, ucontext_t* ctx) {
       REG(R15), REG(RIP), (uintptr_t)ctx->uc_mcontext.fpregs,
       REG(EFL),
   };
-#elif defined(__FreeBSD__)
-#define REG(X) static_cast<uint64_t>(ctx->uc_mcontext.mc_##X)
+  #elif defined(__FreeBSD__)
+    #define REG(X) static_cast<uint64_t>(ctx->uc_mcontext.mc_##X)
   // freebsd seems to just use an
   // array of longs for their floating point context lmao
   uint64_t regs[] = {
@@ -108,7 +110,7 @@ void routine(int sig, siginfo_t*, ucontext_t* ctx) {
       REG(r15),    REG(rip), (uintptr_t)&ctx->uc_mcontext.mc_fpstate,
       REG(rflags),
   };
-#endif
+  #endif
   static void* fp = nullptr;
   if (fp == nullptr)
     fp = TOSLoader["DebuggerLand"].val;
@@ -122,10 +124,8 @@ void SetupDebugger() {
   // ugly piece of shit
   inf.sa_sigaction = (void (*)(int, siginfo_t*, void*))routine;
   sigemptyset(&inf.sa_mask);
-  sigaction(SIGTRAP, &inf, nullptr);
-  sigaction(SIGBUS, &inf, nullptr);
-  sigaction(SIGSEGV, &inf, nullptr);
-  sigaction(SIGFPE, &inf, nullptr);
+  for (auto i : {SIGTRAP, SIGBUS, SIGSEGV, SIGFPE})
+    sigaction(i, &inf, nullptr);
 }
 
 #endif

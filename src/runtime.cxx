@@ -1,14 +1,14 @@
-#include "runtime.hxx"
-#include "TOSPrint.hxx"
-#include "alloc.hxx"
-#include "ffi.h"
-#include "main.hxx"
-#include "mem.hxx"
-#include "multic.hxx"
-#include "sdl_window.hxx"
-#include "sound.h"
-#include "tos_aot.hxx"
-#include "vfs.hxx"
+#ifdef _WIN32
+// clang-format off
+  #include <winsock2.h>
+  #include <windows.h>
+  #include <winbase.h>
+  #include <memoryapi.h>
+// clang-format on
+#else
+  #include <signal.h>
+  #include <sys/mman.h>
+#endif
 
 #include <chrono>
 #include <filesystem>
@@ -16,17 +16,17 @@
 #include <stddef.h>
 #include <string.h>
 
-#ifdef _WIN32
-// clang-format off
-#include <winsock2.h>
-#include <windows.h>
-#include <winbase.h>
-#include <memoryapi.h>
-// clang-format on
-#else
-#include <signal.h>
-#include <sys/mman.h>
-#endif
+#include "TOSPrint.hxx"
+#include "alloc.hxx"
+#include "ffi.h"
+#include "main.hxx"
+#include "mem.hxx"
+#include "multic.hxx"
+#include "runtime.hxx"
+#include "sdl_window.hxx"
+#include "sound.h"
+#include "tos_aot.hxx"
+#include "vfs.hxx"
 
 #include "dyad.h"
 #include "linenoise-ng/linenoise.h"
@@ -459,7 +459,7 @@ void STK_VFsFSeek(uintptr_t* stk) {
   fseek(reinterpret_cast<FILE*>(stk[1]), stk[0], SEEK_SET);
 }
 
-void STK_VFsSetDrv(char* stk) {
+void STK_VFsSetDrv(uint8_t* stk) {
   VFsSetDrv(stk[0]);
 }
 
@@ -485,6 +485,10 @@ uint64_t STK_GetVolume(void*) {
 
 void STK_ExitTINE(int* stk) {
   ShutdownTINE(stk[0]);
+}
+
+uint64_t STK___IsCmdLine(void*) {
+  return static_cast<uint64_t>(is_cmd_line);
 }
 
 // arity must be <= 0xffFF/sizeof U64
@@ -574,11 +578,11 @@ void RegisterFuncPtrs() {
   RegisterFunctionPtr(ffi_blob, #name, \
                       reinterpret_cast<uintptr_t>(STK_##name), arity)
   R_("__CmdLineBootText", CmdLineBootText, 0);
-  R_("__IsCmdLine", IsCmdLine, 0);
   R_("mp_cnt", mp_cnt, 0);
   R_("__CoreNum", CoreNum, 0);
   R_("GetFs", GetFs, 0);
   R_("GetGs", GetGs, 0);
+  S_(__IsCmdLine, 0);
   S_(__IsValidPtr, 1);
   S_(__SpawnCore, 0);
   S_(UnixNow, 0);

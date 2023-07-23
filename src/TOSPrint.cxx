@@ -1,5 +1,3 @@
-#include "TOSPrint.hxx"
-
 #include <algorithm>
 #include <iostream>
 #include <string>
@@ -7,6 +5,8 @@
 #include <ctype.h>
 #include <inttypes.h>
 #include <string.h>
+
+#include "TOSPrint.hxx"
 
 namespace {
 char* UnescapeString(char* __restrict str, char* __restrict where) {
@@ -166,6 +166,10 @@ loop:;
 } // namespace
 
 void TOSPrint(char const* fmt, uint64_t argc, int64_t* argv) {
+  // C++20:
+  // #include <syncstream> up there
+  //
+  // std::osyncstream(std::cerr) << MStrPrint(fmt, argc, argv);
   (std::cerr << MStrPrint(fmt, argc, argv)).flush();
 }
 

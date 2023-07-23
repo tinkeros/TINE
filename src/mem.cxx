@@ -1,24 +1,22 @@
-#include "mem.hxx"
-#include "main.hxx"
+#ifndef _WIN32
+  #include <sys/mman.h>
+#else
+// clang-format off
+  #include <windows.h>
+  #include <memoryapi.h>
+// clang-format on
+extern DWORD dwAllocationGranularity;
+#endif
 
 #include <fstream>
 #include <string>
-
-using std::ios;
 
 #include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#ifndef _WIN32
-#include <sys/mman.h>
-#else
-// clang-format off
-#include <windows.h>
-#include <memoryapi.h>
-extern DWORD dwAllocationGranularity;
-// clang-format on
-#endif
+#include "main.hxx"
+#include "mem.hxx"
 
 #ifdef __linux__
 static inline uint64_t Hex2U64(char const* ptr, char const** res) {
@@ -36,6 +34,7 @@ static inline uint64_t Hex2U64(char const* ptr, char const** res) {
 
 void* NewVirtualChunk(size_t sz, bool low32) {
 #ifndef _WIN32
+  using std::ios;
   // explanation of (x+y-1)&~(y-1) on the bottom windows code
   // page_size is a power of 2 so this works
   size_t const padded_sz = (sz + page_size - 1) & ~(page_size - 1);
@@ -44,7 +43,7 @@ void* NewVirtualChunk(size_t sz, bool low32) {
     // MAP_32BIT is actually MAP_31BIT(which is actually lucky for us)
     ret = mmap(nullptr, padded_sz, PROT_EXEC | PROT_WRITE | PROT_READ,
                MAP_PRIVATE | MAP_ANON | MAP_32BIT, -1, 0);
-#ifdef __linux__
+  #ifdef __linux__
     if (ret == MAP_FAILED) {
       // side note: Linux doesn't seem to like allocating stuff below 31 bits
       // (<0x40000000). I don't know why so technically we have 1GB less space
@@ -78,7 +77,7 @@ void* NewVirtualChunk(size_t sz, bool low32) {
                  MAP_PRIVATE | MAP_ANON | MAP_FIXED, -1, 0);
     } else
       return ret;
-#endif
+  #endif
   } else // data heap
     ret = mmap(nullptr, padded_sz, PROT_WRITE | PROT_READ,
                MAP_PRIVATE | MAP_ANON, -1, 0);

@@ -46,8 +46,8 @@ extern "C" {
 #define ARG_CMD_DESCRIPTION_LEN 256
 
 #ifndef ARG_REPLACE_GETOPT
-#define ARG_REPLACE_GETOPT \
-  1    /* use the embedded getopt as the system getopt(3) */
+  #define ARG_REPLACE_GETOPT \
+    1  /* use the embedded getopt as the system getopt(3) */
 #endif /* ARG_REPLACE_GETOPT */
 
 /* bit masks for arg_hdr.flag */
@@ -58,15 +58,15 @@ enum {
 };
 
 #if defined(_WIN32)
-#if defined(argtable3_EXPORTS)
-#define ARG_EXTERN __declspec(dllexport)
-#elif defined(argtable3_IMPORTS)
-#define ARG_EXTERN __declspec(dllimport)
+  #if defined(argtable3_EXPORTS)
+    #define ARG_EXTERN __declspec(dllexport)
+  #elif defined(argtable3_IMPORTS)
+    #define ARG_EXTERN __declspec(dllimport)
+  #else
+    #define ARG_EXTERN
+  #endif
 #else
-#define ARG_EXTERN
-#endif
-#else
-#define ARG_EXTERN
+  #define ARG_EXTERN
 #endif
 
 typedef struct _internal_arg_dstr* arg_dstr_t;

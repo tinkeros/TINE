@@ -3,10 +3,10 @@
 #include <stddef.h>
 
 void ShutdownTINE(int);
-bool IsCmdLine();
 char const* CmdLineBootText();
 
 extern bool sanitize_clipboard;
+extern bool is_cmd_line;
 
 #ifndef _WIN32
 extern size_t page_size;

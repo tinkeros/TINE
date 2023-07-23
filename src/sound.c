@@ -1,9 +1,9 @@
-#include "sound.h"
-
 #include <SDL2/SDL.h>
 
 #include <math.h>
 #include <stdint.h>
+
+#include "sound.h"
 
 static SDL_AudioDeviceID output;
 static uint64_t sample, freq;

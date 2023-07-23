@@ -12,7 +12,7 @@
 #include <stdint.h>
 
 #ifdef _WIN32
-#include <windows.h> /* For SOCKET */
+  #include <windows.h> /* For SOCKET */
 #endif
 
 #ifdef __cplusplus

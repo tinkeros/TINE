@@ -65,16 +65,16 @@
  ******************************************************************************/
 
 #ifndef ARG_UTILS_H
-#define ARG_UTILS_H
+  #define ARG_UTILS_H
 
-#include <stdlib.h>
+  #include <stdlib.h>
 
-#define ARG_ENABLE_TRACE 0
-#define ARG_ENABLE_LOG   1
+  #define ARG_ENABLE_TRACE 0
+  #define ARG_ENABLE_LOG   1
 
-#ifdef __cplusplus
+  #ifdef __cplusplus
 extern "C" {
-#endif
+  #endif
 
 enum {
   ARG_ERR_MINCOUNT = 1,
@@ -88,45 +88,45 @@ enum {
 
 typedef void(arg_panicfn)(const char* fmt, ...);
 
-#if defined(_MSC_VER)
-#define ARG_TRACE(x)                                             \
-  __pragma(warning(push)) __pragma(warning(disable : 4127)) do { \
-    if (ARG_ENABLE_TRACE)                                        \
-      dbg_printf x;                                              \
-  }                                                              \
-  while (0)                                                      \
-  __pragma(warning(pop))
+  #if defined(_MSC_VER)
+    #define ARG_TRACE(x)                                             \
+      __pragma(warning(push)) __pragma(warning(disable : 4127)) do { \
+        if (ARG_ENABLE_TRACE)                                        \
+          dbg_printf x;                                              \
+      }                                                              \
+      while (0)                                                      \
+      __pragma(warning(pop))
 
-#define ARG_LOG(x)                                               \
-  __pragma(warning(push)) __pragma(warning(disable : 4127)) do { \
-    if (ARG_ENABLE_LOG)                                          \
-      dbg_printf x;                                              \
-  }                                                              \
-  while (0)                                                      \
-  __pragma(warning(pop))
-#else
-#define ARG_TRACE(x)      \
-  do {                    \
-    if (ARG_ENABLE_TRACE) \
-      dbg_printf x;       \
-  } while (0)
+    #define ARG_LOG(x)                                               \
+      __pragma(warning(push)) __pragma(warning(disable : 4127)) do { \
+        if (ARG_ENABLE_LOG)                                          \
+          dbg_printf x;                                              \
+      }                                                              \
+      while (0)                                                      \
+      __pragma(warning(pop))
+  #else
+    #define ARG_TRACE(x)      \
+      do {                    \
+        if (ARG_ENABLE_TRACE) \
+          dbg_printf x;       \
+      } while (0)
 
-#define ARG_LOG(x)      \
-  do {                  \
-    if (ARG_ENABLE_LOG) \
-      dbg_printf x;     \
-  } while (0)
-#endif
+    #define ARG_LOG(x)      \
+      do {                  \
+        if (ARG_ENABLE_LOG) \
+          dbg_printf x;     \
+      } while (0)
+  #endif
 
-/*
- * Rename a few generic names to unique names.
- * They can be a problem for the platforms like NuttX, where
- * the namespace is flat for everything including apps and libraries.
- */
-#define xmalloc  argtable3_xmalloc
-#define xcalloc  argtable3_xcalloc
-#define xrealloc argtable3_xrealloc
-#define xfree    argtable3_xfree
+  /*
+   * Rename a few generic names to unique names.
+   * They can be a problem for the platforms like NuttX, where
+   * the namespace is flat for everything including apps and libraries.
+   */
+  #define xmalloc  argtable3_xmalloc
+  #define xcalloc  argtable3_xcalloc
+  #define xrealloc argtable3_xrealloc
+  #define xfree    argtable3_xfree
 
 extern void dbg_printf(const char* fmt, ...);
 extern void arg_set_panic(arg_panicfn* proc);
@@ -180,10 +180,10 @@ arg_hashtable_t* arg_hashtable_create(unsigned int minsize,
  */
 void arg_hashtable_insert(arg_hashtable_t* h, void* k, void* v);
 
-#define ARG_DEFINE_HASHTABLE_INSERT(fnname, keytype, valuetype) \
-  int fnname(arg_hashtable_t* h, keytype* k, valuetype* v) {    \
-    return arg_hashtable_insert(h, k, v);                       \
-  }
+  #define ARG_DEFINE_HASHTABLE_INSERT(fnname, keytype, valuetype) \
+    int fnname(arg_hashtable_t* h, keytype* k, valuetype* v) {    \
+      return arg_hashtable_insert(h, k, v);                       \
+    }
 
 /**
  * @brief Search the specified key in the hash table.
@@ -194,10 +194,10 @@ void arg_hashtable_insert(arg_hashtable_t* h, void* k, void* v);
  */
 void* arg_hashtable_search(arg_hashtable_t* h, const void* k);
 
-#define ARG_DEFINE_HASHTABLE_SEARCH(fnname, keytype, valuetype) \
-  valuetype* fnname(arg_hashtable_t* h, keytype* k) {           \
-    return (valuetype*)(arg_hashtable_search(h, k));            \
-  }
+  #define ARG_DEFINE_HASHTABLE_SEARCH(fnname, keytype, valuetype) \
+    valuetype* fnname(arg_hashtable_t* h, keytype* k) {           \
+      return (valuetype*)(arg_hashtable_search(h, k));            \
+    }
 
 /**
  * @brief Remove the specified key from the hash table.
@@ -207,8 +207,8 @@ void* arg_hashtable_search(arg_hashtable_t* h, const void* k);
  */
 void arg_hashtable_remove(arg_hashtable_t* h, const void* k);
 
-#define ARG_DEFINE_HASHTABLE_REMOVE(fnname, keytype, valuetype) \
-  void fnname(arg_hashtable_t* h, keytype* k) { arg_hashtable_remove(h, k); }
+  #define ARG_DEFINE_HASHTABLE_REMOVE(fnname, keytype, valuetype) \
+    void fnname(arg_hashtable_t* h, keytype* k) { arg_hashtable_remove(h, k); }
 
 /**
  * @brief Return the number of keys in the hash table.
@@ -281,14 +281,14 @@ int arg_hashtable_itr_remove(arg_hashtable_itr_t* itr);
 int arg_hashtable_itr_search(arg_hashtable_itr_t* itr, arg_hashtable_t* h,
                              void* k);
 
-#define ARG_DEFINE_HASHTABLE_ITERATOR_SEARCH(fnname, keytype)          \
-  int fnname(arg_hashtable_itr_t* i, arg_hashtable_t* h, keytype* k) { \
-    return (arg_hashtable_iterator_search(i, h, k));                   \
-  }
+  #define ARG_DEFINE_HASHTABLE_ITERATOR_SEARCH(fnname, keytype)          \
+    int fnname(arg_hashtable_itr_t* i, arg_hashtable_t* h, keytype* k) { \
+      return (arg_hashtable_iterator_search(i, h, k));                   \
+    }
 
-#ifdef __cplusplus
+  #ifdef __cplusplus
 }
-#endif
+  #endif
 
 #endif
 /*******************************************************************************
@@ -326,7 +326,7 @@ int arg_hashtable_itr_search(arg_hashtable_itr_t* itr, arg_hashtable_t* h,
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdarg.h>
@@ -353,12 +353,12 @@ static void panic(const char* fmt, ...) {
   va_end(args);
 
 #if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4996)
+  #pragma warning(push)
+  #pragma warning(disable : 4996)
 #endif
   s = getenv("EF_DUMPCORE");
 #if defined(_MSC_VER)
-#pragma warning(pop)
+  #pragma warning(pop)
 #endif
 
   if (s != NULL && *s != '\0') {
@@ -504,7 +504,7 @@ void arg_mgsort(void* data, int size, int esize, int i, int k,
  ******************************************************************************/
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <math.h>
@@ -938,7 +938,7 @@ int arg_hashtable_change(arg_hashtable_t* h, void* k, void* v) {
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdarg.h>
@@ -946,8 +946,8 @@ int arg_hashtable_change(arg_hashtable_t* h, void* k, void* v) {
 #include <string.h>
 
 #if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4996)
+  #pragma warning(push)
+  #pragma warning(disable : 4996)
 #endif
 
 #define START_VSNBUFF 16
@@ -1242,7 +1242,7 @@ void arg_dstr_reset(arg_dstr_t ds) {
 }
 
 #if defined(_MSC_VER)
-#pragma warning(pop)
+  #pragma warning(pop)
 #endif
 /*	$NetBSD: getopt.h,v 1.4 2000/07/07 10:43:54 ad Exp $	*/
 /*	$FreeBSD$ */
@@ -1280,16 +1280,16 @@ void arg_dstr_reset(arg_dstr_t ds) {
 
 #if ARG_REPLACE_GETOPT == 1
 
-#ifndef _GETOPT_H_
-#define _GETOPT_H_
+  #ifndef _GETOPT_H_
+    #define _GETOPT_H_
 
-/*
- * GNU-like getopt_long()/getopt_long_only() with 4.4BSD optreset extension.
- * getopt() is declared here too for GNU programs.
- */
-#define no_argument       0
-#define required_argument 1
-#define optional_argument 2
+    /*
+     * GNU-like getopt_long()/getopt_long_only() with 4.4BSD optreset extension.
+     * getopt() is declared here too for GNU programs.
+     */
+    #define no_argument       0
+    #define required_argument 1
+    #define optional_argument 2
 
 struct option {
   /* name of long option */
@@ -1305,30 +1305,30 @@ struct option {
   int val;
 };
 
-#ifdef __cplusplus
+    #ifdef __cplusplus
 extern "C" {
-#endif
+    #endif
 
 int getopt_long(int, char* const*, const char*, const struct option*, int*);
 int getopt_long_only(int, char* const*, const char*, const struct option*,
                      int*);
-#ifndef _GETOPT_DECLARED
-#define _GETOPT_DECLARED
+    #ifndef _GETOPT_DECLARED
+      #define _GETOPT_DECLARED
 int getopt(int, char* const[], const char*);
 
 extern char* optarg; /* getopt(3) external variables */
 extern int optind, opterr, optopt;
-#endif
-#ifndef _OPTRESET_DECLARED
-#define _OPTRESET_DECLARED
+    #endif
+    #ifndef _OPTRESET_DECLARED
+      #define _OPTRESET_DECLARED
 extern int optreset; /* getopt(3) external variable */
-#endif
+    #endif
 
-#ifdef __cplusplus
+    #ifdef __cplusplus
 }
-#endif
+    #endif
 
-#endif /* !_GETOPT_H_ */
+  #endif /* !_GETOPT_H_ */
 
 #endif /* ARG_REPLACE_GETOPT == 1 */
 /*	$OpenBSD: getopt_long.c,v 1.26 2013/06/08 22:47:56 millert Exp $	*/
@@ -1386,15 +1386,15 @@ extern int optreset; /* getopt(3) external variable */
 
 #if ARG_REPLACE_GETOPT == 1
 
-#ifndef ARG_AMALGAMATION
-#include "arg_getopt.h"
-#endif
+  #ifndef ARG_AMALGAMATION
+    #include "arg_getopt.h"
+  #endif
 
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
+  #include <errno.h>
+  #include <stdlib.h>
+  #include <string.h>
 
-#define GNU_COMPATIBLE /* Be more compatible, configure's use us! */
+  #define GNU_COMPATIBLE /* Be more compatible, configure's use us! */
 
 int opterr = 1;   /* if error message should be printed */
 int optind = 1;   /* index into parent argv vector */
@@ -1402,25 +1402,25 @@ int optopt = '?'; /* character checked for validity */
 int optreset;     /* reset getopt */
 char* optarg;     /* argument associated with option */
 
-#define PRINT_ERROR   ((opterr) && (*options != ':'))
+  #define PRINT_ERROR   ((opterr) && (*options != ':'))
 
-#define FLAG_PERMUTE  0x01 /* permute non-options to the end of argv */
-#define FLAG_ALLARGS  0x02 /* treat non-options as args to option "-1" */
-#define FLAG_LONGONLY 0x04 /* operate as getopt_long_only */
+  #define FLAG_PERMUTE  0x01 /* permute non-options to the end of argv */
+  #define FLAG_ALLARGS  0x02 /* treat non-options as args to option "-1" */
+  #define FLAG_LONGONLY 0x04 /* operate as getopt_long_only */
 
-/* return values */
-#define BADCH   (int)'?'
-#define BADARG  ((*options == ':') ? (int)':' : (int)'?')
-#define INORDER (int)1
+  /* return values */
+  #define BADCH   (int)'?'
+  #define BADARG  ((*options == ':') ? (int)':' : (int)'?')
+  #define INORDER (int)1
 
-#define EMSG    ""
+  #define EMSG    ""
 
-#ifdef GNU_COMPATIBLE
-#define NO_PREFIX (-1)
-#define D_PREFIX  0
-#define DD_PREFIX 1
-#define W_PREFIX  2
-#endif
+  #ifdef GNU_COMPATIBLE
+    #define NO_PREFIX (-1)
+    #define D_PREFIX  0
+    #define DD_PREFIX 1
+    #define W_PREFIX  2
+  #endif
 
 static int getopt_internal(int, char* const*, const char*, const struct option*,
                            int*, int);
@@ -1438,7 +1438,7 @@ static int nonopt_end = -1;   /* first option after non options (for permute) */
 /* Error messages */
 static const char recargchar[] = "option requires an argument -- %c";
 static const char illoptchar[] = "illegal option -- %c"; /* From P1003.2 */
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
 static int dash_prefix = NO_PREFIX;
 static const char gnuoptchar[] = "invalid option -- %c";
 
@@ -1446,27 +1446,27 @@ static const char recargstring[] = "option `%s%s' requires an argument";
 static const char ambig[] = "option `%s%.*s' is ambiguous";
 static const char noarg[] = "option `%s%.*s' doesn't allow an argument";
 static const char illoptstring[] = "unrecognized option `%s%s'";
-#else
+  #else
 static const char recargstring[] = "option requires an argument -- %s";
 static const char ambig[] = "ambiguous option -- %.*s";
 static const char noarg[] = "option doesn't take an argument -- %.*s";
 static const char illoptstring[] = "unknown option -- %s";
-#endif
+  #endif
 
-#ifdef _WIN32
+  #ifdef _WIN32
 
-/*
- * Windows needs warnx().  We change the definition though:
- *  1. (another) global is defined, opterrmsg, which holds the error message
- *  2. errors are always printed out on stderr w/o the program name
- * Note that opterrmsg always gets set no matter what opterr is set to.  The
- * error message will not be printed if opterr is 0 as usual.
- */
+  /*
+   * Windows needs warnx().  We change the definition though:
+   *  1. (another) global is defined, opterrmsg, which holds the error message
+   *  2. errors are always printed out on stderr w/o the program name
+   * Note that opterrmsg always gets set no matter what opterr is set to.  The
+   * error message will not be printed if opterr is 0 as usual.
+   */
 
-#include <stdarg.h>
-#include <stdio.h>
+    #include <stdarg.h>
+    #include <stdio.h>
 
-#define MAX_OPTERRMSG_SIZE 128
+    #define MAX_OPTERRMSG_SIZE 128
 
 extern char opterrmsg[MAX_OPTERRMSG_SIZE];
 char opterrmsg[MAX_OPTERRMSG_SIZE]; /* buffer for the last error message */
@@ -1481,24 +1481,24 @@ static void warnx(const char* fmt, ...) {
    */
   memset(opterrmsg, 0, sizeof(opterrmsg));
   if (fmt != NULL)
-#if (defined(__STDC_LIB_EXT1__) && defined(__STDC_WANT_LIB_EXT1__)) || \
-    (defined(__STDC_SECURE_LIB__) && defined(__STDC_WANT_SECURE_LIB__))
+    #if (defined(__STDC_LIB_EXT1__) && defined(__STDC_WANT_LIB_EXT1__)) || \
+        (defined(__STDC_SECURE_LIB__) && defined(__STDC_WANT_SECURE_LIB__))
     _vsnprintf_s(opterrmsg, sizeof(opterrmsg), sizeof(opterrmsg) - 1, fmt, ap);
-#else
+    #else
     _vsnprintf(opterrmsg, sizeof(opterrmsg) - 1, fmt, ap);
-#endif
+    #endif
 
   va_end(ap);
 
-#ifdef _MSC_VER
-#pragma warning(suppress : 6053)
-#endif
+    #ifdef _MSC_VER
+      #pragma warning(suppress : 6053)
+    #endif
   fprintf(stderr, "%s\n", opterrmsg);
 }
 
-#else
-#include <err.h>
-#endif /*_WIN32*/
+  #else
+    #include <err.h>
+  #endif /*_WIN32*/
 /*
  * Compute the greatest common divisor of a and b.
  */
@@ -1559,14 +1559,14 @@ static int parse_long_options(char* const* nargv, const char* options,
                               const struct option* long_options, int* idx,
                               int short_too, int flags) {
   char *current_argv, *has_equal;
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
   char* current_dash;
-#endif
+  #endif
   size_t current_argv_len;
   int i, match, exact_match, second_partial_match;
 
   current_argv = place;
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
   switch (dash_prefix) {
   case D_PREFIX:
     current_dash = "-";
@@ -1581,7 +1581,7 @@ static int parse_long_options(char* const* nargv, const char* options,
     current_dash = "";
     break;
   }
-#endif
+  #endif
   match = -1;
   exact_match = 0;
   second_partial_match = 0;
@@ -1625,9 +1625,9 @@ static int parse_long_options(char* const* nargv, const char* options,
     /* ambiguous abbreviation */
     if (PRINT_ERROR)
       warnx(ambig,
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
             current_dash,
-#endif
+  #endif
             (int)current_argv_len, current_argv);
     optopt = 0;
     return (BADCH);
@@ -1636,9 +1636,9 @@ static int parse_long_options(char* const* nargv, const char* options,
     if (long_options[match].has_arg == no_argument && has_equal) {
       if (PRINT_ERROR)
         warnx(noarg,
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
               current_dash,
-#endif
+  #endif
               (int)current_argv_len, current_argv);
       /*
        * XXX: GNU sets optopt to val regardless of flag
@@ -1647,11 +1647,11 @@ static int parse_long_options(char* const* nargv, const char* options,
         optopt = long_options[match].val;
       else
         optopt = 0;
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
       return (BADCH);
-#else
+  #else
       return (BADARG);
-#endif
+  #endif
     }
     if (long_options[match].has_arg == required_argument ||
         long_options[match].has_arg == optional_argument) {
@@ -1672,9 +1672,9 @@ static int parse_long_options(char* const* nargv, const char* options,
        */
       if (PRINT_ERROR)
         warnx(recargstring,
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
               current_dash,
-#endif
+  #endif
               current_argv);
       /*
        * XXX: GNU sets optopt to val regardless of flag
@@ -1693,9 +1693,9 @@ static int parse_long_options(char* const* nargv, const char* options,
     }
     if (PRINT_ERROR)
       warnx(illoptstring,
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
             current_dash,
-#endif
+  #endif
             current_argv);
     optopt = 0;
     return (BADCH);
@@ -1735,15 +1735,15 @@ static int getopt_internal(int nargc, char* const* nargv, const char* options,
    * string begins with a '+'.
    */
   if (posixly_correct == -1 || optreset) {
-#if defined(_WIN32) &&                                                  \
-    ((defined(__STDC_LIB_EXT1__) && defined(__STDC_WANT_LIB_EXT1__)) || \
-     (defined(__STDC_SECURE_LIB__) && defined(__STDC_WANT_SECURE_LIB__)))
+  #if defined(_WIN32) &&                                                  \
+      ((defined(__STDC_LIB_EXT1__) && defined(__STDC_WANT_LIB_EXT1__)) || \
+       (defined(__STDC_SECURE_LIB__) && defined(__STDC_WANT_SECURE_LIB__)))
     size_t requiredSize;
     getenv_s(&requiredSize, NULL, 0, "POSIXLY_CORRECT");
     posixly_correct = requiredSize != 0;
-#else
+  #else
     posixly_correct = (getenv("POSIXLY_CORRECT") != NULL);
-#endif
+  #endif
   }
 
   if (*options == '-')
@@ -1776,11 +1776,11 @@ start:
       return (-1);
     }
     if (*(place = nargv[optind]) != '-' ||
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
         place[1] == '\0') {
-#else
+  #else
         (place[1] == '\0' && strchr(options, '-') == NULL)) {
-#endif
+  #endif
       place = EMSG; /* found non-option */
       if (flags & FLAG_ALLARGS) {
         /*
@@ -1840,16 +1840,16 @@ start:
   if (long_options != NULL && place != nargv[optind] &&
       (*place == '-' || (flags & FLAG_LONGONLY))) {
     short_too = 0;
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
     dash_prefix = D_PREFIX;
-#endif
+  #endif
     if (*place == '-') {
       place++; /* --foo long option */
       if (*place == '\0')
         return (BADARG); /* malformed option */
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
       dash_prefix = DD_PREFIX;
-#endif
+  #endif
     } else if (*place != ':' && strchr(options, *place) != NULL)
       short_too = 1; /* could be short option too */
 
@@ -1873,13 +1873,13 @@ start:
       return (-1);
     if (!*place)
       ++optind;
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
     if (PRINT_ERROR)
       warnx(posixly_correct ? illoptchar : gnuoptchar, optchar);
-#else
+  #else
     if (PRINT_ERROR)
       warnx(illoptchar, optchar);
-#endif
+  #endif
     optopt = optchar;
     return (BADCH);
   }
@@ -1895,9 +1895,9 @@ start:
       return (BADARG);
     } else /* white space */
       place = nargv[optind];
-#ifdef GNU_COMPATIBLE
+  #ifdef GNU_COMPATIBLE
     dash_prefix = W_PREFIX;
-#endif
+  #endif
     optchar = parse_long_options(nargv, options, long_options, idx, 0, flags);
     place = EMSG;
     return (optchar);
@@ -2003,7 +2003,7 @@ int getopt_long_only(int nargc, char* const* nargv, const char* options,
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdlib.h>
@@ -2585,7 +2585,7 @@ static int conv_num(const char** buf, int* dest, int llim, int ulim) {
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdlib.h>
@@ -2754,7 +2754,7 @@ struct arg_dbl* arg_dbln(const char* shortopts, const char* longopts,
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdlib.h>
@@ -2891,18 +2891,18 @@ void arg_print_errors(FILE* fp, struct arg_end* end, const char* progname) {
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef WIN32
-#define FILESEPARATOR1 '\\'
-#define FILESEPARATOR2 '/'
+  #define FILESEPARATOR1 '\\'
+  #define FILESEPARATOR2 '/'
 #else
-#define FILESEPARATOR1 '/'
-#define FILESEPARATOR2 '/'
+  #define FILESEPARATOR1 '/'
+  #define FILESEPARATOR2 '/'
 #endif
 
 static void arg_file_resetfn(struct arg_file* parent) {
@@ -3115,7 +3115,7 @@ struct arg_file* arg_filen(const char* shortopts, const char* longopts,
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <ctype.h>
@@ -3417,7 +3417,7 @@ struct arg_int* arg_intn(const char* shortopts, const char* longopts,
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdlib.h>
@@ -3543,7 +3543,7 @@ struct arg_lit* arg_litn(const char* shortopts, const char* longopts,
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdlib.h>
@@ -3602,14 +3602,14 @@ struct arg_rem* arg_rem_(const char* datatype, const char* glossary) {
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdlib.h>
 #include <string.h>
 
 #ifndef _TREX_H_
-#define _TREX_H_
+  #define _TREX_H_
 
 /*
  * This module uses the T-Rex regular expression library to implement the regex
@@ -3638,24 +3638,24 @@ struct arg_rem* arg_rem_(const char* datatype, const char* glossary) {
  *      source distribution.
  */
 
-#ifdef __cplusplus
+  #ifdef __cplusplus
 extern "C" {
-#endif
+  #endif
 
-#define TRexChar    char
-#define MAX_CHAR    0xFF
-#define _TREXC(c)   (c)
-#define trex_strlen strlen
-#define trex_printf printf
+  #define TRexChar    char
+  #define MAX_CHAR    0xFF
+  #define _TREXC(c)   (c)
+  #define trex_strlen strlen
+  #define trex_printf printf
 
-#ifndef TREX_API
-#define TREX_API extern
-#endif
+  #ifndef TREX_API
+    #define TREX_API extern
+  #endif
 
-#define TRex_True  1
-#define TRex_False 0
+  #define TRex_True  1
+  #define TRex_False 0
 
-#define TREX_ICASE ARG_REX_ICASE
+  #define TREX_ICASE ARG_REX_ICASE
 
 typedef unsigned int TRexBool;
 typedef struct TRex TRex;
@@ -3665,16 +3665,16 @@ typedef struct {
   int len;
 } TRexMatch;
 
-#ifdef __clang__
+  #ifdef __clang__
 TREX_API TRex* trex_compile(const TRexChar* pattern, const TRexChar** error,
                             int flags) __attribute__((optnone));
-#elif defined(__GNUC__)
+  #elif defined(__GNUC__)
 TREX_API TRex* trex_compile(const TRexChar* pattern, const TRexChar** error,
                             int flags) __attribute__((optimize(0)));
-#else
+  #else
 TREX_API TRex* trex_compile(const TRexChar* pattern, const TRexChar** error,
                             int flags);
-#endif
+  #endif
 TREX_API void trex_free(TRex* exp);
 TREX_API TRexBool trex_match(TRex* exp, const TRexChar* text);
 TREX_API TRexBool trex_search(TRex* exp, const TRexChar* text,
@@ -3687,9 +3687,9 @@ TREX_API TRexBool trex_searchrange(TRex* exp, const TRexChar* text_begin,
 TREX_API int trex_getsubexpcount(TRex* exp);
 TREX_API TRexBool trex_getsubexp(TRex* exp, int n, TRexMatch* subexp);
 
-#ifdef __cplusplus
+  #ifdef __cplusplus
 }
-#endif
+  #endif
 
 #endif
 
@@ -3884,19 +3884,19 @@ struct arg_rex* arg_rexn(const char* shortopts, const char* longopts,
 #include <string.h>
 
 #ifdef _UINCODE
-#define scisprint iswprint
-#define scstrlen  wcslen
-#define scprintf  wprintf
-#define _SC(x)    L(x)
+  #define scisprint iswprint
+  #define scstrlen  wcslen
+  #define scprintf  wprintf
+  #define _SC(x)    L(x)
 #else
-#define scisprint isprint
-#define scstrlen  strlen
-#define scprintf  printf
-#define _SC(x)    (x)
+  #define scisprint isprint
+  #define scstrlen  strlen
+  #define scprintf  printf
+  #define _SC(x)    (x)
 #endif
 
 #ifdef ARG_REX_DEBUG
-#include <stdio.h>
+  #include <stdio.h>
 
 static const TRexChar* g_nnames[] = {
     _SC("NONE"),         _SC("OP_GREEDY"), _SC("OP_OR"),    _SC("OP_EXPR"),
@@ -4646,7 +4646,7 @@ TRexBool trex_getsubexp(TRex* exp, int n, TRexMatch* subexp) {
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <stdlib.h>
@@ -4800,7 +4800,7 @@ struct arg_str* arg_strn(const char* shortopts, const char* longopts,
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
+  #include "argtable3_private.h"
 #endif
 
 #include <assert.h>
@@ -5092,22 +5092,22 @@ int arg_make_syntax_err_help_msg(arg_dstr_t ds, char* name, int help,
 #include "argtable3.h"
 
 #ifndef ARG_AMALGAMATION
-#include "argtable3_private.h"
-#if ARG_REPLACE_GETOPT == 1
-#include "arg_getopt.h"
+  #include "argtable3_private.h"
+  #if ARG_REPLACE_GETOPT == 1
+    #include "arg_getopt.h"
+  #else
+    #include <getopt.h>
+  #endif
 #else
-#include <getopt.h>
-#endif
-#else
-#if ARG_REPLACE_GETOPT == 0
-#include <getopt.h>
-#endif
+  #if ARG_REPLACE_GETOPT == 0
+    #include <getopt.h>
+  #endif
 #endif
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#undef WIN32_LEAN_AND_MEAN
+  #define WIN32_LEAN_AND_MEAN
+  #include <windows.h>
+  #undef WIN32_LEAN_AND_MEAN
 #endif
 
 #include <assert.h>

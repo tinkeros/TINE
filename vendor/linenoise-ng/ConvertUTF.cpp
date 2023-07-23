@@ -41,7 +41,7 @@
 
 #include "ConvertUTF.h"
 #ifdef CVTUTF_DEBUG
-#include <stdio.h>
+  #include <stdio.h>
 #endif
 
 namespace linenoise_ng {
@@ -55,8 +55,6 @@ static const UTF32 halfMask = 0x3FFUL;
 #define UNI_SUR_HIGH_END   (UTF32)0xDBFF
 #define UNI_SUR_LOW_START  (UTF32)0xDC00
 #define UNI_SUR_LOW_END    (UTF32)0xDFFF
-#define false              0
-#define true               1
 
 /* --------------------------------------------------------------------- */
 
@@ -327,7 +325,7 @@ ConversionResult ConvertUTF16toUTF8(const UTF16** sourceStart,
  * definition of UTF-8 goes up to 4-byte sequences.
  */
 
-static Boolean isLegalUTF8(const UTF8* source, int length) {
+static bool isLegalUTF8(const UTF8* source, int length) {
   UTF8 a;
   const UTF8* srcptr = source + length;
   switch (length) {
@@ -385,7 +383,7 @@ static Boolean isLegalUTF8(const UTF8* source, int length) {
  * Exported function to return whether a UTF-8 sequence is legal or not.
  * This is not used here; it's just exported.
  */
-Boolean isLegalUTF8Sequence(const UTF8* source, const UTF8* sourceEnd) {
+bool isLegalUTF8Sequence(const UTF8* source, const UTF8* sourceEnd) {
   int length = trailingBytesForUTF8[*source] + 1;
   if (source + length > sourceEnd) {
     return false;

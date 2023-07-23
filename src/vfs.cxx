@@ -1,5 +1,7 @@
-#include "vfs.hxx"
-#include "alloc.hxx"
+// clang-format off
+#include <sys/types.h>
+#include <sys/stat.h>
+// clang-format on
 
 #include <algorithm>
 #include <array>
@@ -8,49 +10,28 @@
 #include <string>
 #include <vector>
 
+#include <ctype.h>
+#include <stdint.h>
+#include <string.h>
+#include <time.h>
+
+#include "alloc.hxx"
+#include "vfs.hxx"
+
+#ifdef _WIN32
+  #define delim '\\'
+#else
+  #define delim '/'
+#endif
+
 namespace fs = std::filesystem;
 
 using std::ios;
 
-#include <ctype.h>
-#include <string.h>
-#include <time.h>
-
-#ifdef _WIN32
-#define delim '\\'
-#else
-#define delim '/'
-#endif
-// clang-format off
-#include <sys/types.h>
-#include <sys/stat.h>
-// clang-format on
+namespace {
 
 thread_local std::string thrd_pwd;
-thread_local char thrd_drv;
-
-void VFsThrdInit() {
-  thrd_pwd = "/";
-  thrd_drv = 'T';
-}
-
-void VFsSetDrv(char const d) {
-  if (!isalpha(d))
-    return;
-  thrd_drv = toupper(d);
-}
-
-char VFsGetDrv() {
-  return thrd_drv;
-}
-
-void VFsSetPwd(char const* pwd) {
-  if (!pwd)
-    pwd = "/";
-  thrd_pwd = pwd;
-}
-
-namespace {
+thread_local uint8_t thrd_drv;
 
 inline bool FExists(std::string const& path) {
   return fs::exists(path);
@@ -63,6 +44,27 @@ inline bool FIsDir(std::string const& path) {
 std::array<std::string, 'z' - 'a' + 1> mount_points;
 
 } // namespace
+
+void VFsThrdInit() {
+  thrd_pwd = "/";
+  thrd_drv = 'T';
+}
+
+void VFsSetDrv(uint8_t d) {
+  if (!isalpha(d))
+    return;
+  thrd_drv = toupper(d);
+}
+
+uint8_t VFsGetDrv() {
+  return thrd_drv;
+}
+
+void VFsSetPwd(char const* pwd) {
+  if (!pwd)
+    pwd = "/";
+  thrd_pwd = pwd;
+}
 
 std::string VFsFileNameAbs(char const* name) {
   std::string ret;

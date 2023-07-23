@@ -1,5 +1,39 @@
-#include "main.hxx"
+#ifdef _WIN32
+  // clang-format off
+  #include <windows.h>
+  #include <winbase.h>
+  #include <wincon.h>
+  #include <winerror.h>
+  #include <processenv.h>
+  #include <processthreadsapi.h>
+  // clang-format on
+
+  // for mingw
+  // https://archive.md/HEZm2#selection-3667.0-3698.0
+  #ifndef ERROR_CONTROL_C_EXIT
+    #define ERROR_CONTROL_C_EXIT 0x23C
+  #endif
+
+static BOOL WINAPI CtrlCHandlerRoutine(DWORD) {
+  #define STR_(x) x, lstrlenA(x)
+  WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), STR_("User Abort.\n"), nullptr,
+                nullptr);
+  ExitProcess(ERROR_CONTROL_C_EXIT);
+  return TRUE;
+}
+
+#else
+  #include <signal.h>
+  #include <sys/resource.h>
+#endif
+
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
+#include <thread>
+
 #include "dbg.hxx"
+#include "main.hxx"
 #include "multic.hxx"
 #include "runtime.hxx"
 #include "sdl_window.hxx"
@@ -9,78 +43,29 @@
 
 #include "argtable3.h"
 
-#include <algorithm>
-#include <filesystem>
-#include <iostream>
-#include <thread>
-
 namespace fs = std::filesystem;
 
 using std::thread;
 
-static constexpr bool is_win =
+namespace {
+
+constexpr bool is_win =
 #ifdef _WIN32
     true;
 #else
     false;
 #endif
 
-#ifdef _WIN32
-// clang-format off
-#include <windows.h>
-#include <winbase.h>
-#include <wincon.h>
-#include <winerror.h>
-#include <processenv.h>
-#include <processthreadsapi.h>
-// clang-format on
+struct arg_lit *helpArg, *sixty_fps, *commandLineArg, *cb_sanitize, *ndebug,
+    *noans;
+struct arg_file *cmdLineFiles, *TDriveArg, *HCRTArg;
 
-// for mingw
-// https://archive.md/HEZm2#selection-3667.0-3698.0
-#ifndef ERROR_CONTROL_C_EXIT
-#define ERROR_CONTROL_C_EXIT 0x23C
-#endif
-
-static BOOL WINAPI CtrlCHandlerRoutine(DWORD) {
-#define STR_(x) x, lstrlenA(x)
-  WriteConsoleA(GetStdHandle(STD_ERROR_HANDLE), STR_("User Abort.\n"), nullptr,
-                nullptr);
-  ExitProcess(ERROR_CONTROL_C_EXIT);
-  return TRUE;
-}
-
-#else
-#include <signal.h>
-#include <sys/resource.h>
-#endif
-
-static struct arg_lit *helpArg, *sixty_fps, *commandLineArg, *cb_sanitize,
-    *ndebug, *noans;
-static struct arg_file *cmdLineFiles, *TDriveArg, *HCRTArg;
-
-static bool is_cmd_line = false;
-bool IsCmdLine() {
-  return is_cmd_line;
-}
-
-static std::string boot_str;
-char const* CmdLineBootText() {
-  return boot_str.c_str();
-}
-
-static int exit_code = 0;
-static bool prog_exit = false;
-void ShutdownTINE(int ec) {
-  prog_exit = true;
-  exit_code = ec;
-  ShutdownCores(ec);
-}
-
-bool sanitize_clipboard = false;
-
-namespace {
-
+std::string boot_str;
 std::string bin_path{"HCRT.BIN"};
+
+int exit_code = 0;
+bool prog_exit = false;
+
 void* __stdcall Core0(void*) {
   VFsThrdInit();
   LoadHCRT(bin_path);
@@ -94,6 +79,19 @@ void* __stdcall Core0(void*) {
 }
 
 } // namespace
+
+char const* CmdLineBootText() {
+  return boot_str.c_str();
+}
+
+void ShutdownTINE(int ec) {
+  prog_exit = true;
+  exit_code = ec;
+  ShutdownCores(ec);
+}
+
+bool sanitize_clipboard = false;
+bool is_cmd_line = false;
 
 #ifndef _WIN32
 size_t page_size; // used for allocation

@@ -95,7 +95,6 @@ namespace linenoise_ng {
 typedef uint32_t UTF32;
 typedef uint16_t UTF16;
 typedef uint8_t UTF8;
-typedef unsigned char Boolean; /* 0 or 1 */
 
 /* Some fundamental constants */
 #define UNI_REPLACEMENT_CHAR (UTF32)0x0000FFFD
@@ -143,7 +142,7 @@ ConversionResult ConvertUTF32toUTF16(const UTF32** sourceStart,
                                      char16_t* targetEnd,
                                      ConversionFlags flags);
 
-Boolean isLegalUTF8Sequence(const UTF8* source, const UTF8* sourceEnd);
+bool isLegalUTF8Sequence(const UTF8* source, const UTF8* sourceEnd);
 
 } // namespace linenoise_ng
 

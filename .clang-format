@@ -19,5 +19,5 @@ AllowShortFunctionsOnASingleLine: false
 AllowShortLambdasOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Never
 AlwaysBreakAfterReturnType: None
-#BreakAfterAttributes: Always 
+IndentPPDirectives: BeforeHash
 ...

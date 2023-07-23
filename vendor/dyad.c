@@ -6,7 +6,7 @@
  */
 
 #ifdef _WIN32
-// clang-format off
+  // clang-format off
 #define _WIN32_WINNT 0x501
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
@@ -24,48 +24,48 @@
 #include <string.h>
 // clang-format on
 #else
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#if defined(__FreeBSD__) && !defined(_BSD_SOURCE)
-#define _BSD_SOURCE
-#endif
-#include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
+  #ifndef _GNU_SOURCE
+    #define _GNU_SOURCE
+  #endif
+  #if defined(__FreeBSD__) && !defined(_BSD_SOURCE)
+    #define _BSD_SOURCE
+  #endif
+  #include <arpa/inet.h>
+  #include <errno.h>
+  #include <fcntl.h>
+  #include <limits.h>
+  #include <netdb.h>
+  #include <netinet/in.h>
+  #include <netinet/tcp.h>
+  #include <signal.h>
+  #include <stdarg.h>
+  #include <stdint.h>
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include <string.h>
+  #include <sys/socket.h>
+  #include <sys/time.h>
+  #include <sys/types.h>
+  #include <time.h>
+  #include <unistd.h>
 #endif
 #include "dyad.h"
 
 #define DYAD_VERSION "0.2.1"
 
 #ifdef _WIN32
-#define close(a)                  closesocket(a)
-#define getsockopt(a, b, c, d, e) getsockopt((a), (b), (c), (char*)(d), (e))
-#define setsockopt(a, b, c, d, e) setsockopt((a), (b), (c), (char*)(d), (e))
-#define select(a, b, c, d, e)     select((int)(a), (b), (c), (d), (e))
-#define bind(a, b, c)             bind((a), (b), (int)(c))
-#define connect(a, b, c)          connect((a), (b), (int)(c))
+  #define close(a)                  closesocket(a)
+  #define getsockopt(a, b, c, d, e) getsockopt((a), (b), (c), (char*)(d), (e))
+  #define setsockopt(a, b, c, d, e) setsockopt((a), (b), (c), (char*)(d), (e))
+  #define select(a, b, c, d, e)     select((int)(a), (b), (c), (d), (e))
+  #define bind(a, b, c)             bind((a), (b), (int)(c))
+  #define connect(a, b, c)          connect((a), (b), (int)(c))
 
-#undef errno
-#define errno WSAGetLastError()
+  #undef errno
+  #define errno WSAGetLastError()
 
-#undef EWOULDBLOCK
-#define EWOULDBLOCK WSAEWOULDBLOCK
+  #undef EWOULDBLOCK
+  #define EWOULDBLOCK WSAEWOULDBLOCK
 
 const char* inet_ntop(int af, const void* src, char* dst, socklen_t size) {
   union {
@@ -89,7 +89,7 @@ const char* inet_ntop(int af, const void* src, char* dst, socklen_t size) {
 #endif
 
 #ifndef INVALID_SOCKET
-#define INVALID_SOCKET -1
+  #define INVALID_SOCKET -1
 #endif
 
 /*===========================================================================*/
@@ -698,15 +698,15 @@ void dyad_update(void) {
 
 /* Init timeout value and do select */
 #ifdef _MSC_VER
-#pragma warning(push)
-/* Disable double to long implicit conversion warning,
- * because the type of timeval's fields don't agree across platforms */
-#pragma warning(disable : 4244)
+  #pragma warning(push)
+  /* Disable double to long implicit conversion warning,
+   * because the type of timeval's fields don't agree across platforms */
+  #pragma warning(disable : 4244)
 #endif
   tv.tv_sec = dyad_updateTimeout;
   tv.tv_usec = (dyad_updateTimeout - tv.tv_sec) * 1e6;
 #ifdef _MSC_VER
-#pragma warning(pop)
+  #pragma warning(pop)
 #endif
 
   select(dyad_selectSet.maxfd + 1, dyad_selectSet.fds[SELECT_READ],

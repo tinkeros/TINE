@@ -1,8 +1,9 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "mem.hxx"
 #include "runtime.hxx"
-#include <stdint.h>
 
 // sizeof(void) is _TECHNICALLY_ illegal in standard C++
 // so I'm going to do some template fuckery just to be safe

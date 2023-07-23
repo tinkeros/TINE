@@ -1,9 +1,3 @@
-#include "tos_aot.hxx"
-#include "alloc.hxx"
-#include "dbg.hxx"
-#include "ffi.h"
-#include "mem.hxx"
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
@@ -17,6 +11,12 @@
 #include <signal.h>
 #include <stdint.h>
 #include <string.h>
+
+#include "alloc.hxx"
+#include "dbg.hxx"
+#include "ffi.h"
+#include "mem.hxx"
+#include "tos_aot.hxx"
 
 namespace fs = std::filesystem;
 

@@ -1,9 +1,23 @@
-#include "multic.hxx"
-#include "dbg.hxx"
-#include "ffi.h"
-#include "runtime.hxx"
-#include "tos_aot.hxx"
-#include "vfs.hxx"
+#ifdef _WIN32
+// clang-format off
+  #include <windows.h>
+  #include <processthreadsapi.h>
+  #include <synchapi.h>
+  #include <sysinfoapi.h>
+  #include <timeapi.h>
+// clang-format on
+using WinCB = LPTHREAD_START_ROUTINE;
+#else
+  #include <pthread.h>
+  #include <signal.h>
+  #ifdef __linux__
+    #include <linux/futex.h>
+    #include <sys/syscall.h>
+  #elif defined(__FreeBSD__)
+    #include <sys/types.h>
+    #include <sys/umtx.h>
+  #endif
+#endif
 
 #include <atomic>
 #include <vector>
@@ -11,27 +25,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef _WIN32
-// clang-format off
-#include <windows.h>
-#include <processthreadsapi.h>
-#include <synchapi.h>
-#include <sysinfoapi.h>
-#include <timeapi.h>
-using WinCB = LPTHREAD_START_ROUTINE;
-// clang-format on
-#else
-#include <pthread.h>
-#include <signal.h>
-#endif
-
-#ifdef __linux__
-#include <linux/futex.h>
-#include <sys/syscall.h>
-#elif defined(__FreeBSD__)
-#include <sys/types.h>
-#include <sys/umtx.h>
-#endif
+#include "dbg.hxx"
+#include "ffi.h"
+#include "multic.hxx"
+#include "runtime.hxx"
+#include "tos_aot.hxx"
+#include "vfs.hxx"
 
 uint64_t GetTicks() {
 #ifdef _WIN32
@@ -42,43 +41,6 @@ uint64_t GetTicks() {
   return static_cast<uint64_t>(ts.tv_nsec / 1000000) +
          1000 * static_cast<uint64_t>(ts.tv_sec);
 #endif
-}
-
-/*
- * (DolDoc code)
- * $ID,-2$$TR-C,"How do you use the FS and GS segment registers."$
- * $ID,2$$FG,2$MOV RAX,FS:[RAX]$FG$ : FS can be set with a $FG,2$WRMSR$FG$, but
- * displacement is RIP relative, so it's tricky to use.  FS is used for the
- * current $LK,"CTask",A="MN:CTask"$, GS for $LK,"CCPU",A="MN:CCPU"$.
- *
- * Note on Fs and Gs: They might seem like very weird names for ThisTask and
- * ThisCPU repectively but it's because they are stored in the F Segment and G
- * Segment registers. (https://archive.md/pf2td)
- */
-
-thread_local std::atomic<void*> Fs = nullptr;
-
-void* GetFs() {
-  return Fs;
-}
-
-void SetFs(void* f) {
-  Fs = f;
-}
-
-thread_local std::atomic<void*> Gs = nullptr;
-
-void* GetGs() {
-  return Gs;
-}
-
-void SetGs(void* g) {
-  Gs = g;
-}
-
-thread_local size_t core_num;
-size_t CoreNum() {
-  return core_num;
 }
 
 namespace {
@@ -111,6 +73,7 @@ struct CCore {
 };
 
 std::vector<CCore> cores;
+thread_local size_t core_num;
 
 void* __stdcall LaunchCore(void* c) {
   VFsThrdInit();
@@ -132,7 +95,41 @@ void* __stdcall LaunchCore(void* c) {
   return nullptr;
 }
 
+/*
+ * (DolDoc code)
+ * $ID,-2$$TR-C,"How do you use the FS and GS segment registers."$
+ * $ID,2$$FG,2$MOV RAX,FS:[RAX]$FG$ : FS can be set with a $FG,2$WRMSR$FG$, but
+ * displacement is RIP relative, so it's tricky to use.  FS is used for the
+ * current $LK,"CTask",A="MN:CTask"$, GS for $LK,"CCPU",A="MN:CCPU"$.
+ *
+ * Note on Fs and Gs: They might seem like very weird names for ThisTask and
+ * ThisCPU repectively but it's because they are stored in the F Segment and G
+ * Segment registers. (https://archive.md/pf2td)
+ */
+thread_local std::atomic<void*> Fs = nullptr;
+thread_local std::atomic<void*> Gs = nullptr;
+
 } // namespace
+
+void* GetFs() {
+  return Fs;
+}
+
+void SetFs(void* f) {
+  Fs = f;
+}
+
+void* GetGs() {
+  return Gs;
+}
+
+void SetGs(void* g) {
+  Gs = g;
+}
+
+size_t CoreNum() {
+  return core_num;
+}
 
 // this may look like bad code but HolyC cannot switch
 // contexts unless you call Yield() in a loop so
@@ -166,7 +163,7 @@ void LaunchCore0(ThreadCallback* fp) {
 #ifdef _WIN32
   // sorry for this piece of utter garbage code, I wanted it to compile
   // without warnings
-#define C_(x) ((WinCB)((void*)x))
+  #define C_(x) ((WinCB)((void*)x))
   cores[0].thread = CreateThread(nullptr, 0, C_(fp), nullptr, 0, nullptr);
   cores[0].mtx = CreateMutex(nullptr, FALSE, nullptr);
   cores[0].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
@@ -234,12 +231,12 @@ void AwakeFromSleeping(size_t core) {
   uint32_t old = 1;
   __atomic_compare_exchange_n(&cores[core].is_sleeping, &old, 0u, false,
                               __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
-#ifdef __linux__
+  #ifdef __linux__
   syscall(SYS_futex, &cores[core].is_sleeping, FUTEX_WAKE, 1u, nullptr, nullptr,
           0);
-#elif defined(__FreeBSD__)
+  #elif defined(__FreeBSD__)
   _umtx_op(&cores[core].is_sleeping, UMTX_OP_WAKE, 1u, nullptr, nullptr);
-#endif
+  #endif
 #endif
 }
 
@@ -296,13 +293,13 @@ void SleepHP(uint64_t us) {
   struct timespec ts {};
   ts.tv_nsec = us * 1000;
   __atomic_store_n(&cores[core_num].is_sleeping, 1u, __ATOMIC_SEQ_CST);
-#ifdef __linux__
+  #ifdef __linux__
   syscall(SYS_futex, &cores[core_num].is_sleeping, FUTEX_WAIT, 1u, &ts, nullptr,
           0);
-#elif defined(__FreeBSD__)
+  #elif defined(__FreeBSD__)
   _umtx_op(&cores[core_num].is_sleeping, UMTX_OP_WAIT_UINT, 1u,
            (void*)sizeof(struct timespec), &ts);
-#endif
+  #endif
 #endif
 }
 

@@ -1,10 +1,10 @@
-#include "sdl_window.hxx"
+#include <algorithm>
+#include <string>
+
 #include "ffi.h"
 #include "logo.hxx"
 #include "main.hxx"
-
-#include <algorithm>
-#include <string>
+#include "sdl_window.hxx"
 
 #include <SDL2/SDL.h>
 

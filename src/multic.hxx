@@ -5,7 +5,7 @@
 
 // Technically UB by the standard but... meh
 #ifndef _WIN32
-#define __stdcall
+  #define __stdcall
 #endif
 
 uint64_t GetTicks();
