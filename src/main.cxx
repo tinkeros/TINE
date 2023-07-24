@@ -57,10 +57,6 @@ constexpr bool is_win =
     false;
 #endif
 
-struct arg_lit *helpArg, *sixty_fps, *commandLineArg, *cb_sanitize, *ndebug,
-    *noans;
-struct arg_file *cmdLineFiles, *TDriveArg, *HCRTArg;
-
 std::string boot_str;
 std::string bin_path{"HCRT.BIN"};
 
@@ -119,6 +115,9 @@ int main(int argc, char** argv) {
 #endif
   proc_cnt = thread::hardware_concurrency();
   // i wanted to use cli11 but i dont want exceptions in this codebase
+  struct arg_lit *helpArg, *sixty_fps, *commandLineArg, *cb_sanitize, *ndebug,
+      *noans;
+  struct arg_file *cmdLineFiles, *TDriveArg, *HCRTArg;
   void* argtable[] = {
       helpArg = arg_lit0("h", "help", "Display this help message."),
       sixty_fps = arg_lit0("6", "60fps", "Run in 60 fps mode."),
