@@ -157,6 +157,9 @@ int main(int argc, char** argv) {
     VFsMountDrive('Z', ".");
     is_cmd_line = true;
   }
+  if (cb_sanitize->count > 0)
+    sanitize_clipboard = true;
+
   // This is called before LoadHCRT so TOSLoader will not be
   // all fucked up, fyi
   RegisterFuncPtrs();
@@ -194,12 +197,11 @@ int main(int argc, char** argv) {
     return 1;
   }
 
+  arg_freetable(argtable, sizeof argtable / sizeof argtable[0]);
   if (!is_cmd_line) {
 #ifdef _WIN32
     SetConsoleCtrlHandler(CtrlCHandlerRoutine, TRUE);
 #endif
-    if (cb_sanitize->count > 0)
-      sanitize_clipboard = true;
     InputLoop(&prog_exit);
   } else {
     WaitForCore0();
