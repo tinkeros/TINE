@@ -25,6 +25,7 @@ static BOOL WINAPI CtrlCHandlerRoutine(DWORD) {
 #else
   #include <signal.h>
   #include <sys/resource.h>
+  #include <unistd.h>
 #endif
 
 #include <algorithm>
