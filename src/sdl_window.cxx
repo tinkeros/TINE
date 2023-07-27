@@ -360,11 +360,10 @@ int ScanKey(uint64_t* sc, SDL_Event* ev) {
       return *sc = K2SC('n') | mod;
     case SDL_SCANCODE_M:
       return *sc = K2SC('m') | mod;
-    // *, +
     case SDL_SCANCODE_KP_MULTIPLY:
-      return *sc = K2SC('8') | SCF_SHIFT | mod;
+      return *sc = K2SC('*') | mod;
     case SDL_SCANCODE_KP_PLUS:
-      return *sc = K2SC('=') | SCF_SHIFT | mod;
+      return *sc = K2SC('+') | mod;
     case SDL_SCANCODE_ESCAPE:
       *sc = mod | SC_ESC;
       return 1;
