@@ -62,12 +62,15 @@ size_t mp_cnt(void*) {
 }
 
 [[noreturn]] void HolyThrow(std::string_view sv) {
-  char s[8]{};
+  union {
+    char s[8]{}; // zero-init
+    uint64_t i;
+  } u;
   static void* fp;
   if (!fp)
     fp = TOSLoader["throw"].val;
-  std::copy(sv.begin(), sv.begin() + std::min<size_t>(sv.size(), 8), s);
-  FFI_CALL_TOS_1(fp, *reinterpret_cast<uint64_t*>(s));
+  std::copy(sv.begin(), sv.begin() + std::min<size_t>(sv.size(), 8), u.s);
+  FFI_CALL_TOS_1(fp, u.i);
   __builtin_unreachable();
 }
 
