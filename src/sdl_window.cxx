@@ -230,60 +230,72 @@ static inline constexpr uint64_t K2SC(char ch) {
 }
 
 int ScanKey(uint64_t* sc, SDL_Event* ev) {
-  SDL_Event e = *ev;
-  int64_t mod = 0;
-  if (e.type == SDL_KEYDOWN) {
+  uint64_t mod = 0;
+  if (ev->type == SDL_KEYDOWN) {
   ent:
-    *sc = e.key.keysym.scancode;
-    if (e.key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
+    *sc = ev->key.keysym.scancode;
+    if (ev->key.keysym.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
       mod |= SCF_SHIFT;
     else
       mod |= SCF_NO_SHIFT;
-    if (e.key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL))
+    if (ev->key.keysym.mod & (KMOD_LCTRL | KMOD_RCTRL))
       mod |= SCF_CTRL;
-    if (e.key.keysym.mod & (KMOD_LALT | KMOD_RALT))
+    if (ev->key.keysym.mod & (KMOD_LALT | KMOD_RALT))
       mod |= SCF_ALT;
-    if (e.key.keysym.mod & (KMOD_CAPS))
+    if (ev->key.keysym.mod & KMOD_CAPS)
       mod |= SCF_CAPS;
-    if (e.key.keysym.mod & (KMOD_NUM))
+    if (ev->key.keysym.mod & KMOD_NUM)
       mod |= SCF_NUM;
-    if (e.key.keysym.mod & KMOD_LGUI)
+    if (ev->key.keysym.mod & KMOD_LGUI)
       mod |= SCF_MS_L_DOWN;
-    if (e.key.keysym.mod & KMOD_RGUI)
+    if (ev->key.keysym.mod & KMOD_RGUI)
       mod |= SCF_MS_R_DOWN;
-    switch (e.key.keysym.scancode) {
+    switch (ev->key.keysym.scancode) {
     case SDL_SCANCODE_SPACE:
       return *sc = K2SC(' ') | mod;
     case SDL_SCANCODE_APOSTROPHE:
       return *sc = K2SC('\'') | mod;
     case SDL_SCANCODE_COMMA:
       return *sc = K2SC(',') | mod;
+    case SDL_SCANCODE_KP_MINUS:
     case SDL_SCANCODE_MINUS:
       return *sc = K2SC('-') | mod;
+    case SDL_SCANCODE_KP_PERIOD:
     case SDL_SCANCODE_PERIOD:
       return *sc = K2SC('.') | mod;
     case SDL_SCANCODE_GRAVE:
       return *sc = K2SC('`') | mod;
+    case SDL_SCANCODE_KP_DIVIDE:
     case SDL_SCANCODE_SLASH:
       return *sc = K2SC('/') | mod;
+    case SDL_SCANCODE_KP_0:
     case SDL_SCANCODE_0:
       return *sc = K2SC('0') | mod;
+    case SDL_SCANCODE_KP_1:
     case SDL_SCANCODE_1:
       return *sc = K2SC('1') | mod;
+    case SDL_SCANCODE_KP_2:
     case SDL_SCANCODE_2:
       return *sc = K2SC('2') | mod;
+    case SDL_SCANCODE_KP_3:
     case SDL_SCANCODE_3:
       return *sc = K2SC('3') | mod;
+    case SDL_SCANCODE_KP_4:
     case SDL_SCANCODE_4:
       return *sc = K2SC('4') | mod;
+    case SDL_SCANCODE_KP_5:
     case SDL_SCANCODE_5:
       return *sc = K2SC('5') | mod;
+    case SDL_SCANCODE_KP_6:
     case SDL_SCANCODE_6:
       return *sc = K2SC('6') | mod;
+    case SDL_SCANCODE_KP_7:
     case SDL_SCANCODE_7:
       return *sc = K2SC('7') | mod;
+    case SDL_SCANCODE_KP_8:
     case SDL_SCANCODE_8:
       return *sc = K2SC('8') | mod;
+    case SDL_SCANCODE_KP_9:
     case SDL_SCANCODE_9:
       return *sc = K2SC('9') | mod;
     case SDL_SCANCODE_SEMICOLON:
@@ -348,6 +360,11 @@ int ScanKey(uint64_t* sc, SDL_Event* ev) {
       return *sc = K2SC('n') | mod;
     case SDL_SCANCODE_M:
       return *sc = K2SC('m') | mod;
+    // *, +
+    case SDL_SCANCODE_KP_MULTIPLY:
+      return *sc = K2SC('8') | SCF_SHIFT | mod;
+    case SDL_SCANCODE_KP_PLUS:
+      return *sc = K2SC('=') | SCF_SHIFT | mod;
     case SDL_SCANCODE_ESCAPE:
       *sc = mod | SC_ESC;
       return 1;
@@ -357,6 +374,7 @@ int ScanKey(uint64_t* sc, SDL_Event* ev) {
     case SDL_SCANCODE_TAB:
       *sc = mod | SC_TAB;
       return 1;
+    case SDL_SCANCODE_KP_ENTER:
     case SDL_SCANCODE_RETURN:
       *sc = mod | SC_ENTER;
       return 1;
@@ -425,11 +443,11 @@ int ScanKey(uint64_t* sc, SDL_Event* ev) {
       *sc = mod | SC_PAUSE;
       return 1;
     case SDL_SCANCODE_F1 ... SDL_SCANCODE_F12:
-      *sc = mod | (SC_F1 + e.key.keysym.scancode - SDL_SCANCODE_F1);
+      *sc = mod | (SC_F1 + ev->key.keysym.scancode - SDL_SCANCODE_F1);
       return 1;
     default:;
     }
-  } else if (e.type == SDL_KEYUP) {
+  } else if (ev->type == SDL_KEYUP) {
     mod |= SCF_KEY_UP;
     goto ent;
   }

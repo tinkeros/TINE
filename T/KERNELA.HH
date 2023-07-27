@@ -240,6 +240,7 @@ public class CD3 //Three dimensional F64 pt
 extern class CCPU;
 extern class CDyadStream;
 #ifdef IMPORT_BUILTINS
+import U64 _ThrowDemo(U64);
 import U0 _GrPaletteColorSet(I64i,I64i);
 import U0 __SleepHP(U64);
 import U0 __AwakeCore(U64);
@@ -311,6 +312,8 @@ import U8i *__CmdLineBootText();
 import U0i UnblockSignals();
 import U64i __GetTicksHP(); 
 #else
+extern U0 _GrPaletteColorSet(I64i,I64i);
+extern U64 _ThrowDemo(U64);
 extern U0 __SleepHP(U64);
 extern U0 __AwakeCore(U64);
 extern U64i __GetTicksHP(); 
@@ -366,7 +369,7 @@ extern U64 mp_cnt();
 extern U0i SetFs(CTask*);
 extern CTask* GetFs();
 extern CCPU *GetGs();
-extern U0 SetGs(CCPU *);
+extern U0 SetGs(CCPU *);
 extern U8i *__CmdLineBootText();
 extern U0i ExitTINE(I32i ec=0);
 extern Bool __IsCmdLine();

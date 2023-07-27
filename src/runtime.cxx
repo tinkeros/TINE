@@ -10,8 +10,10 @@
   #include <sys/mman.h>
 #endif
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
+#include <string_view>
 
 #include <stddef.h>
 #include <string.h>
@@ -59,6 +61,16 @@ size_t mp_cnt(void*) {
   return proc_cnt;
 }
 
+[[noreturn]] void HolyThrow(std::string_view sv) {
+  char s[8]{};
+  static void* fp;
+  if (!fp)
+    fp = TOSLoader["throw"].val;
+  std::copy(sv.begin(), sv.begin() + std::min<size_t>(sv.size(), 8), s);
+  FFI_CALL_TOS_1(fp, *reinterpret_cast<uint64_t*>(s));
+  __builtin_unreachable();
+}
+
 namespace { // ffi shit goes here
 
 namespace fs = std::filesystem;
@@ -66,7 +78,20 @@ namespace chrono = std::chrono;
 
 using chrono::system_clock;
 
-void STK_DyadInit() {
+uint64_t STK__ThrowDemo(uint64_t* stk) {
+  switch (stk[0]) {
+  case 1:
+    return 3;
+    break;
+  case 2:
+    return 4;
+    break;
+  default:
+    HolyThrow("Chungus");
+  }
+}
+
+void STK_DyadInit(void*) {
   static bool init = false;
   if (init)
     return;
@@ -75,15 +100,15 @@ void STK_DyadInit() {
   dyad_setUpdateTimeout(0.);
 }
 
-void STK_DyadUpdate() {
+void STK_DyadUpdate(void*) {
   dyad_update();
 }
 
-void STK_DyadShutdown() {
+void STK_DyadShutdown(void*) {
   dyad_shutdown();
 }
 
-void* STK_DyadNewStream() {
+void* STK_DyadNewStream(void*) {
   return dyad_newStream();
 }
 
@@ -195,7 +220,7 @@ void STK_DyadSetNoDelay(intptr_t* stk) {
                   static_cast<int>(stk[1]));
 }
 
-void STK_UnblockSignals() {
+void STK_UnblockSignals(void*) {
 #ifndef _WIN32
   sigset_t all;
   sigfillset(&all);
@@ -657,6 +682,7 @@ void RegisterFuncPtrs() {
   S_(SetVolume, 1);
   S_(__GetTicksHP, 0);
   S_(_GrPaletteColorSet, 2);
+  S_(_ThrowDemo, 1);
   auto blob = VirtAlloc<char>(ffi_blob.size());
   std::copy(ffi_blob.begin(), ffi_blob.end(), blob);
   for (auto& [name, sym] : TOSLoader)
