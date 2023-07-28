@@ -584,7 +584,7 @@ void NewDrawWindow() {
   SDL_SetSurfacePalette(win.surf, win.palette);
   SDL_SetWindowMinimumSize(win.window, 640, 480);
   win.rend = SDL_CreateRenderer(win.window, -1, SDL_RENDERER_ACCELERATED);
-  SDL_SetRenderDrawColor(win.rend, 85, 255, 255, 255);
+  SDL_SetRenderDrawColor(win.rend, 0, 0, 0, 255);
   SDL_RenderClear(win.rend);
   SDL_RenderPresent(win.rend);
   win.margin_y = win.margin_x = 0;
