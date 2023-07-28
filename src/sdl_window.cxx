@@ -222,7 +222,7 @@ char constexpr keys[] = {
     '+', 0,      0,    0,   0,    0,   0,   0,   0,   0,   0,   0};
 
 static inline constexpr uint64_t K2SC(char ch) {
-  for (size_t i = 0; i < sizeof(keys) / sizeof(*keys); ++i) {
+  for (size_t i = 0; i < sizeof keys / sizeof keys[0]; ++i) {
     if (keys[i] == ch)
       return i;
   }
@@ -584,6 +584,9 @@ void NewDrawWindow() {
   SDL_SetSurfacePalette(win.surf, win.palette);
   SDL_SetWindowMinimumSize(win.window, 640, 480);
   win.rend = SDL_CreateRenderer(win.window, -1, SDL_RENDERER_ACCELERATED);
+  SDL_SetRenderDrawColor(win.rend, 85, 255, 255, 255);
+  SDL_RenderClear(win.rend);
+  SDL_RenderPresent(win.rend);
   win.margin_y = win.margin_x = 0;
   win.sz_x = 640;
   win.sz_y = 480;

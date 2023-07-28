@@ -61,7 +61,7 @@ size_t mp_cnt(void*) {
   return proc_cnt;
 }
 
-[[noreturn]] void HolyThrow(std::string_view sv) {
+[[noreturn]] void HolyThrow(std::string_view sv = {}) {
   union {
     char s[8]{}; // zero-init
     uint64_t i;
