@@ -26,8 +26,8 @@ using WinCB = LPTHREAD_START_ROUTINE;
 
 #include "dbg.hxx"
 #include "ffi.h"
+#include "main.hxx"
 #include "multic.hxx"
-#include "runtime.hxx"
 #include "tos_aot.hxx"
 #include "vfs.hxx"
 
@@ -157,7 +157,7 @@ void InterruptCore(size_t core) {
 }
 
 void LaunchCore0(ThreadCallback* fp) {
-  cores.resize(mp_cnt(nullptr));
+  cores.resize(proc_cnt);
   cores[0].fp = nullptr;
 #ifdef _WIN32
   // sorry for this piece of utter garbage code, I wanted it to compile
@@ -211,7 +211,7 @@ void ShutdownCore(size_t core) {
 }
 
 void ShutdownCores(int ec) {
-  for (size_t c = 0; c < mp_cnt(nullptr); ++c)
+  for (size_t c = 0; c < proc_cnt; ++c)
     if (c != core_num)
       ShutdownCore(c);
   // This is the same as calling Core0Exit
