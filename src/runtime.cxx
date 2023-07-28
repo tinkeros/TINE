@@ -16,6 +16,9 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <dyad.h>
+#include <linenoise-ng/linenoise.h>
+
 #include "TOSPrint.hxx"
 #include "alloc.hxx"
 #include "ffi.h"
@@ -27,9 +30,6 @@
 #include "sound.h"
 #include "tos_aot.hxx"
 #include "vfs.hxx"
-
-#include "dyad.h"
-#include "linenoise-ng/linenoise.h"
 
 void HolyFree(void* ptr) {
   static void* fptr = nullptr;

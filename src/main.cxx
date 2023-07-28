@@ -34,7 +34,8 @@ static BOOL WINAPI CtrlCHandlerRoutine(DWORD) {
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "argtable3.h"
+#include <argtable3.h>
+
 #include "dbg.hxx"
 #include "main.hxx"
 #include "multic.hxx"
