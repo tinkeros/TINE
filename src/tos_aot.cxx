@@ -258,7 +258,7 @@ void BackTrace() {
       if (curp == ptr) {
         fprintf(stderr, "%s\n", sorted[idx].c_str());
       } else if (curp > ptr) {
-        fprintf(stderr, "%s [%p+0x%" PRIx64 "]\n", last.c_str(), ptr,
+        fprintf(stderr, "%s [%p+%#" PRIx64 "]\n", last.c_str(), ptr,
                 (char*)ptr - (char*)oldp);
         goto next;
       }
