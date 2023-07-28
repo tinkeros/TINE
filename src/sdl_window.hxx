@@ -1,8 +1,9 @@
 #pragma once
 
+#include <string>
+
 #include <stddef.h>
 #include <stdint.h>
-#include <string>
 
 void        SetClipboard(char const* text);
 std::string ClipboardText();

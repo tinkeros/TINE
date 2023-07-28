@@ -1,5 +1,8 @@
-#include "vfs.hxx"
-#include "alloc.hxx"
+// clang-format off
+// Windows requires sys/stat to be included after sys/types
+#include <sys/types.h>
+#include <sys/stat.h>
+// clang-format on
 
 #include <algorithm>
 #include <array>
@@ -12,11 +15,8 @@
 #include <stdio.h>
 #include <string.h>
 
-// clang-format off
-// Windows requires sys/stat to be included after sys/types
-#include <sys/types.h>
-#include <sys/stat.h>
-// clang-format on
+#include "alloc.hxx"
+#include "vfs.hxx"
 
 #ifdef _WIN32
   #define delim '\\'

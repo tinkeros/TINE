@@ -3,16 +3,15 @@
   #include <memoryapi.h>
 extern DWORD dwAllocationGranularity;
 #else
-  #include <sys/mman.h>
-#endif
-
-#ifdef __linux__
-  #ifndef _GNU_SOURCE
-    // for ::getline()
-    #define _GNU_SOURCE
+  #ifdef __linux__
+    #ifndef _GNU_SOURCE
+      // for ::getline()
+      #define _GNU_SOURCE
+    #endif
+    #include <stdio.h>
+    #include <stdlib.h>
   #endif
-  #include <stdio.h>
-  #include <stdlib.h>
+  #include <sys/mman.h>
 #endif
 
 #include <ctype.h>

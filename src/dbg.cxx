@@ -1,7 +1,3 @@
-#include "dbg.hxx"
-#include "ffi.h"
-#include "tos_aot.hxx"
-
 #ifdef _WIN32
   #include <windows.h>
   #include <errhandlingapi.h>
@@ -9,6 +5,10 @@
   #include <signal.h>
   #include <ucontext.h>
 #endif
+
+#include "dbg.hxx"
+#include "ffi.h"
+#include "tos_aot.hxx"
 
 #ifdef _WIN32
 

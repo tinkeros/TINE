@@ -3,7 +3,6 @@
 extern "C" {
 #endif
 #include <stdint.h>
-// please policeman is it a test?
 
 uint64_t FFI_CALL_TOS_0(void*);
 uint64_t FFI_CALL_TOS_1(void*, uint64_t);
