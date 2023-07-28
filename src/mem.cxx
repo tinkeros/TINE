@@ -1,15 +1,19 @@
-#ifndef _WIN32
-  #include <sys/mman.h>
-#else
-// clang-format off
+#ifdef _WIN32
   #include <windows.h>
   #include <memoryapi.h>
-// clang-format on
 extern DWORD dwAllocationGranularity;
+#else
+  #include <sys/mman.h>
 #endif
 
-#include <fstream>
-#include <string>
+#ifdef __linux__
+  #ifndef _GNU_SOURCE
+    // for ::getline()
+    #define _GNU_SOURCE
+  #endif
+  #include <stdio.h>
+  #include <stdlib.h>
+#endif
 
 #include <ctype.h>
 #include <stddef.h>
@@ -21,7 +25,7 @@ extern DWORD dwAllocationGranularity;
 #ifdef __linux__
 static inline uint64_t Hex2U64(char const* ptr, char const** res) {
   uint64_t ret = 0;
-  char c;
+  char     c;
   while (isxdigit(c = *ptr)) {
     ret <<= 4;
     ret |= isalpha(c) ? toupper(c) - 'A' + 10 : c - '0';
@@ -34,11 +38,10 @@ static inline uint64_t Hex2U64(char const* ptr, char const** res) {
 
 void* NewVirtualChunk(size_t sz, bool low32) {
 #ifndef _WIN32
-  using std::ios;
   // explanation of (x+y-1)&~(y-1) on the bottom windows code
   // page_size is a power of 2 so this works
-  size_t const padded_sz = (sz + page_size - 1) & ~(page_size - 1);
-  void* ret;
+  size_t padded_sz = (sz + page_size - 1) & ~(page_size - 1);
+  void*  ret;
   if (low32) { // code heap
     // MAP_32BIT is actually MAP_31BIT(which is actually lucky for us)
     ret = mmap(nullptr, padded_sz, PROT_EXEC | PROT_WRITE | PROT_READ,
@@ -50,13 +53,14 @@ void* NewVirtualChunk(size_t sz, bool low32) {
       // for the code heap than on Windows or maybe FreeBSD(I don't have it
       // installed) but it won't really matter since machine code doesn't take
       // up a lot of space
-      uintptr_t down = 0;
-      std::ifstream map{"/proc/self/maps", ios::binary | ios::in};
-      std::string buffer;
+      char*     buffer  = nullptr;
+      size_t    line_sz = 0;
+      uintptr_t down    = 0;
+      FILE* map = fopen("/proc/self/maps", "rb"); // assumes its always there
       // just fs::file_size() wont work lmao
-      while (std::getline(map, buffer)) {
-        char const* ptr = buffer.data();
-        uint64_t lower = Hex2U64(ptr, &ptr);
+      while (::getline(&buffer, &line_sz, map) > 0) { // NOT std::getline
+        char const* ptr   = buffer;
+        uint64_t    lower = Hex2U64(ptr, &ptr);
         // MAP_FIXED wants us to align `down` to the page size
         down = (down + page_size - 1) & ~(page_size - 1);
         // basically finds a gap between the previous line's upper address
@@ -67,9 +71,13 @@ void* NewVirtualChunk(size_t sz, bool low32) {
         // cat /proc/self/maps for an explanation
         ++ptr;
         uint64_t upper = Hex2U64(ptr, &ptr);
-        down = upper;
+        down           = upper;
+        free(buffer);
+        buffer  = nullptr;
+        line_sz = 0;
       }
-    found:
+    found:;
+      fclose(map);
       if (down > MAX_CODE_HEAP_ADDR)
         return nullptr;
       ret = mmap(reinterpret_cast<void*>(down), padded_sz,
@@ -137,7 +145,7 @@ void FreeVirtualChunk(void* ptr, [[maybe_unused]] size_t sz) {
 #ifdef _WIN32
   VirtualFree(ptr, 0, MEM_RELEASE);
 #else
-  size_t const padded_sz = (sz + page_size - 1) & ~(page_size - 1);
+  size_t padded_sz = (sz + page_size - 1) & ~(page_size - 1);
   munmap(ptr, padded_sz);
 #endif
 }

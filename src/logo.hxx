@@ -1,9 +1,9 @@
 #pragma once
+
 #include <stdint.h>
 
 // clang-format off
 // logo courtesy of CrunkLord420
-// am i being detained? 6-up, 5-oh, pigs come, i cop and go
 inline constexpr struct {
   uint32_t width, height, bytes_per_pixel;
   uint8_t pixel_data[100 * 100 * 4 + 1];

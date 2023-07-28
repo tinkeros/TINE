@@ -11,10 +11,10 @@
 uint64_t GetTicks();
 
 void* GetFs();
-void SetFs(void*);
+void  SetFs(void*);
 
 void* GetGs();
-void SetGs(void*);
+void  SetGs(void*);
 
 size_t CoreNum();
 

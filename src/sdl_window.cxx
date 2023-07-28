@@ -1,25 +1,28 @@
 #include <algorithm>
 #include <string>
 
+#include <stddef.h>
+#include <stdint.h>
+
+#include <SDL2/SDL.h>
+
 #include "ffi.h"
 #include "logo.hxx"
 #include "main.hxx"
 #include "sdl_window.hxx"
 
-#include <SDL2/SDL.h>
-
 namespace {
 
 static bool win_init = false;
 struct CDrawWindow {
-  SDL_mutex* screen_mutex;
-  SDL_cond* screen_done_cond;
-  SDL_Window* window;
-  SDL_Palette* palette;
-  SDL_Surface* surf;
+  SDL_mutex*    screen_mutex;
+  SDL_cond*     screen_done_cond;
+  SDL_Window*   window;
+  SDL_Palette*  palette;
+  SDL_Surface*  surf;
   SDL_Renderer* rend;
-  Uint32 sz_x, sz_y;
-  Sint32 margin_x, margin_y;
+  Uint32        sz_x, sz_y;
+  Sint32        margin_x, margin_y;
   ~CDrawWindow() noexcept {
     if (!win_init)
       return;
@@ -38,23 +41,22 @@ struct CDrawWindow {
 void DrawWindowUpdate_EV(uint8_t* colors, uint64_t internal_width) {
   if (!win_init)
     return;
-  SDL_Surface* s = win.surf;
-  uint64_t y;
-  uint8_t *src = colors, *dst = static_cast<uint8_t*>(s->pixels);
+  SDL_Surface* s   = win.surf;
+  auto         src = colors, dst = static_cast<uint8_t*>(s->pixels);
   SDL_LockSurface(s);
-  for (y = 0; y < 480; ++y) {
+  for (size_t y = 0; y < 480; ++y) {
     std::copy(src, src + 640, dst);
     src += internal_width;
     dst += s->pitch;
   }
   SDL_UnlockSurface(s);
-  int ww, wh, w2, h2;
-  int64_t margin = 0, margin2 = 0;
+  int      ww, wh, w2, h2;
+  int64_t  margin = 0, margin2 = 0;
   SDL_Rect rct;
   SDL_GetWindowSize(win.window, &ww, &wh);
   if (wh < ww) {
-    h2 = wh;
-    w2 = 640. / 480 * h2;
+    h2     = wh;
+    w2     = 640. / 480 * h2;
     margin = (ww - w2) / 2;
     if (w2 > ww) {
       margin = 0;
@@ -62,18 +64,18 @@ void DrawWindowUpdate_EV(uint8_t* colors, uint64_t internal_width) {
     }
   } else {
   top_margin:
-    w2 = ww;
-    h2 = 480 / 640. * w2;
+    w2      = ww;
+    h2      = 480 / 640. * w2;
     margin2 = (wh - h2) / 2;
   }
-  win.margin_x = margin;
-  win.margin_y = margin2;
-  win.sz_x = w2;
-  win.sz_y = h2;
-  rct.y = margin2;
-  rct.x = margin;
-  rct.w = w2;
-  rct.h = h2;
+  win.margin_x   = margin;
+  win.margin_y   = margin2;
+  win.sz_x       = w2;
+  win.sz_y       = h2;
+  rct.y          = margin2;
+  rct.x          = margin;
+  rct.w          = w2;
+  rct.h          = h2;
   SDL_Texture* t = SDL_CreateTextureFromSurface(win.rend, s);
   SDL_RenderClear(win.rend);
   SDL_RenderCopy(win.rend, t, nullptr, &rct);
@@ -94,77 +96,76 @@ int ExitCb(void* off, SDL_Event* event) {
   return 0;
 }
 
-// yuck
 enum : uint8_t {
-  CH_CTRLA = 0x01,
-  CH_CTRLB = 0x02,
-  CH_CTRLC = 0x03,
-  CH_CTRLD = 0x04,
-  CH_CTRLE = 0x05,
-  CH_CTRLF = 0x06,
-  CH_CTRLG = 0x07,
-  CH_CTRLH = 0x08,
-  CH_CTRLI = 0x09,
-  CH_CTRLJ = 0x0A,
-  CH_CTRLK = 0x0B,
-  CH_CTRLL = 0x0C,
-  CH_CTRLM = 0x0D,
-  CH_CTRLN = 0x0E,
-  CH_CTRLO = 0x0F,
-  CH_CTRLP = 0x10,
-  CH_CTRLQ = 0x11,
-  CH_CTRLR = 0x12,
-  CH_CTRLS = 0x13,
-  CH_CTRLT = 0x14,
-  CH_CTRLU = 0x15,
-  CH_CTRLV = 0x16,
-  CH_CTRLW = 0x17,
-  CH_CTRLX = 0x18,
-  CH_CTRLY = 0x19,
-  CH_CTRLZ = 0x1A,
-  CH_CURSOR = 0x05,
-  CH_BACKSPACE = 0x08,
-  CH_ESC = 0x1B,
-  CH_SHIFT_ESC = 0x1C,
+  CH_CTRLA       = 0x01,
+  CH_CTRLB       = 0x02,
+  CH_CTRLC       = 0x03,
+  CH_CTRLD       = 0x04,
+  CH_CTRLE       = 0x05,
+  CH_CTRLF       = 0x06,
+  CH_CTRLG       = 0x07,
+  CH_CTRLH       = 0x08,
+  CH_CTRLI       = 0x09,
+  CH_CTRLJ       = 0x0A,
+  CH_CTRLK       = 0x0B,
+  CH_CTRLL       = 0x0C,
+  CH_CTRLM       = 0x0D,
+  CH_CTRLN       = 0x0E,
+  CH_CTRLO       = 0x0F,
+  CH_CTRLP       = 0x10,
+  CH_CTRLQ       = 0x11,
+  CH_CTRLR       = 0x12,
+  CH_CTRLS       = 0x13,
+  CH_CTRLT       = 0x14,
+  CH_CTRLU       = 0x15,
+  CH_CTRLV       = 0x16,
+  CH_CTRLW       = 0x17,
+  CH_CTRLX       = 0x18,
+  CH_CTRLY       = 0x19,
+  CH_CTRLZ       = 0x1A,
+  CH_CURSOR      = 0x05,
+  CH_BACKSPACE   = 0x08,
+  CH_ESC         = 0x1B,
+  CH_SHIFT_ESC   = 0x1C,
   CH_SHIFT_SPACE = 0x1F,
-  CH_SPACE = 0x20,
+  CH_SPACE       = 0x20,
 };
 
 // Scan code flags
 enum : uint8_t {
   SCf_E0_PREFIX = 7,
-  SCf_KEY_UP = 8,
-  SCf_SHIFT = 9,
-  SCf_CTRL = 10,
-  SCf_ALT = 11,
-  SCf_CAPS = 12,
-  SCf_NUM = 13,
-  SCf_SCROLL = 14,
-  SCf_NEW_KEY = 15,
+  SCf_KEY_UP    = 8,
+  SCf_SHIFT     = 9,
+  SCf_CTRL      = 10,
+  SCf_ALT       = 11,
+  SCf_CAPS      = 12,
+  SCf_NUM       = 13,
+  SCf_SCROLL    = 14,
+  SCf_NEW_KEY   = 15,
   SCf_MS_L_DOWN = 16,
   SCf_MS_R_DOWN = 17,
-  SCf_DELETE = 18,
-  SCf_INS = 19,
-  SCf_NO_SHIFT = 30,
-  SCf_KEY_DESC = 31,
+  SCf_DELETE    = 18,
+  SCf_INS       = 19,
+  SCf_NO_SHIFT  = 30,
+  SCf_KEY_DESC  = 31,
 };
 
 enum : uint32_t {
   SCF_E0_PREFIX = 1u << SCf_E0_PREFIX,
-  SCF_KEY_UP = 1u << SCf_KEY_UP,
-  SCF_SHIFT = 1u << SCf_SHIFT,
-  SCF_CTRL = 1u << SCf_CTRL,
-  SCF_ALT = 1u << SCf_ALT,
-  SCF_CAPS = 1u << SCf_CAPS,
-  SCF_NUM = 1u << SCf_NUM,
-  SCF_SCROLL = 1u << SCf_SCROLL,
-  SCF_NEW_KEY = 1u << SCf_NEW_KEY,
+  SCF_KEY_UP    = 1u << SCf_KEY_UP,
+  SCF_SHIFT     = 1u << SCf_SHIFT,
+  SCF_CTRL      = 1u << SCf_CTRL,
+  SCF_ALT       = 1u << SCf_ALT,
+  SCF_CAPS      = 1u << SCf_CAPS,
+  SCF_NUM       = 1u << SCf_NUM,
+  SCF_SCROLL    = 1u << SCf_SCROLL,
+  SCF_NEW_KEY   = 1u << SCf_NEW_KEY,
   SCF_MS_L_DOWN = 1u << SCf_MS_L_DOWN,
   SCF_MS_R_DOWN = 1u << SCf_MS_R_DOWN,
-  SCF_DELETE = 1u << SCf_DELETE,
-  SCF_INS = 1u << SCf_INS,
-  SCF_NO_SHIFT = 1u << SCf_NO_SHIFT,
-  SCF_KEY_DESC = 1u << SCf_KEY_DESC,
+  SCF_DELETE    = 1u << SCf_DELETE,
+  SCF_INS       = 1u << SCf_INS,
+  SCF_NO_SHIFT  = 1u << SCf_NO_SHIFT,
+  SCF_KEY_DESC  = 1u << SCf_KEY_DESC,
 };
 
 // TempleOS places a 1 in bit 7 for
@@ -173,59 +174,59 @@ enum : uint32_t {
 // and
 // \dLK,"KbdHndlr",A="MN:KbdHndlr"\d().
 enum : uint8_t {
-  SC_ESC = 0x01,
-  SC_BACKSPACE = 0x0E,
-  SC_TAB = 0x0F,
-  SC_ENTER = 0x1C,
-  SC_SHIFT = 0x2A,
-  SC_CTRL = 0x1D,
-  SC_ALT = 0x38,
-  SC_CAPS = 0x3A,
-  SC_NUM = 0x45,
-  SC_SCROLL = 0x46,
-  SC_CURSOR_UP = 0x48,
-  SC_CURSOR_DOWN = 0x50,
-  SC_CURSOR_LEFT = 0x4B,
+  SC_ESC          = 0x01,
+  SC_BACKSPACE    = 0x0E,
+  SC_TAB          = 0x0F,
+  SC_ENTER        = 0x1C,
+  SC_SHIFT        = 0x2A,
+  SC_CTRL         = 0x1D,
+  SC_ALT          = 0x38,
+  SC_CAPS         = 0x3A,
+  SC_NUM          = 0x45,
+  SC_SCROLL       = 0x46,
+  SC_CURSOR_UP    = 0x48,
+  SC_CURSOR_DOWN  = 0x50,
+  SC_CURSOR_LEFT  = 0x4B,
   SC_CURSOR_RIGHT = 0x4D,
-  SC_PAGE_UP = 0x49,
-  SC_PAGE_DOWN = 0x51,
-  SC_HOME = 0x47,
-  SC_END = 0x4F,
-  SC_INS = 0x52,
-  SC_DELETE = 0x53,
-  SC_F1 = 0x3B,
-  SC_F2 = 0x3C,
-  SC_F3 = 0x3D,
-  SC_F4 = 0x3E,
-  SC_F5 = 0x3F,
-  SC_F6 = 0x40,
-  SC_F7 = 0x41,
-  SC_F8 = 0x42,
-  SC_F9 = 0x43,
-  SC_F10 = 0x44,
-  SC_F11 = 0x57,
-  SC_F12 = 0x58,
-  SC_PAUSE = 0x61,
-  SC_GUI = 0xDB,
-  SC_PRTSCRN1 = 0xAA,
-  SC_PRTSCRN2 = 0xB7,
+  SC_PAGE_UP      = 0x49,
+  SC_PAGE_DOWN    = 0x51,
+  SC_HOME         = 0x47,
+  SC_END          = 0x4F,
+  SC_INS          = 0x52,
+  SC_DELETE       = 0x53,
+  SC_F1           = 0x3B,
+  SC_F2           = 0x3C,
+  SC_F3           = 0x3D,
+  SC_F4           = 0x3E,
+  SC_F5           = 0x3F,
+  SC_F6           = 0x40,
+  SC_F7           = 0x41,
+  SC_F8           = 0x42,
+  SC_F9           = 0x43,
+  SC_F10          = 0x44,
+  SC_F11          = 0x57,
+  SC_F12          = 0x58,
+  SC_PAUSE        = 0x61,
+  SC_GUI          = 0xDB,
+  SC_PRTSCRN1     = 0xAA,
+  SC_PRTSCRN2     = 0xB7,
 };
 
 // this is templeos' keymap
-char constexpr keys[] = {
+uint8_t constexpr keys[]{
     0,   CH_ESC, '1',  '2', '3',  '4', '5', '6', '7', '8', '9', '0', '-',
     '=', '\b',   '\t', 'q', 'w',  'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
     '[', ']',    '\n', 0,   'a',  's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
     ';', '\'',   '`',  0,   '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',',
     '.', '/',    0,    '*', 0,    ' ', 0,   0,   0,   0,   0,   0,   0,
     0,   0,      0,    0,   0,    0,   0,   0,   0,   '-', 0,   '5', 0,
-    '+', 0,      0,    0,   0,    0,   0,   0,   0,   0,   0,   0};
+    '+', 0,      0,    0,   0,    0,   0,   0,   0,   0,   0,   0,
+};
 
-static inline constexpr uint64_t K2SC(char ch) {
-  for (size_t i = 0; i < sizeof keys / sizeof keys[0]; ++i) {
+uint64_t constexpr K2SC(uint8_t ch) {
+  for (size_t i = 0; i < sizeof keys / sizeof keys[0]; ++i)
     if (keys[i] == ch)
       return i;
-  }
   __builtin_unreachable();
 }
 
@@ -442,7 +443,8 @@ int ScanKey(uint64_t* sc, SDL_Event* ev) {
       *sc = mod | SC_PAUSE;
       return 1;
     case SDL_SCANCODE_F1 ... SDL_SCANCODE_F12:
-      *sc = mod | (SC_F1 + ev->key.keysym.scancode - SDL_SCANCODE_F1);
+      *sc = mod | (static_cast<uint8_t>(SC_F1) +
+                   (ev->key.keysym.scancode - SDL_SCANCODE_F1));
       return 1;
     default:;
     }
@@ -453,10 +455,11 @@ int ScanKey(uint64_t* sc, SDL_Event* ev) {
   return -1;
 }
 
-static void* kb_cb = nullptr;
+static void* kb_cb      = nullptr;
 static void* kb_cb_data = nullptr;
-static bool kb_init = false;
-static bool ms_init = false;
+static bool  kb_init    = false;
+static bool  ms_init    = false;
+
 int SDLCALL KBCallback(void*, SDL_Event* e) {
   uint64_t s;
   if (kb_cb && (-1 != ScanKey(&s, e)))
@@ -466,11 +469,12 @@ int SDLCALL KBCallback(void*, SDL_Event* e) {
 
 // x,y,z,(l<<1)|r
 static void* ms_cb = nullptr;
+
 int SDLCALL MSCallback(void*, SDL_Event* e) {
   static Sint32 x, y;
-  static int state;
-  static int z;
-  int x2, y2;
+  static int    state;
+  static int    z;
+  int           x2, y2;
   // return value is actually ignored
   if (!ms_cb)
     return 0;
@@ -532,7 +536,7 @@ void SetClipboard(char const* text) {
   SDL_SetClipboardText(text);
 }
 
-std::string const ClipboardText() {
+std::string ClipboardText() {
   char* sdl_clip = SDL_GetClipboardText();
   if (sdl_clip == nullptr)
     return {};
@@ -560,8 +564,8 @@ void NewDrawWindow() {
                           SDL_HINT_OVERRIDE);
   SDL_SetHintWithPriority(SDL_HINT_RENDER_SCALE_QUALITY, "linear",
                           SDL_HINT_OVERRIDE);
-  win_init = true;
-  win.screen_mutex = SDL_CreateMutex();
+  win_init             = true;
+  win.screen_mutex     = SDL_CreateMutex();
   win.screen_done_cond = SDL_CreateCond();
   win.window =
       SDL_CreateWindow("TINE Is Not an Emulator", SDL_WINDOWPOS_CENTERED,
@@ -579,7 +583,7 @@ void NewDrawWindow() {
   SDL_UnlockSurface(icon);
   SDL_SetWindowIcon(win.window, icon);
   SDL_FreeSurface(icon);
-  win.surf = SDL_CreateRGBSurface(0, 640, 480, 8, 0, 0, 0, 0);
+  win.surf    = SDL_CreateRGBSurface(0, 640, 480, 8, 0, 0, 0, 0);
   win.palette = SDL_AllocPalette(256);
   SDL_SetSurfacePalette(win.surf, win.palette);
   SDL_SetWindowMinimumSize(win.window, 640, 480);
@@ -588,23 +592,23 @@ void NewDrawWindow() {
   SDL_RenderClear(win.rend);
   SDL_RenderPresent(win.rend);
   win.margin_y = win.margin_x = 0;
-  win.sz_x = 640;
-  win.sz_y = 480;
+  win.sz_x                    = 640;
+  win.sz_y                    = 480;
   // let templeos manage the cursor
   SDL_ShowCursor(SDL_DISABLE);
 }
 
 void DrawWindowUpdate(uint8_t* colors, uintptr_t internal_width) {
   // https://archive.md/yD5QL
-  SDL_Event event;
+  SDL_Event     event;
   SDL_UserEvent userevent;
 
   /* our callback pushes an SDL_USEREVENT event into the
   queue, and causes our callback to be
   called again at the same interval: */
 
-  userevent.type = SDL_USEREVENT;
-  userevent.code = 0;
+  userevent.type  = SDL_USEREVENT;
+  userevent.code  = 0;
   userevent.data1 = colors;
   userevent.data2 = reinterpret_cast<void*>(internal_width);
 
@@ -619,7 +623,7 @@ void DrawWindowUpdate(uint8_t* colors, uintptr_t internal_width) {
 }
 
 void SetKBCallback(void* fptr, void* data) {
-  kb_cb = fptr;
+  kb_cb      = fptr;
   kb_cb_data = data;
   if (kb_init)
     return;
@@ -638,13 +642,11 @@ void SetMSCallback(void* fptr) {
 void GrPaletteColorSet(uint64_t i, bgr_48 u) {
   if (!win_init)
     return;
-  // clang-format off
   // 0xffff is 100% so 0x7fff/0xffff would be about .50
   // this gets multiplied by 0xff to get 0x7f
   Uint8 b = u.b / static_cast<double>(0xffff) * 0xff,
         g = u.g / static_cast<double>(0xffff) * 0xff,
         r = u.r / static_cast<double>(0xffff) * 0xff;
-  // clang-format on
   // i seriously need designated inits in c++
   SDL_Color sdl_c;
   sdl_c.r = r;

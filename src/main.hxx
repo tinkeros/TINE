@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-void ShutdownTINE(int);
+void        ShutdownTINE(int);
 char const* CmdLineBootText();
 
 extern bool sanitize_clipboard;

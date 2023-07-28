@@ -1,12 +1,10 @@
 #ifdef _WIN32
-  // clang-format off
   #include <windows.h>
   #include <winbase.h>
   #include <wincon.h>
   #include <winerror.h>
   #include <processenv.h>
   #include <processthreadsapi.h>
-  // clang-format on
 
   // for mingw
   // https://archive.md/HEZm2#selection-3667.0-3698.0
@@ -30,9 +28,13 @@ static BOOL WINAPI CtrlCHandlerRoutine(DWORD) {
 
 #include <algorithm>
 #include <filesystem>
-#include <iostream>
 #include <thread>
 
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "argtable3.h"
 #include "dbg.hxx"
 #include "main.hxx"
 #include "multic.hxx"
@@ -41,8 +43,6 @@ static BOOL WINAPI CtrlCHandlerRoutine(DWORD) {
 #include "sound.h"
 #include "tos_aot.hxx"
 #include "vfs.hxx"
-
-#include "argtable3.h"
 
 namespace fs = std::filesystem;
 
@@ -60,7 +60,7 @@ constexpr bool is_win =
 std::string boot_str;
 std::string bin_path{"HCRT.BIN"};
 
-int exit_code = 0;
+int  exit_code = 0;
 bool prog_exit = false;
 
 void* __stdcall Core0(void*) {
@@ -88,7 +88,7 @@ void ShutdownTINE(int ec) {
 }
 
 bool sanitize_clipboard = false;
-bool is_cmd_line = false;
+bool is_cmd_line        = false;
 
 #ifndef _WIN32
 size_t page_size; // used for allocation
@@ -118,29 +118,23 @@ int main(int argc, char** argv) {
   struct arg_lit *helpArg, *sixty_fps, *commandLineArg, *cb_sanitize, *ndebug,
       *noans;
   struct arg_file *cmdLineFiles, *TDriveArg, *HCRTArg;
+
   void* argtable[] = {
-      helpArg = arg_lit0("h", "help", "Display this help message."),
-      sixty_fps = arg_lit0("6", "60fps", "Run in 60 fps mode."),
-      commandLineArg = arg_lit0("c", "com",
-                                "Start in command line "
-                                "mode, mount cwd at Z:/"),
-      HCRTArg = arg_file0("f", "file", nullptr,
-                          "Specify where your HolyC runtime is"),
-      TDriveArg = arg_file0("t", "root", nullptr,
-                            "This tells TINE where the boot folder is"),
-      cb_sanitize = arg_lit0("s", "sanitize-cb",
-                             "Remove characters in clipboard that may collide "
-                             "with DolDoc control chars"),
-      ndebug = arg_lit0("n", "ndebug", "Silence compiler output"),
-      noans = arg_lit0("a", "noans", "Do not print expression results"),
+      helpArg        = arg_lit0("h", "help", "Display this help message"),
+      sixty_fps      = arg_lit0("6", "60fps", "Run in 60 fps mode."),
+      commandLineArg = arg_lit0("c", "com", "Command line mode, cwd -> Z:/"),
+      cb_sanitize = arg_lit0("s", "sanitize-cb", "Sanitize clipboard contents"),
+      ndebug      = arg_lit0("n", "ndebug", "Silence compiler output"),
+      noans       = arg_lit0("a", "noans", "Silence expression results"),
+      HCRTArg     = arg_file0("f", "file", nullptr, "Specify HolyC runtime"),
+      TDriveArg   = arg_file0("t", "root", nullptr, "Specify boot folder"),
       cmdLineFiles = arg_filen(nullptr, nullptr, "<files>", 0, 100,
-                               "Files for use with command "
-                               "line mode"),
+                               "Files that run on boot(cmdline mode specific)"),
       arg_end_(1),
   };
   int errs = arg_parse(argc, argv, argtable);
   if (helpArg->count > 0 || errs > 0 || TDriveArg->count == 0) {
-    std::cerr << "Usage is: " << argv[0];
+    fprintf(stderr, "Usage: %s", argv[0]);
     arg_print_syntaxv(stderr, argtable, "\n");
     arg_print_glossary_gnu(stderr, argtable);
     return 1;
@@ -149,8 +143,8 @@ int main(int argc, char** argv) {
   if (fs::exists(TDriveArg->filename[0])) {
     VFsMountDrive('T', TDriveArg->filename[0]);
   } else {
-    std::cerr << TDriveArg->filename[0] << " DOES NOT EXIST\n";
-    std::terminate();
+    fprintf(stderr, "%s DOES NOT EXIST\n", TDriveArg->filename[0]);
+    return 1;
   }
   if (commandLineArg->count > 0) {
     VFsMountDrive('Z', ".");
@@ -184,18 +178,16 @@ int main(int argc, char** argv) {
     NewDrawWindow();
   if (is_win || !is_cmd_line)
     InitSound();
-
   if (HCRTArg->count > 0)
     bin_path = HCRTArg->filename[0];
   if (fs::exists(bin_path)) {
     if (ndebug->count == 0)
-      std::cerr << "Using " << bin_path << " as the kernel.\n";
-    LaunchCore0(Core0);
+      fprintf(stderr, "Using %s as the kernel.\n", bin_path.c_str());
   } else {
-    std::cerr << bin_path << " DOES NOT EXIST\n";
+    fprintf(stderr, "%s DOES NOT EXIST\n", bin_path.c_str());
     return 1;
   }
-
+  LaunchCore0(Core0);
   arg_freetable(argtable, sizeof argtable / sizeof argtable[0]);
   if (!is_cmd_line) {
 #ifdef _WIN32

@@ -6,7 +6,10 @@ Language: Cpp
 PointerAlignment: Left
 AlignAfterOpenBracket: Align
 AlignArrayOfStructures: Left
-AlignConsecutiveMacros: AcrossEmptyLines
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+AlignConsecutiveAssignments: Consecutive
+AlignEscapedNewlines: Left
 AlignOperands: AlignAfterOperator
 AlignEscapedNewlines: Left
 AlignTrailingComments: true
@@ -20,4 +23,10 @@ AllowShortLambdasOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: Never
 AlwaysBreakAfterReturnType: None
 IndentPPDirectives: BeforeHash
+IncludeCategories: [
+  {Regex: '<winsock.*\.h>', Priority: -3},
+  {Regex: '<windows\.h>', Priority: -2},
+  {Regex: '<winbase\.h>', Priority: -1},
+  {Regex: '<win.*\.h>'  , Priority: 0},
+]
 ...

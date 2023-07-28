@@ -4,8 +4,13 @@
 
 #ifdef _WIN32
   #include <windows.h>
-  // fuck you bill gates, design your headers properly
   #include <errhandlingapi.h>
+#else
+  #include <signal.h>
+  #include <ucontext.h>
+#endif
+
+#ifdef _WIN32
 
 namespace {
 
@@ -45,12 +50,12 @@ LONG WINAPI VectorHandler(struct _EXCEPTION_POINTERS* info) {
       REG(R15),    REG(Rip), (uintptr_t)&ctx->FltSave,
       REG(EFlags),
   };
-  uint64_t sig = (c == EXCEPTION_BREAKPOINT || c == STATUS_SINGLE_STEP)
-                   ? 5 /* SIGTRAP */
-                   : 0;
   static void* fp = nullptr;
   if (fp == nullptr)
     fp = TOSLoader["DebuggerLandWin"].val;
+  uint64_t sig = (c == EXCEPTION_BREAKPOINT || c == STATUS_SINGLE_STEP)
+                   ? 5 /* SIGTRAP */
+                   : 0;
   FFI_CALL_TOS_2(fp, sig, reinterpret_cast<uintptr_t>(regs));
   return EXCEPTION_CONTINUE_EXECUTION;
 }
@@ -61,11 +66,6 @@ void SetupDebugger() {
 }
 
 #else
-  #include <ucontext.h>
-
-  #include <initializer_list>
-
-  #include <signal.h>
 
 namespace {
 

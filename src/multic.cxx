@@ -1,15 +1,11 @@
 #ifdef _WIN32
-// clang-format off
   #include <windows.h>
   #include <processthreadsapi.h>
   #include <synchapi.h>
   #include <sysinfoapi.h>
   #include <timeapi.h>
-// clang-format on
 using WinCB = LPTHREAD_START_ROUTINE;
 #else
-  #include <pthread.h>
-  #include <signal.h>
   #ifdef __linux__
     #include <linux/futex.h>
     #include <sys/syscall.h>
@@ -17,6 +13,8 @@ using WinCB = LPTHREAD_START_ROUTINE;
     #include <sys/types.h>
     #include <sys/umtx.h>
   #endif
+  #include <pthread.h>
+  #include <signal.h>
 #endif
 
 #include <atomic>
@@ -24,6 +22,7 @@ using WinCB = LPTHREAD_START_ROUTINE;
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "dbg.hxx"
 #include "ffi.h"
@@ -47,9 +46,9 @@ namespace {
 
 struct CCore {
 #ifdef _WIN32
-  HANDLE thread;
-  HANDLE event;
-  HANDLE mtx;
+  HANDLE   thread;
+  HANDLE   event;
+  HANDLE   mtx;
   uint64_t awake_at;
 #else
   pthread_t thread;
@@ -72,7 +71,7 @@ struct CCore {
   void* fp;
 };
 
-std::vector<CCore> cores;
+std::vector<CCore>  cores;
 thread_local size_t core_num;
 
 void* __stdcall LaunchCore(void* c) {
@@ -165,8 +164,8 @@ void LaunchCore0(ThreadCallback* fp) {
   // without warnings
   #define C_(x) ((WinCB)((void*)x))
   cores[0].thread = CreateThread(nullptr, 0, C_(fp), nullptr, 0, nullptr);
-  cores[0].mtx = CreateMutex(nullptr, FALSE, nullptr);
-  cores[0].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+  cores[0].mtx    = CreateMutex(nullptr, FALSE, nullptr);
+  cores[0].event  = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[0].thread, THREAD_PRIORITY_HIGHEST);
   // im not going to use SEH or some crazy bulllshit to set the
   // thread name on windows(https://archive.md/9jiD5)
@@ -182,8 +181,8 @@ void CreateCore(size_t core, void* fp) {
 #ifdef _WIN32
   cores[core].thread = CreateThread(nullptr, 0, C_(LaunchCore),
                                     reinterpret_cast<void*>(core), 0, nullptr);
-  cores[core].mtx = CreateMutex(nullptr, FALSE, nullptr);
-  cores[core].event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+  cores[core].mtx    = CreateMutex(nullptr, FALSE, nullptr);
+  cores[core].event  = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   SetThreadPriority(cores[core].thread, THREAD_PRIORITY_HIGHEST);
 #else
   pthread_create(&cores[core].thread, nullptr, LaunchCore,
@@ -244,7 +243,7 @@ void AwakeFromSleeping(size_t core) {
 
 namespace {
 
-UINT tick_inc;
+UINT     tick_inc;
 uint64_t ticks = 0;
 
 // To just get ticks we can use QueryPerformanceFrequency

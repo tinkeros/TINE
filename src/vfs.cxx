@@ -1,25 +1,26 @@
-// clang-format off
-#include <sys/types.h>
-#include <sys/stat.h>
-// clang-format on
+#include "vfs.hxx"
+#include "alloc.hxx"
 
 #include <algorithm>
 #include <array>
 #include <filesystem>
-#include <fstream>
 #include <string>
 #include <vector>
 
 #include <ctype.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
-#include <time.h>
 
-#include "alloc.hxx"
-#include "vfs.hxx"
+// clang-format off
+// Windows requires sys/stat to be included after sys/types
+#include <sys/types.h>
+#include <sys/stat.h>
+// clang-format on
 
 #ifdef _WIN32
   #define delim '\\'
+  #define stat  _stati64
 #else
   #define delim '/'
 #endif
@@ -31,7 +32,7 @@ using std::ios;
 namespace {
 
 thread_local std::string thrd_pwd;
-thread_local uint8_t thrd_drv;
+thread_local uint8_t     thrd_drv;
 
 inline bool FExists(std::string const& path) {
   return fs::exists(path);
@@ -93,7 +94,7 @@ bool VFsDirMk(char const* to, int const flags) {
 
 uint64_t VFsDel(char const* p) {
   std::string path = VFsFileNameAbs(p);
-  bool e = FExists(path);
+  bool        e    = FExists(path);
   if (!e)
     return 0;
   fs::remove_all(path);
@@ -115,23 +116,19 @@ uint64_t VFsUnixTime(char const* name) {
   std::string fn = VFsFileNameAbs(name);
   if (!FExists(fn))
     return 0;
-#ifndef _WIN32
   struct stat s;
   stat(fn.c_str(), &s);
-#else
-  // wtf lmao
-  struct _stati64 s;
-  _stati64(fn.c_str(), &s);
-#endif
   return s.st_mtime;
 }
 
-uint64_t VFsFileWrite(char const* name, char const* data, size_t const len) {
+uint64_t VFsFileWrite(char const* name, char const* data, size_t len) {
   std::string p = VFsFileNameAbs(name);
   if (name) {
-    std::ofstream f{p, ios::binary | ios::out};
-    if (f)
-      f.write(data, len);
+    FILE* fp = fopen(p.c_str(), "wb");
+    if (fp != nullptr) {
+      fwrite(data, 1, len, fp);
+      fclose(fp);
+    }
   }
   return !!name;
 }
@@ -141,17 +138,18 @@ void* VFsFileRead(char const* name, uint64_t* len_ptr) {
     *len_ptr = 0;
   if (!name)
     return nullptr;
-  char* data = nullptr;
   std::string p = VFsFileNameAbs(name);
   if (!FExists(p))
     return nullptr;
   if (FIsDir(p))
     return nullptr;
-  std::ifstream f{p, ios::binary | ios::in};
-  if (!f)
+  char* data = nullptr;
+  FILE* fp   = fopen(p.c_str(), "rb");
+  if (fp == nullptr)
     return nullptr;
   size_t sz = fs::file_size(p);
-  f.read(data = HolyAlloc<char, true>(sz + 1), sz);
+  fread(data = HolyAlloc<char, true>(sz + 1), 1, sz, fp);
+  fclose(fp);
   if (len_ptr != nullptr)
     *len_ptr = sz;
   return data;

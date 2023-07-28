@@ -1,9 +1,9 @@
 #include <algorithm>
-#include <iostream>
 #include <string>
 
 #include <ctype.h>
 #include <inttypes.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "TOSPrint.hxx"
@@ -36,7 +36,7 @@ char* UnescapeString(char* __restrict str, char* __restrict where) {
 
   check_us_key:; // you bear a striking resemblance
                  // you look just like my bathroom mirror
-    if (isalnum(static_cast<unsigned char>(*str)) == 0 &&
+    if (isalnum(static_cast<char unsigned>(*str)) == 0 &&
         strchr(" ~!@#$%^&*()_+|{}[]\\;':\",./<>?", *str) == nullptr) {
       // Note: this was giving me bizarre buffer overflow
       // errors and it turns out you MUST use uint8_t when
@@ -62,9 +62,9 @@ std::string MStrPrint(char const* fmt, uint64_t, int64_t* argv) {
   // with StrOcc(fmt, '%'), be careful i guess
   // it also isn't a fully featured one but should
   // account for most use cases
-  std::string ret;
-  int64_t arg = -1;
   char const *start = fmt, *end;
+  std::string ret;
+  int64_t     arg = -1;
 loop:;
   ++arg;
   end = strchr(start, '%');
@@ -105,13 +105,13 @@ loop:;
       ++start;
     }
   }
-#define FMT_CH(x, T)                                                          \
-  do {                                                                        \
-    size_t sz = snprintf(nullptr, 0, "%" x, reinterpret_cast<T*>(argv)[arg]); \
-    char* tmp = new (std::nothrow) char[sz + 1];                              \
-    snprintf(tmp, sz + 1, "%" x, reinterpret_cast<T*>(argv)[arg]);            \
-    ret += tmp;                                                               \
-    delete[] tmp;                                                             \
+#define FMT_CH(x, T)                                                           \
+  do {                                                                         \
+    size_t sz  = snprintf(nullptr, 0, "%" x, reinterpret_cast<T*>(argv)[arg]); \
+    char*  tmp = new (std::nothrow) char[sz + 1];                              \
+    snprintf(tmp, sz + 1, "%" x, reinterpret_cast<T*>(argv)[arg]);             \
+    ret += tmp;                                                                \
+    delete[] tmp;                                                              \
   } while (false);
   switch (*start) {
   case 'd':
@@ -166,11 +166,9 @@ loop:;
 } // namespace
 
 void TOSPrint(char const* fmt, uint64_t argc, int64_t* argv) {
-  // C++20:
-  // #include <syncstream> up there
-  //
-  // std::osyncstream(std::cerr) << MStrPrint(fmt, argc, argv);
-  (std::cerr << MStrPrint(fmt, argc, argv)).flush();
+  auto s = MStrPrint(fmt, argc, argv);
+  fputs(s.c_str(), stderr);
+  fflush(stderr);
 }
 
 // vim: set expandtab ts=2 sw=2 :

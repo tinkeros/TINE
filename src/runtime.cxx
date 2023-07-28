@@ -1,10 +1,8 @@
 #ifdef _WIN32
-// clang-format off
   #include <winsock2.h>
   #include <windows.h>
   #include <winbase.h>
   #include <memoryapi.h>
-// clang-format on
 #else
   #include <signal.h>
   #include <sys/mman.h>
@@ -63,7 +61,7 @@ size_t mp_cnt(void*) {
 
 [[noreturn]] void HolyThrow(std::string_view sv = {}) {
   union {
-    char s[8]{}; // zero-init
+    char     s[8]{}; // zero-init
     uint64_t i;
   } u;
   static void* fp;
@@ -76,7 +74,7 @@ size_t mp_cnt(void*) {
 
 namespace { // ffi shit goes here
 
-namespace fs = std::filesystem;
+namespace fs     = std::filesystem;
 namespace chrono = std::chrono;
 
 using chrono::system_clock;
@@ -257,7 +255,6 @@ uint64_t STK___IsValidPtr(uintptr_t* stk) {
   #endif*/
 
 #else
-  /* #ifdef __FreeBSD__ */
   // round down to page boundary (equiv to stk[0] / page_size * page_size)
   //   0b100101010 (x)
   // & 0b111110000 <- ~(0b10000 - 1)
@@ -266,31 +263,6 @@ uint64_t STK___IsValidPtr(uintptr_t* stk) {
   uintptr_t addr = stk[0] & ~(page_size - 1);
   // https://archive.md/Aj0S4
   return -1 != msync(reinterpret_cast<void*>(addr), page_size, MS_ASYNC);
-  /*#elif defined(__linux__)
-        // TOO FUCKING GODDAMN SLOW!!!!!
-    auto constexpr Hex2U64 = [](char const *ptr, char const** res) {
-      uint64_t ret = 0;
-      char c;
-      while (isxdigit(c = *ptr)) {
-        ret <<= 4;
-        ret |= isalpha(c) ? toupper(c) - 'A' + 10 : c - '0';
-        ++ptr;
-      }
-      *res = ptr;
-      return ret;
-    };
-    std::ifstream map{"/proc/self/maps", ios::binary | ios::in};
-    std::string buffer;
-    while (std::getline(map, buffer)) {
-      char const* ptr = buffer.data();
-      uintptr_t lower = Hex2U64(ptr, &ptr);
-      ++ptr; // skip '-'
-      uintptr_t upper = Hex2U64(ptr, &ptr);
-      if (lower <= stk[0] && stk[0] <= upper)
-        return true;
-    }
-    return false;
-  #endif*/
 
 #endif
 }
@@ -317,14 +289,14 @@ void STK_DrawWindowUpdate(uintptr_t* stk) {
 uint64_t STK___GetTicksHP(void*) {
 #ifndef _WIN32
   struct timespec ts;
-  uint64_t theTick = 0U;
+  uint64_t        theTick = 0U;
   clock_gettime(CLOCK_MONOTONIC, &ts);
   theTick = ts.tv_nsec / 1000;
   theTick += ts.tv_sec * 1000000U;
   return theTick;
 #else
   static uint64_t freq = 0;
-  uint64_t cur;
+  uint64_t        cur;
   if (!freq) {
     QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
     freq /= 1000000U;
@@ -498,14 +470,14 @@ uint64_t STK_VFsGetDrv(void*) {
 void STK_SetVolume(uint64_t* stk) {
   union {
     uint64_t i;
-    double flt;
+    double   flt;
   } un = {stk[0]};
   SetVolume(un.flt);
 }
 
 uint64_t STK_GetVolume(void*) {
   union {
-    double flt;
+    double   flt;
     uint64_t i;
   } un = {GetVolume()};
   return un.i;
@@ -549,7 +521,7 @@ void RegisterFunctionPtr(std::string& blob, char const* name, uintptr_t fp,
   blob.append("\x48\xb8", 2);
   union {
     uintptr_t p;
-    char data[8];
+    char      data[8];
   } fu = {fp};
   blob.append(fu.data, 8);
   // call rax
@@ -586,12 +558,12 @@ void RegisterFunctionPtr(std::string& blob, char const* name, uintptr_t fp,
   // imm16
   union {
     uint16_t ar;
-    char data[2];
+    char     data[2];
   } au = {arity};
   blob.append(au.data, 2);
   CHash sym;
-  sym.type = HTT_FUN;
-  sym.val = reinterpret_cast<uint8_t*>(off);
+  sym.type        = HTT_FUN;
+  sym.val         = reinterpret_cast<uint8_t*>(off);
   TOSLoader[name] = sym;
 }
 

@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 void* NewVirtualChunk(size_t sz, bool low32);
-void FreeVirtualChunk(void* ptr, size_t s);
+void  FreeVirtualChunk(void* ptr, size_t s);
 
 // from Glossary.DD
 /*
@@ -19,7 +19,7 @@ void FreeVirtualChunk(void* ptr, size_t s);
  * any core, even making independent (with MemPagAlloc) heaps.
  */
 enum : uint32_t {
-  MAX_CODE_HEAP_ADDR = 0x7fffFFFF
+  MAX_CODE_HEAP_ADDR = 0x7fffFFFF,
 };
 
 // vim: set expandtab ts=2 sw=2 :
