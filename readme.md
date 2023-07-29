@@ -49,8 +49,9 @@ mv T/HCRT.BIN .
 ```
 ./tine -t T #-h for info on other flags
 ```
-# caveats
+# changes from vanilla TempleOS
 `Fs` and `Gs` are not `_intern` anymore, instead they are replaced by normal functions so `&Fs->member` must be replaced by `&(Fs->member)` <br>
+The Windows key functionality has been replaced with the Alt key <br>
 due to running in userspace, context switching is around 4 times slower(not that it matters anyway outside of flexing `CPURep(TRUE);` results) and ring 0 routines like In/OutU8 are not present <br>
 division by zero is not an exception, it will bring up the debugger(SIGFPE)
 

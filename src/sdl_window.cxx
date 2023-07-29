@@ -213,7 +213,7 @@ enum : uint8_t {
 };
 
 // this is templeos' keymap
-uint8_t constexpr keys[]{
+uint8_t constexpr keys[] = {
     0,   CH_ESC, '1',  '2', '3',  '4', '5', '6', '7', '8', '9', '0', '-',
     '=', '\b',   '\t', 'q', 'w',  'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
     '[', ']',    '\n', 0,   'a',  's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
@@ -383,14 +383,10 @@ int ScanKey(uint64_t* sc, SDL_Event* ev) {
       *sc = mod | SC_SHIFT;
       return 1;
     case SDL_SCANCODE_LALT:
-      *sc = mod | SC_ALT;
-      return 1;
     case SDL_SCANCODE_RALT:
       *sc = mod | SC_ALT;
       return 1;
     case SDL_SCANCODE_LCTRL:
-      *sc = mod | SC_CTRL;
-      return 1;
     case SDL_SCANCODE_RCTRL:
       *sc = mod | SC_CTRL;
       return 1;
@@ -433,8 +429,10 @@ int ScanKey(uint64_t* sc, SDL_Event* ev) {
     case SDL_SCANCODE_DELETE:
       *sc = mod | SC_DELETE;
       return 1;
-    case SC_GUI:
-      *sc = mod | SDL_SCANCODE_APPLICATION;
+    case SDL_SCANCODE_APPLICATION:
+    case SDL_SCANCODE_LGUI:
+    case SDL_SCANCODE_RGUI:
+      *sc = mod | SC_GUI;
       return 1;
     case SDL_SCANCODE_PRINTSCREEN:
       *sc = mod | SC_PRTSCRN1;
